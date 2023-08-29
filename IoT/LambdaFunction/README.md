@@ -4,10 +4,10 @@
 
 ## Folder Contents
 
-`config.py`: File containing configuration data such as AWS RDS endpoint, master username, master password, and database name.
-`lambda_function.py`: Lambda function code that processes messages from AWS IoT Core and writes them to the RDS database.
-`requirements.txt`: List of Python dependencies for the Lambda function.
-`install.sh`: Script to create a zip file containing the function code and dependencies ready for uploading to AWS Lambda.
+* `config.py`: File containing configuration data such as AWS RDS endpoint, master username, master password, and database name.
+* `lambda_function.py`: Lambda function code that processes messages from AWS IoT Core and writes them to the RDS database.
+* `requirements.txt`: List of Python dependencies for the Lambda function.
+* `install.sh`: Script to create a zip file containing the function code and dependencies ready for uploading to AWS Lambda.
 
 
 ## Setup and Execution Steps
