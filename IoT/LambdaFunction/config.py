@@ -1,0 +1,5 @@
+host = "YOUR RDS DATABASE ENDPOINT"
+user = "RDS MASTER USERNAME"
+password = "MASTER PASSWORD"
+db_name = "DATABASE NAME"
+
