@@ -1,0 +1,2 @@
+pkg_resources==0.0.0
+smbus2==0.4.2
