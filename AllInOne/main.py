@@ -3,7 +3,7 @@ from Sensors import AirQualitySensor, CO2Sensor, LightSensor, TPHSensor
 from WeatherMeterSensors import WeatherSensors
 
 
-def add_data(sensors):
+def read_sensor_data(sensors):
     data = {}
 
     for sensor, name in sensors.items():
@@ -14,6 +14,18 @@ def add_data(sensors):
             data[name] = res
     
     return data
+
+
+def add_data(data_all, data):
+    for key, value in data.items():
+        if value is None:
+            continue
+        if key not in data_all:
+            data_all[key] = [value, 1]
+        else:
+            data_all[key][0] += value
+            data_all[key][1] += 1
+    return data_all
 
 
 def get_averages(data, weather):
@@ -40,20 +52,13 @@ def main(light_obj, tph_obj, air_quality_obj, co2_obj, weather):
     start_time = time.time()
 
     while time.time() - start_time < 60:
-        data = add_data(sensors)
+        data = read_sensor_data(sensors)
 
-        for key, value in data.items():
-            if value is None:
-                continue
-            if key not in data_all:
-                data_all[key] = [value, 1]
-            else:
-                data_all[key][0] += value
-                data_all[key][1] += 1
-        
-        t = time.time() - start_time
-        if 60 - t <= 25:
-            time.sleep(60 - t)
+        data_all = add_data(data_all, data)
+          
+        remaining_time = 60 - (time.time() - start_time)
+        if remaining_time <= 25:
+            time.sleep(remaining_time)
 
     data_all["direction"] = data_all.get("direction")
 
@@ -67,10 +72,6 @@ if __name__ == "__main__":
     co2_obj = CO2Sensor()
     weather = WeatherSensors()
 
-    for i in range(10):
-        air_quality_obj.read_data()
-
-
     while True:
         data = main(light_obj, tph_obj, air_quality_obj, co2_obj, weather)
 
@@ -81,5 +82,3 @@ if __name__ == "__main__":
             else: 
                 print(f"{key}: {round(value[0] / value[1], 2)}")
         print("\n" + ("#" * 50) + "\n")
-
-
