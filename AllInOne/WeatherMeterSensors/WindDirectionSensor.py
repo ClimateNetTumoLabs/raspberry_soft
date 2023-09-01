@@ -121,7 +121,8 @@ class WindDirection():
                 break
 
         return angle
-
+    
+    
     def get_direction_label(self, angle):
         """
         Gets the label for the wind direction based on the angle.
@@ -180,7 +181,7 @@ class WindDirection():
             return None
         
         angle = sum(self.data) / len(self.data)
-        return self.get_direction_label(angle)
+        return angle
     
     def add_data(self):
         """

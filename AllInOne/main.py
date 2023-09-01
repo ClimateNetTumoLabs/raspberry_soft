@@ -2,42 +2,63 @@ import time
 from Sensors import AirQualitySensor, CO2Sensor, LightSensor, TPHSensor
 from WeatherMeterSensors import WeatherSensors
 
-times = {
-    "Light": [],
-    "TPH": [],
-    "AirQuality": [],
-    "CO2": [],
-    "Weather": []
-}
 
-def main(light_obj, tph_obj, air_quality_obj, co2_obj, weather):
-    global times
-
+def add_data(sensors):
     data = {}
 
-    start_time = time.time()
-    data["Light"] = light_obj.read_data()
-    times["Light"].append(time.time() - start_time)
-
-    start_time = time.time()
-    tph_data = tph_obj.read_data()
-    data.update(tph_data)
-    times["TPH"].append(time.time() - start_time)
-
-    start_time = time.time()
-    air_quality_data = air_quality_obj.read_data()
-    data.update(air_quality_data)
-    times["AirQuality"].append(time.time() - start_time)
-
-    start_time = time.time()
-    data["CO2"] = co2_obj.get_data()
-    times["CO2"].append(time.time() - start_time)
-
-    start_time = time.time()
-    data.update(weather.get_data())
-    times["Weather"].append(time.time() - start_time)
-
+    for sensor, name in sensors.items():
+        res = sensor.read_data()
+        if type(res) == dict:
+            data.update(res)
+        elif type(res) == int:
+            data[name] = res
+    
     return data
+
+
+def get_averages(data, weather):
+    result_data = {}
+    for key, values in data.items():
+        if key == "directory":
+            result_data[key] = weather.get_direction_label(values)
+        else:
+            result_data[key] = round(sum(values) / len(values), 2)
+        result_data[key]
+
+
+def main(light_obj, tph_obj, air_quality_obj, co2_obj, weather):
+    sensors = {
+        light_obj: "Light",
+        tph_obj: "",
+        air_quality_obj: "",
+        co2_obj: "CO2",
+        weather: ""
+    }
+
+    data_all = {}
+
+    start_time = time.time()
+
+    while time.time() - start_time < 60:
+        data = add_data(sensors)
+
+        for key, value in data.items():
+            if value is None:
+                continue
+            if key not in data_all:
+                data_all[key] = [value, 1]
+            else:
+                data_all[key][0] += value
+                data_all[key][1] += 1
+        
+        t = time.time() - start_time
+        if 60 - t <= 25:
+            time.sleep(60 - t)
+    print(time.time() - start_time)
+
+    data_all["direction"] = data_all.get("direction")
+
+    return data_all
 
 
 if __name__ == "__main__":
@@ -49,26 +70,19 @@ if __name__ == "__main__":
 
     for i in range(10):
         air_quality_obj.read_data()
-    j = 0
-    while True:
-        if j == 15:
-            sum_avg = 0
-            sum_max = 0
-            for key, value in times.items():
-                sum_avg += (sum(value) / len(value))
-                sum_max += max(value)
-                print(f"{key}  ->  {value}  ->  Max:{round(max(value), 2)}  ->  Average:{round(sum(value) / len(value), 2)}")
-            print(f"Sum_Max  ->  {round(sum_max, 2)}")
-            print(f"Sum_Avg  ->  {round(sum_avg, 2)}")
-            print("\n" + ("#" * 50) + "\n")
-            break
 
+
+    while True:
         data = main(light_obj, tph_obj, air_quality_obj, co2_obj, weather)
+        print(data)
+        print(data["direction"])
 
         for key, value in data.items():
-            print(f"{key}: {value}")
+            if key == "direction":
+                direction = weather.get_direction_label(value)
+                print(f"{key}: {direction}")
+            else: 
+                print(f"{key}: {round(value[0] / value[1], 2)}")
+        print("\n" + ("#" * 50) + "\n")
 
-        print("\n" + str(j) + ("#" * 50) + "\n")
-
-        j += 1
 

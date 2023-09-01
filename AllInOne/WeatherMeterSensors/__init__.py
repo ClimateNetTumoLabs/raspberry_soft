@@ -19,8 +19,15 @@ class WeatherSensors:
         self.speed.reset()
         self.rain.reset()
         self.direction.reset()
+    
 
-    def get_data(self):
+    def get_direction_label(self, angles):
+        if angles is None:
+            return None
+        else:
+            return self.direction.get_direction_label(angles[0] / angles[1])
+
+    def read_data(self):
         start_time = time.time()
         old_speed_count = 0
 

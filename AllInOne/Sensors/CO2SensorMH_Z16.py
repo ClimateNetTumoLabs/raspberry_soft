@@ -81,6 +81,6 @@ class CO2Sensor():
 
         return buf
 
-    def get_data(self):
+    def read_data(self):
         self.begin()
         return self.getCO2()
