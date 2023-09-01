@@ -1,7 +1,7 @@
 import time
-from WeatherMeterSensors.RainSensor import Rain
-from WeatherMeterSensors.WindDirectionSensor import WindDirection
-from WeatherMeterSensors.WindSpeedSensor import WindSpeed
+from .RainSensor import Rain
+from .WindDirectionSensor import WindDirection
+from .WindSpeedSensor import WindSpeed
 
 
 class WeatherSensors:
