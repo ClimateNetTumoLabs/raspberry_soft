@@ -54,7 +54,6 @@ def main(light_obj, tph_obj, air_quality_obj, co2_obj, weather):
         t = time.time() - start_time
         if 60 - t <= 25:
             time.sleep(60 - t)
-    print(time.time() - start_time)
 
     data_all["direction"] = data_all.get("direction")
 
@@ -74,8 +73,6 @@ if __name__ == "__main__":
 
     while True:
         data = main(light_obj, tph_obj, air_quality_obj, co2_obj, weather)
-        print(data)
-        print(data["direction"])
 
         for key, value in data.items():
             if key == "direction":
