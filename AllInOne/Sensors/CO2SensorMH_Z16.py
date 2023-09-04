@@ -1,5 +1,10 @@
 import smbus2
 import time
+import logging
+
+
+logging.basicConfig(filename='parsing.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
 
 class CO2Sensor():
     cmd_measure = [0xFF, 0x01, 0x9C, 0x00, 0x00, 0x00, 0x00, 0x00, 0x63]
@@ -82,5 +87,11 @@ class CO2Sensor():
         return buf
 
     def read_data(self):
-        self.begin()
-        return self.getCO2()
+        for i in range(3):
+            try:
+                self.begin()
+                return self.getCO2()
+            except Exception as e:
+                logging.error(f"Error occurred during reading data from CO2 sensor: {str(e)}", exc_info=True)
+                if i == 2:
+                    return None

@@ -1,7 +1,11 @@
 import time
+import logging
 from .RainSensor import Rain
 from .WindDirectionSensor import WindDirection
 from .WindSpeedSensor import WindSpeed
+
+
+logging.basicConfig(filename='parsing.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 
 class WeatherSensors:
@@ -22,26 +26,33 @@ class WeatherSensors:
     
 
     def get_direction_label(self, angles):
-        if angles is None:
-            return None
-        else:
-            return self.direction.get_direction_label(angles[0] / angles[1])
+        return self.direction.get_direction_label(angles[0] / angles[1])
 
     def read_data(self):
-        start_time = time.time()
-        old_speed_count = 0
+        try:
+            start_time = time.time()
+            old_speed_count = 0
 
-        while time.time() - start_time <= self.parse_interval:
-            if self.speed.count != old_speed_count:
-                old_speed_count = self.speed.count
-                self.direction.add_data()
+            while time.time() - start_time <= self.parse_interval:
+                if self.speed.count != old_speed_count:
+                    old_speed_count = self.speed.count
+                    self.direction.add_data()
 
-        result = {
-            "speed": self.speed.get_data(self.parse_interval),
-            "rain": self.rain.get_data(),
-            "direction": self.direction.get_data()
-        }
+            result = {
+                "speed": self.speed.get_data(self.parse_interval),
+                "rain": self.rain.get_data(),
+                "direction": self.direction.get_data()
+            }
 
-        self.reset_all()
+            self.reset_all()
 
-        return result
+            return result
+        except Exception as e:
+            logging.error(f"Error occurred during reading data from WeatherMeter Sensor: {str(e)}", exc_info=True)
+            self.reset_all()
+
+            return {
+                "speed": None,
+                "rain": None,
+                "direction": None
+            }

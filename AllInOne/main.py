@@ -9,42 +9,53 @@ from datetime import datetime
 logging.basicConfig(filename='parsing.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 
-def read_sensor_data(sensors):
-    data = {}
+def add_data(data, sensors):
+    try:
+        for sensor, name in sensors.items():
+            res = sensor.read_data()
 
-    for sensor, name in sensors.items():
-        res = sensor.read_data()
-        if type(res) == dict:
-            data.update(res)
-        elif type(res) == int:
-            data[name] = res
-    
-    return data
-
-
-def add_data(data_all, data):
-    for key, value in data.items():
-        if key == "direction" and value is None:
-            continue
-        if key not in data_all:
-            data_all[key] = [value]
-        else:
-            data_all[key].append(value)
-    return data_all
+            if type(res) == dict:
+                for key, value in res:
+                    if key in data:
+                        data[key].append(value)
+                    else:
+                        data[key] = [value]
+            elif type(res) == int:
+                if name in data:
+                    data[name].append(res)
+                else:
+                    data[name] = [res]
+        
+        return data
+    except Exception as e:
+            logging.error(f"Error occurred during reading data: {str(e)}", exc_info=True)
 
 
-def get_averages(data, weather):
+def remove_none(lst):
+    new_lst = [elem for elem in lst if elem is not None]
+    return new_lst
+
+
+def get_averages_list(data, weather):
     result_data = {}
+
     for key, values in data.items():
-        if key == "direction":
-            result_data[key] = weather.get_direction_label(values)
+        values = remove_none(values)
+        if values:
+            if key == "direction":
+                result_data[key] = weather.get_direction_label(values)
+            else:
+                result_data[key] = round(sum(values) / len(values), 2)
         else:
-            result_data[key] = round(sum(values) / len(values), 2)
-    
-    return result_data
+            result_data[key] = None
+
+    result_lst = list(result_data.items())
+    result_lst.insert(0, datetime.now())
+
+    return result_lst
 
 
-def main(measuring_time, light_obj, tph_obj, air_quality_obj, co2_obj, weather):
+def read_data(measuring_time, light_obj, tph_obj, air_quality_obj, co2_obj, weather):
 
     try:
         logging.info("Starting data collection.")
@@ -62,14 +73,11 @@ def main(measuring_time, light_obj, tph_obj, air_quality_obj, co2_obj, weather):
         start_time = time.time()
 
         while time.time() - start_time < measuring_time:
-            data = read_sensor_data(sensors)
-            data_all = add_data(data_all, data)
+            data_all = add_data(data_all, sensors)
             
             remaining_time = measuring_time - (time.time() - start_time)
             if remaining_time <= 30:
                 time.sleep(remaining_time)
-
-        data_all["direction"] = data_all.get("direction")
 
         logging.info("Data collection completed.")
 
@@ -78,10 +86,9 @@ def main(measuring_time, light_obj, tph_obj, air_quality_obj, co2_obj, weather):
     except Exception as e:
         logging.error(f"Error occurred during execution: {str(e)}", exc_info=True)
 
-    
-
 
 if __name__ == "__main__":
+    
     light_obj = LightSensor() 
     tph_obj = TPHSensor()
     air_quality_obj = AirQualitySensor()
@@ -91,15 +98,9 @@ if __name__ == "__main__":
 
     while True:
         try:
-            data = main(900, light_obj, tph_obj, air_quality_obj, co2_obj, weather)
+            data = read_data(900, light_obj, tph_obj, air_quality_obj, co2_obj, weather)
+            data_lst = get_averages_list(data, weather)
+            db.insert_data(data_lst)
 
-            data_avg = get_averages(data, weather)
-
-            insert_data = list(data_avg.values())
-            insert_data.insert(0, datetime.now())
-
-            db.insert_data(insert_data)
-
-            logging.info("Data successfully inserted into the database.")
         except Exception as e:
             logging.error(f"Error occurred during execution: {str(e)}", exc_info=True)
