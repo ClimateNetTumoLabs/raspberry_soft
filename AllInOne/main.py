@@ -1,51 +1,52 @@
 import time
+from db import Database
 from Sensors import AirQualitySensor, CO2Sensor, LightSensor, TPHSensor
 from WeatherMeterSensors import WeatherSensors
+from datetime import datetime
 
 
-def read_sensor_data(sensor_name_map: dict) -> dict:
-    sensor_data = {}
+def read_sensor_data(sensors):
+    data = {}
 
-    for sensor, name in sensor_name_map.items():
-        result = sensor.read_data()
-        if isinstance(result, dict):
-            sensor_data.update(result)
-        elif isinstance(result, int):
-            sensor_data[name] = result
+    for sensor, name in sensors.items():
+        res = sensor.read_data()
+        if type(res) == dict:
+            data.update(res)
+        elif type(res) == int:
+            data[name] = res
+    
+    return data
 
-    return sensor_data
 
-
-def add_data(data_all: dict, sensors_data: dict) -> dict:
-    for key, value in sensors_data.items():
-        if value is None:
+def add_data(data_all, data):
+    for key, value in data.items():
+        if key == "direction" and value is None:
             continue
         if key not in data_all:
-            data_all[key] = [value, 1]
+            data_all[key] = [value]
         else:
-            data_all[key][0] += value
-            data_all[key][1] += 1
+            data_all[key].append(value)
     return data_all
 
 
-def get_averages(data_all: dict, weather_sensor: WeatherSensors) -> dict:
+def get_averages(data, weather):
     result_data = {}
-    for key, values in data_all.items():
+    for key, values in data.items():
         if key == "direction":
-            result_data[key] = weather_sensor.get_direction_label(values)
+            result_data[key] = weather.get_direction_label(values)
         else:
             result_data[key] = round(sum(values) / len(values), 2)
+    
     return result_data
 
 
-def main(light_sensor: LightSensor, tph_sensor: TPHSensor, air_quality_sensor: AirQualitySensor, co2_sensor: CO2Sensor,
-         weather_sensor: WeatherSensors) -> dict:
-    sensor_name_map = {
-        light_sensor: "Light",
-        tph_sensor: "",
-        air_quality_sensor: "",
-        co2_sensor: "CO2",
-        weather_sensor: ""
+def main(light_obj, tph_obj, air_quality_obj, co2_obj, weather):
+    sensors = {
+        light_obj: "Light",
+        tph_obj: "",
+        air_quality_obj: "",
+        co2_obj: "CO2",
+        weather: ""
     }
 
     data_all = {}
@@ -53,28 +54,35 @@ def main(light_sensor: LightSensor, tph_sensor: TPHSensor, air_quality_sensor: A
     start_time = time.time()
 
     while time.time() - start_time < 60:
-        sensor_data = read_sensor_data(sensor_name_map)
-        data_all = add_data(data_all, sensor_data)
+        data = read_sensor_data(sensors)
 
+        data_all = add_data(data_all, data)
+          
         remaining_time = 60 - (time.time() - start_time)
         if remaining_time <= 25:
             time.sleep(remaining_time)
 
     data_all["direction"] = data_all.get("direction")
 
-    return get_averages(data_all, weather_sensor)
+    return data_all
 
 
 if __name__ == "__main__":
-    light_sensor = LightSensor()
-    tph_sensor = TPHSensor()
-    air_quality_sensor = AirQualitySensor()
-    co2_sensor = CO2Sensor()
-    weather_sensor = WeatherSensors()
+    light_obj = LightSensor() 
+    tph_obj = TPHSensor()
+    air_quality_obj = AirQualitySensor()
+    co2_obj = CO2Sensor()
+    weather = WeatherSensors()
+    db = Database()
 
     while True:
-        data = main(light_sensor, tph_sensor, air_quality_sensor, co2_sensor, weather_sensor)
+        data = main(light_obj, tph_obj, air_quality_obj, co2_obj, weather)
 
-        for key, value in data.items():
-            print(f"{key}: {value}")
+        data_avg = get_averages(data, weather)
+
+        insert_data = list(data_avg.values())
+        insert_data.insert(0, datetime.now())
+
+        db.insert_data(insert_data)
+
         print("\n" + ("#" * 50) + "\n")

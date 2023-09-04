@@ -1,4 +1,7 @@
+colorzero==2.0
+gpiozero==1.6.2
 pkg_resources==0.0.0
+psycopg2-binary==2.9.7
 pyserial==3.5
 pytz==2023.3
 RPi.bme280==0.2.4
