@@ -15,12 +15,12 @@ def add_data(data, sensors):
             res = sensor.read_data()
 
             if type(res) == dict:
-                for key, value in res:
+                for key, value in res.items():
                     if key in data:
                         data[key].append(value)
                     else:
                         data[key] = [value]
-            elif type(res) == int:
+            else:
                 if name in data:
                     data[name].append(res)
                 else:
@@ -49,7 +49,7 @@ def get_averages_list(data, weather):
         else:
             result_data[key] = None
 
-    result_lst = list(result_data.items())
+    result_lst = list(result_data.values())
     result_lst.insert(0, datetime.now())
 
     return result_lst
@@ -95,10 +95,12 @@ if __name__ == "__main__":
     co2_obj = CO2Sensor()
     weather = WeatherSensors()
     db = Database()
+    db.connect_to_db()
+    db.create_table()
 
     while True:
         try:
-            data = read_data(900, light_obj, tph_obj, air_quality_obj, co2_obj, weather)
+            data = read_data(300, light_obj, tph_obj, air_quality_obj, co2_obj, weather)
             data_lst = get_averages_list(data, weather)
             db.insert_data(data_lst)
 
