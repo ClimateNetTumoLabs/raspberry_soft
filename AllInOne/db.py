@@ -29,7 +29,7 @@ class Database:
     def create_table(self):
         try:
             self.cursor.execute("""
-                CREATE TABLE IF NOT EXISTS weather_data2 (
+                CREATE TABLE IF NOT EXISTS weather_data (
                     id SERIAL PRIMARY KEY,
                     time TIMESTAMP,
                     light REAL,
@@ -67,7 +67,7 @@ class Database:
             values = ", ".join([f"'{elem}'" if elem is not None else "NULL" for elem in data])
 
             self.cursor.execute(f"""
-                INSERT INTO weather_data2 (
+                INSERT INTO weather_data (
                     time, light, temperature, pressure, humidity, PM1, PM2_5, PM10, Atmospheric_PM1, 
                     Atmospheric_PM2_5, Atmospheric_PM10, "0_3um", "0_5um", "1_0um", "2_5um", "5um", "10um", CO2, speed, rain, direction
                 )
