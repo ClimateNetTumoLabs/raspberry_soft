@@ -4,6 +4,7 @@ from db import Database
 from Sensors import AirQualitySensor, CO2Sensor, LightSensor, TPHSensor
 from WeatherMeterSensors import WeatherSensors
 from datetime import datetime
+from network_check import is_connected
 
 
 logging.basicConfig(filename='parsing.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -88,7 +89,13 @@ def read_data(measuring_time, light_obj, tph_obj, air_quality_obj, co2_obj, weat
 
 
 if __name__ == "__main__":
+    time.sleep(30)
+    while True:
+        if is_connected():
+            logging.info("Connected to Network")
+            break
     
+    measuring_time = 900
     light_obj = LightSensor() 
     tph_obj = TPHSensor()
     air_quality_obj = AirQualitySensor()
@@ -100,7 +107,7 @@ if __name__ == "__main__":
 
     while True:
         try:
-            data = read_data(300, light_obj, tph_obj, air_quality_obj, co2_obj, weather)
+            data = read_data(measuring_time, light_obj, tph_obj, air_quality_obj, co2_obj, weather)
             data_lst = get_averages_list(data, weather)
             db.insert_data(data_lst)
 
