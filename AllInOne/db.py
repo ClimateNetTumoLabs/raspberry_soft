@@ -7,6 +7,10 @@ logging.basicConfig(filename='parsing.log', level=logging.INFO, format='%(asctim
 
 
 class Database:
+    def __init__(self) -> None:
+        self.connect_to_db()
+        self.create_table()
+    
     def connect_to_db(self):
         try:
             connection = psycopg2.connect(

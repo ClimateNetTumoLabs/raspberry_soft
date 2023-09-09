@@ -24,9 +24,8 @@ class WeatherSensors:
         self.rain.reset()
         self.direction.reset()
     
-
     def get_direction_label(self, angles):
-        return self.direction.get_direction_label(angles[0] / angles[1])
+        return self.direction.get_direction_label(sum(angles) / len(angles))
 
     def read_data(self):
         try:
@@ -39,7 +38,7 @@ class WeatherSensors:
                     self.direction.add_data()
 
             result = {
-                "speed": self.speed.get_data(self.parse_interval),
+                "speed": self.speed.get_data(time.time() - start_time),
                 "rain": self.rain.get_data(),
                 "direction": self.direction.get_data()
             }
