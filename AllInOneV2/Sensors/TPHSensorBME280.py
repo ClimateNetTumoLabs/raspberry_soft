@@ -1,6 +1,6 @@
 import smbus2
 import bme280
-from ..logger_config import *
+from logger_config import *
 
 
 class TPHSensor:

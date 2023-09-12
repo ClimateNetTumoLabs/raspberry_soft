@@ -1,6 +1,6 @@
 import smbus2
 import time
-from ..logger_config import *
+from logger_config import *
 
 
 class LightSensor:

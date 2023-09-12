@@ -1,5 +1,5 @@
 from .PMS5003_library import PMS5003
-from ..logger_config import *
+from logger_config import *
 
 
 class AirQualitySensor:

@@ -3,7 +3,7 @@ import time
 import math
 import os
 from gpiozero import MCP3008
-from ..logger_config import *
+from logger_config import *
 
 
 class WindDirection:

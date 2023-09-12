@@ -10,7 +10,7 @@ logging.basicConfig(filename='parsing.log', level=logging.INFO,
 
 
 class ReadSensor:
-    def __init__(self, measuring_time=9000, max_reading_time=30):
+    def __init__(self, measuring_time=300, max_reading_time=30):
         self.air_quality_sensor = AirQualitySensor()
         self.co2_sensor = CO2Sensor()
         self.light_sensor = LightSensor()
@@ -29,8 +29,8 @@ class ReadSensor:
         self.MEASURING_TIME = measuring_time
         self.MAX_READING_TIME = max_reading_time
 
-        self.wind_speed_sensor.when_pressed = self.wind_speed_sensor.press
-        self.rain_sensor.when_pressed = self.rain_sensor.press
+        self.wind_speed_sensor.sensor.when_pressed = self.wind_speed_sensor.press
+        self.rain_sensor.sensor.when_pressed = self.rain_sensor.press
 
         self.old_speed_count = self.rain_sensor.count
 
@@ -62,7 +62,7 @@ class ReadSensor:
         result_data = {}
 
         for key, values in data.items():
-            values = list(filter(None, values))
+            values = [value for value in values if value is not None]
 
             if not values:
                 result_data[key] = None
