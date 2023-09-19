@@ -10,8 +10,7 @@ class Rain:
     def press(self):
         self.count += 1
     
-    def get_data(self, interval):
-        return round(((self.count * self.bucket_size) / interval) * 3600, 2)
-    
-    def reset(self):
+    def read_data(self):
+        result = self.count * self.bucket_size
         self.count = 0
+        return result

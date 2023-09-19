@@ -1,10 +1,6 @@
 import smbus2
 import bme280
-import logging
-from time import sleep
-
-
-logging.basicConfig(filename='parsing.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+from logger_config import *
 
 
 class TPHSensor:
@@ -14,7 +10,6 @@ class TPHSensor:
         self.bus = smbus2.SMBus(self.port)
         self.calibration_params = bme280.load_calibration_params(self.bus, self.address)
 
-    
     def read_data(self):
         for i in range(3):
             try:

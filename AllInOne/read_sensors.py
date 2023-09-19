@@ -10,21 +10,34 @@ logging.basicConfig(filename='parsing.log', level=logging.INFO,
 
 
 class ReadSensor:
-    def __init__(self, measuring_time=300, max_reading_time=30):
-        self.air_quality_sensor = AirQualitySensor()
-        self.co2_sensor = CO2Sensor()
-        self.light_sensor = LightSensor()
-        self.tph_sensor = TPHSensor()
+    def __init__(self, measuring_time=100, max_reading_time=30):
+        sensors = {
+            LightSensor: {
+                "variable_name": "light_sensor",
+                "name": "Light"
+            },
+            TPHSensor: {
+                "variable_name": "tph_sensor",
+                "name": "TPH"
+            },
+            AirQualitySensor: {
+                "variable_name": "air_quality_sensor",
+                "name": "AirQuality"
+            },
+            CO2Sensor: {
+                "variable_name": "co2_sensor",
+                "name": "CO2"
+            }
+        }
+
         self.wind_direction_sensor = WindDirection()
         self.wind_speed_sensor = WindSpeed()
         self.rain_sensor = Rain()
+        self.sensor_name_mapping = {}
 
-        self.sensor_name_mapping = {
-            self.light_sensor: "Light",
-            self.tph_sensor: "TPH",
-            self.air_quality_sensor: "AirQuality",
-            self.co2_sensor: "CO2"
-        }
+        for sensor, names in sensors.items():
+            setattr(self, names["variable_name"], sensor())
+            self.sensor_name_mapping[self.__dict__[names["variable_name"]]] = names["name"]
 
         self.MEASURING_TIME = measuring_time
         self.MAX_READING_TIME = max_reading_time
@@ -102,6 +115,10 @@ class ReadSensor:
     def get_averages_list(self, data):
         averages_data = self.__calculate_averages(data)
 
-        result_lst = [datetime.now()] + list(averages_data.values())
+        for key, value in averages_data.items():
+            print(f"{key}  ->  {value}")
+        print("\n" + ("#" * 50) + "\n")
+
+        result_lst = [datetime.now().isoformat()] + list(averages_data.values())
 
         return result_lst

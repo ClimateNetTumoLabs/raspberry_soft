@@ -3,10 +3,11 @@ import time
 import math
 import os
 from gpiozero import MCP3008
+from logger_config import *
 
 
-class WindDirection():
-    def __init__(self, adc_channel=0, config_file="directions_config.json", adc_max=1024, adc_vref=5.12, wind_interval=5):
+class WindDirection:
+    def __init__(self, adc_channel=0, config_file="directions_config.json", adc_max=1024, adc_vref=5.12, wind_interval=3):
         self.adc_channel = adc_channel
         self.config_file = config_file
         self.adc_max = adc_max
@@ -20,8 +21,6 @@ class WindDirection():
 
         self.calculate_vout_adc()
         self.calculate_max_min_adc()
-
-        self.data = []
 
     def calculate_vout_adc(self):
         vin = self.config["vin"]
@@ -96,24 +95,18 @@ class WindDirection():
 
         return 0.0 if average == 360 else average
 
-    def get_data(self):
-        if not self.data:
+    def read_data(self):
+        try:
+            start_time = time.time()
+            data = []
+
+            while time.time() - start_time <= self.wind_interval:
+                adc_value = self.adc.value * 1000
+                direction = self.get_dir(adc_value)
+                if direction is not None:
+                    data.append(direction)
+
+            return self.get_average(data)
+        except Exception as e:
+            logging.error(f"Error occurred during reading data from TPH sensor: {str(e)}", exc_info=True)
             return None
-        
-        angle = sum(self.data) / len(self.data)
-        return angle
-    
-    def add_data(self):
-        start_time = time.time()
-        data = []
-
-        while time.time() - start_time <= self.wind_interval:
-            adc_value = self.adc.value * 1000
-            direction = self.get_dir(adc_value)
-            if direction is not None:
-                data.append(direction)
-
-        self.data.append(self.get_average(data))
-    
-    def reset(self):
-        self.data.clear()

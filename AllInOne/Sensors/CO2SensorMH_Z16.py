@@ -1,12 +1,9 @@
 import smbus2
 import time
-import logging
+from logger_config import *
 
 
-logging.basicConfig(filename='parsing.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-
-
-class CO2Sensor():
+class CO2Sensor:
     cmd_measure = [0xFF, 0x01, 0x9C, 0x00, 0x00, 0x00, 0x00, 0x00, 0x63]
     ppm = 0
 
