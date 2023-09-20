@@ -25,6 +25,8 @@ def is_connected():
 
 
 def check_network():
+    time.sleep(30)
+    
     retry_delay = 30
     max_retries = 3
     retry_count = 0

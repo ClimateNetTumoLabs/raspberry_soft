@@ -1,9 +1,9 @@
 colorzero==2.0
 gpiozero==1.6.2
+paho-mqtt==1.6.1
 pkg_resources==0.0.0
-psycopg2-binary==2.9.7
 pyserial==3.5
-pytz==2023.3
+pytz==2023.3.post1
 RPi.bme280==0.2.4
 RPi.GPIO==0.7.1
-smbus2==0.4.2
+smbus2==0.4.3
