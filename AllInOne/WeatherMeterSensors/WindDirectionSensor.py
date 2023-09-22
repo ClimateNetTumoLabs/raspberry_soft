@@ -106,7 +106,7 @@ class WindDirection:
                 if direction is not None:
                     data.append(direction)
 
-            return self.get_average(data)
+            return self.get_direction_label(self.get_average(data))
         except Exception as e:
-            logging.error(f"Error occurred during reading data from TPH sensor: {str(e)}", exc_info=True)
+            logging.error(f"Error occurred during reading data from WeatherDirection sensor: {str(e)}", exc_info=True)
             return None

@@ -9,6 +9,9 @@ class WindSpeed:
     
     def press(self):
         self.count += 1
+
+    def clear_data(self):
+        self.count = 0
     
     def read_data(self, interval):
         result = round((self.count / interval) * self.turn_distance, 2)

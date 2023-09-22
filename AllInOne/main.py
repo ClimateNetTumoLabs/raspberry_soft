@@ -17,8 +17,6 @@ if __name__ == "__main__":
         try:
             data = sensor_reader.collect_data()
             logging.info(f"{data}")
-            average_lst = sensor_reader.get_averages_list(data)
-            logging.info(f"{average_lst}")
             # mqtt_client.send_data("device1", average_lst)
         except Exception as e:
             logging.error(f"Error occurred during execution: {str(e)}", exc_info=True)

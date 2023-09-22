@@ -10,6 +10,9 @@ class Rain:
     def press(self):
         self.count += 1
     
+    def clear_data(self):
+        self.count = 0
+    
     def read_data(self):
         result = self.count * self.bucket_size
         self.count = 0

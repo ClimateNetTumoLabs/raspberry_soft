@@ -10,7 +10,7 @@ logging.basicConfig(filename='parsing.log', level=logging.INFO,
 
 
 class ReadSensor:
-    def __init__(self, measuring_time=100, max_reading_time=30):
+    def __init__(self, measuring_time=60, max_reading_time=30):
         sensors = {
             LightSensor: {
                 "variable_name": "light_sensor",
@@ -33,8 +33,8 @@ class ReadSensor:
         self.wind_direction_sensor = WindDirection()
         self.wind_speed_sensor = WindSpeed()
         self.rain_sensor = Rain()
-        self.sensor_name_mapping = {}
 
+        self.sensor_name_mapping = {}
         for sensor, names in sensors.items():
             setattr(self, names["variable_name"], sensor())
             self.sensor_name_mapping[self.__dict__[names["variable_name"]]] = names["name"]
@@ -45,80 +45,53 @@ class ReadSensor:
         self.wind_speed_sensor.sensor.when_pressed = self.wind_speed_sensor.press
         self.rain_sensor.sensor.when_pressed = self.rain_sensor.press
 
-        self.old_speed_count = self.rain_sensor.count
+    def __get_data(self):
+        time.sleep(self.MEASURING_TIME - self.MAX_READING_TIME)
 
-    def __add_data(self, data):
-        time.sleep(20)
-
-        if self.old_speed_count != self.rain_sensor.count:
-            self.old_speed_count = self.rain_sensor.count
-            direction = self.wind_direction_sensor.read_data()
-        else:
-            direction = None
+        data = {}
 
         for sensor, name in self.sensor_name_mapping.items():
             res = sensor.read_data()
 
             if isinstance(res, dict):
-                for key, value in res.items():
-                    data.setdefault(key, []).append(value)
+                 data.update(res)
             else:
-                data.setdefault(name, []).append(res)
+                data[name] = res
 
-        data.setdefault("speed", [])
-        data.setdefault("rain", [])
-        data.setdefault("direction", []).append(direction)
+        data["speed"] = 0.0
+        data["rain"] = 0.0
+        data["direction"] = None
 
         return data
 
-    def __calculate_averages(self, data):
-        result_data = {}
-
-        for key, values in data.items():
-            values = [value for value in values if value is not None]
-
-            if not values:
-                result_data[key] = None
-                continue
-
-            if key == "direction":
-                result_data[key] = self.wind_direction_sensor.get_direction_label(sum(values) / len(values))
-            else:
-                result_data[key] = round(sum(values) / len(values), 2)
-
-        return result_data
-
     def collect_data(self):
         try:
+            self.wind_speed_sensor.clear_data()
+            self.rain_sensor.clear_data()
+
             logging.info("Starting data collection.")
-
-            collected_data = {}
-
             start_time = time.time()
-            while time.time() - start_time < self.MEASURING_TIME:
-                collected_data = self.__add_data(collected_data)
 
-                remaining_time = self.MEASURING_TIME - (time.time() - start_time)
-                if remaining_time <= self.MAX_READING_TIME:
-                    time.sleep(remaining_time)
+            collected_data = self.__get_data()
+            
+            if self.wind_speed_sensor.count != 0:
+                collected_data["direction"] = self.wind_direction_sensor.read_data()
 
-            collected_data["speed"].append(self.wind_speed_sensor.read_data(time.time() - start_time))
-            collected_data["rain"].append(self.rain_sensor.read_data())
+            remaining_time = self.MEASURING_TIME - (time.time() - start_time)
+            time.sleep(remaining_time)
+
+            collected_data["speed"] = self.wind_speed_sensor.read_data(time.time() - start_time)
+            collected_data["rain"] = self.rain_sensor.read_data()
 
             logging.info("Data collection completed.")
+
+            for key, value in collected_data.items():
+                print(f"{key}  ->  {value}")
+
+            print("\n" + ("#" * 50) + "\n")
 
             return collected_data
 
         except Exception as e:
             logging.error(f"Error occurred during execution: {str(e)}", exc_info=True)
 
-    def get_averages_list(self, data):
-        averages_data = self.__calculate_averages(data)
-
-        for key, value in averages_data.items():
-            print(f"{key}  ->  {value}")
-        print("\n" + ("#" * 50) + "\n")
-
-        result_lst = [datetime.now().isoformat()] + list(averages_data.values())
-
-        return result_lst

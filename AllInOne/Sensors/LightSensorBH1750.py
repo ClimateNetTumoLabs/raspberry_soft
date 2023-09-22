@@ -61,7 +61,7 @@ class LightSensor:
                 self.reset()
                 self._set_mode(self.ONE_TIME_HIGH_RES_MODE_2)
                 self.wait_for_result(additional=additional_delay)
-                return self.get_result()
+                return round(self.get_result(), 2)
             except Exception as e:
                 logging.error(f"Error occurred during reading data from Light sensor: {str(e)}", exc_info=True)
                 if i == 2:

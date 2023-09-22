@@ -1,9 +1,7 @@
 import subprocess
 import time
 import logging
-
-
-logging.basicConfig(filename='parsing.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+from logger_config import *
 
 
 def get_network_interface():
@@ -25,7 +23,7 @@ def is_connected():
 
 
 def check_network():
-    time.sleep(30)
+    # time.sleep(30)
     
     retry_delay = 30
     max_retries = 3
