@@ -1,12 +1,7 @@
 import time
-import logging
-from datetime import datetime
 from WeatherMeterSensors import Rain, WindDirection, WindSpeed
 from Sensors import AirQualitySensor, CO2Sensor, LightSensor, TPHSensor
-
-
-logging.basicConfig(filename='parsing.log', level=logging.INFO,
-                    format='%(asctime)s - %(levelname)s - %(message)s')
+from logger_config import *
 
 
 class ReadSensor:

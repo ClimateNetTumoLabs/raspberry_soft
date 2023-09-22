@@ -1,10 +1,7 @@
-import logging
 from read_sensors import ReadSensor
 from network_check import check_network
 from MQTT_Sender import MQTTClient
-
-logging.basicConfig(filename='parsing.log', level=logging.INFO, 
-                    format='%(asctime)s - %(levelname)s - %(message)s')
+from logger_config import *
 
 
 if __name__ == "__main__":
