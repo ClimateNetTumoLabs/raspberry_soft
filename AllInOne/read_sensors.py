@@ -5,7 +5,7 @@ from logger_config import *
 
 
 class ReadSensor:
-    def __init__(self, measuring_time=60, max_reading_time=30):
+    def __init__(self, measuring_time=900, max_reading_time=30):
         sensors = {
             LightSensor: {
                 "variable_name": "light_sensor",
@@ -71,11 +71,6 @@ class ReadSensor:
             collected_data["speed"] = self.wind_speed_sensor.read_data(time.time() - start_time)
             collected_data["rain"] = self.rain_sensor.read_data()
             logging.info("Data collection completed.")
-
-            for key, value in collected_data.items():
-                print(f"{key}  ->  {value}")
-
-            print("\n" + ("#" * 50) + "\n")
 
             return collected_data
 
