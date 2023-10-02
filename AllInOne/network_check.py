@@ -23,8 +23,6 @@ def is_connected():
 
 
 def check_network():
-    time.sleep(30)
-    
     retry_delay = 30
     max_retries = 3
     retry_count = 0
@@ -32,7 +30,7 @@ def check_network():
     while retry_count < max_retries:
         if is_connected():
             logging.info("Connected to Network")
-            break
+            return True
         else:
             logging.warning("Network connection lost. Retrying in {} seconds...".format(retry_delay))
             time.sleep(retry_delay)
@@ -40,4 +38,4 @@ def check_network():
 
     if retry_count == max_retries:
         logging.error("Failed to establish network connection after {} retries.".format(max_retries))
-        raise
+        return False

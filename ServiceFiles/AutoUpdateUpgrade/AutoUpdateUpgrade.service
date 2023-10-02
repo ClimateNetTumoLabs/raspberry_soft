@@ -1,9 +1,0 @@
-[Unit]
-Description=System Update & Upgrade
-After=network.target
-
-[Service]
-ExecStart=/bin/bash -c "/usr/bin/apt update && /usr/bin/apt upgrade -y > /home/username/Desktop/update.log 2>&1"
-
-[Install]
-WantedBy=default.target

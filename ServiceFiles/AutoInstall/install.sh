@@ -9,7 +9,7 @@ else
     exit 1  # Exit the script with an error
 fi
 
-username=$USER
+username="raspberry"
 script_dir="/home/$username/scripts/"
 service_dir="/etc/systemd/system/"
 inet_files=0
@@ -34,17 +34,13 @@ if [ ! -f "$service_dir/InetCheckConnect.service" ]; then
     # Check if the script_dir exists and create if it doesn't
     if [ ! -d "$script_dir" ]; then
         mkdir -p "$script_dir"
-    else
-        # Check if InetCheckConnect.py exists in script_dir and set inet_files to 1
-        if [ -f "$script_dir/InetCheckConnect.py" ]; then
-            inet_files=1
-        fi
     fi
+    mv InetCheckConnect.py "$script_dir"
 
     # Move InetCheckConnect.py to script_dir if inet_files is 0
     if [ "$inet_files" -eq 0 ]; then
         sed -i "s/username/$username/g" InetCheckConnect.service
-        mv InetCheckConnect.py "$script_dir"
+        mv InetCheckConnect.service "$service_dir"
         sudo systemctl start NetworkManager
         sudo systemctl enable NetworkManager
         sudo systemctl daemon-reload
