@@ -17,11 +17,14 @@ class MQTTClient:
         self.client.loop_start()
     
     def send_data(self, device, data):
+        print("^" * 50)
+        print(data)
         message = {
             "device": device,
             "data": data
         }
 
         message_json = json.dumps(message)
-
+        print(message_json)
+        print("^" * 50)
         self.client.publish("raspberry/devices", message_json)

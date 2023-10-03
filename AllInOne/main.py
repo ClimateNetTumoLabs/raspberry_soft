@@ -15,8 +15,6 @@ def main():
     mqtt_client = MQTTClient()
     local_db = LocalDatabase()
 
-    timezone = pytz.timezone('Asia/Yerevan')
-
     local = False
 
     while True:
@@ -29,17 +27,20 @@ def main():
             
             print("\n" + ("#" * 50) + "\n")
             
-            insert_data = tuple([datetime.now(tz=timezone).isoformat()] + list(data.values()))
-            print(insert_data)
+            insert_data = tuple([datetime.now().isoformat()] + list(data.values()))
 
             if check_network():
                 if local:
                     local_data = local_db.get_data("device4")
-                    mqtt_client.send_data("device4", local_data.append(insert_data))
-                    local_db.drop_table()
+                    local_data.append(insert_data)
+
+                    mqtt_client.send_data("device4", local_data)
+                    local_db.drop_table("device4")
+                    local = False
                 else:
                     mqtt_client.send_data("device4", [insert_data])
             else:
+                local = True
                 local_db.insert_data("device4", insert_data)
                 
 

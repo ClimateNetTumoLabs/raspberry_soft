@@ -32,6 +32,7 @@ def check_network():
             logging.info("Connected to Network")
             return True
         else:
+            return False
             logging.warning("Network connection lost. Retrying in {} seconds...".format(retry_delay))
             time.sleep(retry_delay)
             retry_count += 1

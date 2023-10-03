@@ -63,9 +63,10 @@ class LocalDatabase:
             raise
     
     def get_data(self, device):
-        self.cursor.execute(f"SELECT (time, light, temperature, pressure, humidity, PM1, PM2_5, PM10, CO2, speed, rain, direction) FROM {device};")
-
+        self.cursor.execute(f"SELECT time, light, temperature, pressure, humidity, PM1, PM2_5, PM10, CO2, speed, rain, direction FROM {device};")
+        
         result = self.cursor.fetchall()
+        result = [(row[0].isoformat(), *row[1:]) for row in result]
 
         return result
 
