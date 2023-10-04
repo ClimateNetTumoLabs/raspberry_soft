@@ -40,7 +40,6 @@ class LocalDatabase:
                     PM1 REAL,
                     PM2_5 REAL,
                     PM10 REAL,
-                    CO2 REAL,
                     speed REAL,
                     rain REAL,
                     direction TEXT
@@ -63,7 +62,7 @@ class LocalDatabase:
             raise
     
     def get_data(self, device):
-        self.cursor.execute(f"SELECT time, light, temperature, pressure, humidity, PM1, PM2_5, PM10, CO2, speed, rain, direction FROM {device};")
+        self.cursor.execute(f"SELECT time, light, temperature, pressure, humidity, PM1, PM2_5, PM10, speed, rain, direction FROM {device};")
         
         result = self.cursor.fetchall()
         result = [(row[0].isoformat(), *row[1:]) for row in result]
@@ -75,7 +74,7 @@ class LocalDatabase:
             self.create_table(device)
             
             query_data = ', '.join([f"'{elem}'" if elem is not None else "NULL" for elem in data])
-            self.cursor.execute(f"INSERT INTO {device} (time, light, temperature, pressure, humidity, PM1, PM2_5, PM10, CO2, speed, rain, direction) VALUES ({query_data})")
+            self.cursor.execute(f"INSERT INTO {device} (time, light, temperature, pressure, humidity, PM1, PM2_5, PM10, speed, rain, direction) VALUES ({query_data})")
             self.conn.commit()
 
             logging.info("Successfully inserted data into the database")

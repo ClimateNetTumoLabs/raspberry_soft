@@ -1,6 +1,6 @@
 import time
 from WeatherMeterSensors import Rain, WindDirection, WindSpeed
-from Sensors import AirQualitySensor, CO2Sensor, LightSensor, TPHSensor
+from Sensors import AirQualitySensor, LightSensor, TPHSensor
 from logger_config import *
 
 
@@ -18,10 +18,6 @@ class ReadSensor:
             AirQualitySensor: {
                 "variable_name": "air_quality_sensor",
                 "name": "AirQuality"
-            },
-            CO2Sensor: {
-                "variable_name": "co2_sensor",
-                "name": "CO2"
             }
         }
 
