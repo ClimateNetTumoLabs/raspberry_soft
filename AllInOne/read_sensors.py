@@ -1,6 +1,6 @@
 import time
-from WeatherMeterSensors import Rain, WindDirection, WindSpeed
-from Sensors import AirQualitySensor, LightSensor, TPHSensor
+from WeatherMeterSensors import *
+from Sensors import *
 from logger_config import *
 
 

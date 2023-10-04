@@ -5,7 +5,7 @@ import paho.mqtt.client as mqtt
 
 
 class MQTTClient:
-    def __init__(self) -> None:
+    def __init__(self, deviceID) -> None:
         self.client = mqtt.Client()
         self.client.tls_set(ca_certs=os.path.join(os.path.dirname(__file__), 'rootCA.pem'),
                             certfile=os.path.join(os.path.dirname(__file__), 'certificate.pem.crt'), 
@@ -15,16 +15,14 @@ class MQTTClient:
         self.client.connect("a3b2v7yks3ewbi-ats.iot.us-east-1.amazonaws.com", 8883, 60)
 
         self.client.loop_start()
+
+        self.deviceID = deviceID
     
-    def send_data(self, device, data):
-        print("^" * 50)
-        print(data)
+    def send_data(self, data):
         message = {
-            "device": device,
+            "device": self.deviceID,
             "data": data
         }
 
         message_json = json.dumps(message)
-        print(message_json)
-        print("^" * 50)
         self.client.publish("raspberry/devices", message_json)
