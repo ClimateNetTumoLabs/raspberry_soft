@@ -25,4 +25,5 @@ class MQTTClient:
         }
 
         message_json = json.dumps(message)
+        print(message_json)
         self.client.publish("raspberry/devices", message_json)

@@ -51,7 +51,7 @@ class LocalDatabase:
 
             logging.info(f"Successfully created table {self.deviceID}")
         except Exception as e:
-            logging.error(f"Error occurred during creating table weather_data: {str(e)}", exc_info=True)
+            logging.error(f"Error occurred during creating table {self.deviceID}: {str(e)}", exc_info=True)
             raise
 
     def drop_table(self):
@@ -59,7 +59,7 @@ class LocalDatabase:
             self.cursor.execute(f"DROP TABLE {self.deviceID}")
             self.conn.commit()
         except Exception as e:
-            logging.error(f"Error occurred during creating table weather_data: {str(e)}", exc_info=True)
+            logging.error(f"Error occurred during dropping table {self.deviceID}: {str(e)}", exc_info=True)
             raise
     
     def get_data(self):

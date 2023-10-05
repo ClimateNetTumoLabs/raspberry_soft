@@ -25,6 +25,8 @@ if [ ! -f "$service_dir/AutoUpdateUpgrade.service" ]; then
     sudo systemctl daemon-reload
     sudo systemctl enable AutoUpdateUpgrade.service
     sudo systemctl start AutoUpdateUpgrade.service
+
+    echo "Created and started AutoUpdateUpgrade service file."
 else
     echo "The file AutoUpdateUpgrade.service already exists in $service_dir."
 fi
@@ -37,6 +39,8 @@ if [ ! -f "$service_dir/InetCheckConnect.service" ]; then
     fi
     mv InetCheckConnect.py "$script_dir"
 
+    echo "Moved InetCheckConnect.py to $script_dir"
+
     # Move InetCheckConnect.py to script_dir if inet_files is 0
     if [ "$inet_files" -eq 0 ]; then
         sed -i "s/username/$username/g" InetCheckConnect.service
@@ -46,6 +50,8 @@ if [ ! -f "$service_dir/InetCheckConnect.service" ]; then
         sudo systemctl daemon-reload
         sudo systemctl enable InetCheckConnect.service
         sudo systemctl start InetCheckConnect.service
+
+        echo "Created and started InetCheckConnect service file."
     else
         echo "The file InetCheckConnect.py already exists in $script_dir."
     fi
