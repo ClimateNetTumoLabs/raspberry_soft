@@ -22,7 +22,7 @@ class MQTTClient:
     
     def send_data(self, data):
         if not self.client.is_connected():
-            logging.info("Reconnecting to MQTT Broker")
+            logging.info("Reconnecting to MQTT Broker...")
             self.client.reconnect()
             
             is_connected = False
@@ -45,7 +45,6 @@ class MQTTClient:
         }
 
         message_json = json.dumps(message)
-        logging.info(message_json)
         self.client.publish("raspberry/devices", message_json)
         
         return True

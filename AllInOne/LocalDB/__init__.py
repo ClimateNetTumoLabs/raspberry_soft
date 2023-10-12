@@ -21,9 +21,6 @@ class LocalDatabase:
             cursor = connection.cursor()
 
             self.conn, self.cursor = connection, cursor
-
-            logging.info("Successfully connected to db")
-
         except Exception as e:
             logging.error(f"Error occurred during connection to db: {str(e)}", exc_info=True)
             raise
@@ -48,8 +45,6 @@ class LocalDatabase:
                 """)
 
             self.conn.commit()
-
-            logging.info(f"Successfully created table {self.deviceID}")
         except Exception as e:
             logging.error(f"Error occurred during creating table {self.deviceID}: {str(e)}", exc_info=True)
             raise
@@ -64,7 +59,7 @@ class LocalDatabase:
     
     def get_data(self):
         self.cursor.execute(f"SELECT time, light, temperature, pressure, humidity, PM1, PM2_5, PM10, speed, rain, direction FROM {self.deviceID};")
-        
+
         result = self.cursor.fetchall()
         result = [(row[0].isoformat(), *row[1:]) for row in result]
 
@@ -73,12 +68,9 @@ class LocalDatabase:
     def insert_data(self, data):
         try:
             self.create_table()
-            
             query_data = ', '.join([f"'{elem}'" if elem is not None else "NULL" for elem in data])
             self.cursor.execute(f"INSERT INTO {self.deviceID} (time, light, temperature, pressure, humidity, PM1, PM2_5, PM10, speed, rain, direction) VALUES ({query_data})")
             self.conn.commit()
-
-            logging.info("Successfully inserted data into the database")
         except Exception as e:
-            logging.error(f"Error occurred during creating table weather_data: {str(e)}", exc_info=True)
+            logging.error(f"Error occurred during inserting data to Local DB: {str(e)}", exc_info=True)
             raise
