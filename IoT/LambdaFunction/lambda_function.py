@@ -1,17 +1,24 @@
-import json
-import paho.mqtt.client as mqtt
-import ssl
 import psycopg2
 from config import host, user, password, db_name
 
 
-def connect_to_db():
-    create_table_query = """
-        CREATE TABLE IF NOT EXISTS messages (
-            device TEXT,
-            message TEXT
+def connect_to_db(device_id):
+    create_table_query = f"""
+        CREATE TABLE IF NOT EXISTS {device_id} (
+            id SERIAL PRIMARY KEY,
+            time TIMESTAMP,
+            light REAL,
+            temperature REAL,
+            pressure REAL,
+            humidity REAL,
+            PM1 REAL,
+            PM2_5 REAL,
+            PM10 REAL,
+            speed REAL,
+            rain REAL,
+            direction TEXT
         );
-    """
+        """
     
     try:
         connection = psycopg2.connect(
@@ -36,15 +43,18 @@ def connect_to_db():
 
 def add_message(info, connection, cursor):
     device = info['device']
-    mssg = info['message']
+
+    for data in info['data']:
+        insert_data = ', '.join([f"'{elem}'" if elem is not None else "NULL" for elem in data])
+        cursor.execute(f"INSERT INTO {device} (time, light, temperature, pressure, humidity, PM1, PM2_5, PM10, speed, rain, direction) VALUES ({insert_data})")
     
-    cursor.execute(f"INSERT INTO messages (device, message) VALUES ('{device}', '{mssg}')")
     connection.commit()
 
 
 def lambda_handler(event, context):
-    conn, cursor = connect_to_db()
+    conn, cursor = connect_to_db(event["device"])
     
     add_message(event, conn, cursor)
     
+    conn.close()
     return True
