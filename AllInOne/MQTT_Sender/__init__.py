@@ -1,7 +1,9 @@
 import json
 import ssl
 import os
+import time
 import paho.mqtt.client as mqtt
+from logger_config import *
 
 
 class MQTTClient:
@@ -19,11 +21,31 @@ class MQTTClient:
         self.deviceID = deviceID
     
     def send_data(self, data):
+        if not self.client.is_connected():
+            logging.info("Reconnecting to MQTT Broker")
+            self.client.reconnect()
+            
+            is_connected = False
+
+            t = time.time()
+            while time.time() - t <= 15:
+                if self.client.is_connected():
+                    is_connected = True
+                    logging.info("Connected to MQTT Broker")
+                    break
+                time.sleep(1)
+
+            if not is_connected:
+                logging.error("Failed to connect to MQTT Broker")
+                return False
+        
         message = {
             "device": self.deviceID,
             "data": data
         }
 
         message_json = json.dumps(message)
-        print(message_json)
+        logging.info(message_json)
         self.client.publish("raspberry/devices", message_json)
+        
+        return True

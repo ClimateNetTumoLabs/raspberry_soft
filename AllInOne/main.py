@@ -30,14 +30,20 @@ def main(deviceID):
                     logging.info("Send local & current data to RDS")
                     local_data = local_db.get_data()
                     local_data.append(insert_data)
-                    local_db.drop_table()
                     print(local_data)
-                    mqtt_client.send_data(local_data)
-                    local = False
+                    mqtt_res = mqtt_client.send_data(local_data)
+
+                    if mqtt_res:
+                        local_db.drop_table()
+                        local = False
+                    else:
+                        local_db.insert_data(insert_data)
+                        logging.info("Send current data to local DB")
                 else:
                     logging.info("Send current data to RDS")
                     mqtt_client.send_data([insert_data])
             else:
+                print("OK")
                 local = True
                 local_db.insert_data(insert_data)
                 logging.info("Send current data to local DB")
