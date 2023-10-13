@@ -1,4 +1,5 @@
 import smbus2
+import time
 from logger_config import *
 
 class LightSensor:
@@ -79,6 +80,8 @@ class LightSensor:
         Returns:
             None
         """
+        self.mode = mode
+        self.bus.write_byte(self.addr, self.mode)
 
     def power_down(self):
         """
@@ -89,6 +92,7 @@ class LightSensor:
         Returns:
             None
         """
+        self._set_mode(self.POWER_DOWN)
 
     def power_on(self):
         """
@@ -99,6 +103,7 @@ class LightSensor:
         Returns:
             None
         """
+        self._set_mode(self.POWER_ON)
 
     def reset(self):
         """
@@ -109,6 +114,8 @@ class LightSensor:
         Returns:
             None
         """
+        self.power_on()
+        self._set_mode(self.RESET)
 
     def oneshot_high_res2(self):
         """
@@ -119,6 +126,7 @@ class LightSensor:
         Returns:
             None
         """
+        self._set_mode(self.ONE_TIME_HIGH_RES_MODE_2)
 
     def set_sensitivity(self, sensitivity=150):
         """
@@ -132,6 +140,16 @@ class LightSensor:
         Returns:
             None
         """
+        if sensitivity < 31:
+            self.mtreg = 31
+        elif sensitivity > 254:
+            self.mtreg = 254
+        else:
+            self.mtreg = sensitivity
+        self.power_on()
+        self._set_mode(0x40 | (self.mtreg >> 5))
+        self._set_mode(0x60 | (self.mtreg & 0x1f))
+        self.power_down()
 
     def get_result(self):
         """
@@ -143,6 +161,11 @@ class LightSensor:
             float: The measured light intensity.
 
         """
+        data = self.bus.read_word_data(self.addr, self.mode)
+        count = data >> 8 | (data & 0xff) << 8
+        mode2coeff = 2 if (self.mode & 0x03) == 0x01 else 1
+        ratio = 1 / (1.2 * (self.mtreg / 69.0) * mode2coeff)
+        return ratio * count
 
     def wait_for_result(self, additional=0):
         """
@@ -156,6 +179,8 @@ class LightSensor:
         Returns:
             None
         """
+        basetime = 0.018 if (self.mode & 0x03) == 0x03 else 0.128
+        time.sleep(basetime * (self.mtreg / 69.0) + additional)
 
     def read_data(self, additional_delay=0):
         """
@@ -170,3 +195,13 @@ class LightSensor:
         Returns:
             float or None: The measured light intensity, or None in case of an error.
         """
+        for i in range(3):
+            try:
+                self.reset()
+                self._set_mode(self.ONE_TIME_HIGH_RES_MODE_2)
+                self.wait_for_result(additional=additional_delay)
+                return round(self.get_result(), 2)
+            except Exception as e:
+                logging.error(f"Error occurred during reading data from Light sensor: {str(e)}", exc_info=True)
+                if i == 2:
+                    return None
