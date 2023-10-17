@@ -20,7 +20,6 @@ def get_network_interface():
     """
     result = subprocess.run("route | grep '^default' | grep -o '[^ ]*$'", shell=True, capture_output=True, text=True)
     output = result.stdout
-    
     lines = output.split('\n')
     
     return lines[0] if lines[0] else False
