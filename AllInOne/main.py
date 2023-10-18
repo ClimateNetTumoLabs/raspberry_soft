@@ -1,56 +1,14 @@
 import time
-import sys
-import math
-import subprocess
 from datetime import datetime
 from read_sensors import ReadSensor
 from network_check import check_network
 from MQTT_Sender import MQTTClient
 from LocalDB import LocalDatabase
 from logger_config import *
+from scripts import update_time_from_ntp, split_data, chmod_tty
 
 
 DEVICE_ID = 5
-
-
-def chmod_tty():
-    command = 'sudo chmod 777 /dev/ttyS0'
-
-    try:
-        result = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-
-        if result.returncode == 0:
-            logging.info(f"Successfully changed mode for /dev/ttyS0")
-        else:
-            logging.error(f"Error while changing mode for /dev/ttyS0: {result.stderr}")
-    except Exception as e:
-        logging.error(f"Error while changing mode for /dev/ttyS0 {str(e)}")
-        raise
-
-
-def get_quantity(data_lst):
-    size_in_bytes = sys.getsizeof(data_lst)
-    size = 256 * 1024 * 1024
-
-    return math.ceil(size_in_bytes / size)
-
-
-def split_data(data_lst):
-    quantity = get_quantity(data_lst)
-    avg = len(data_lst) // quantity
-    remainder = len(data_lst) % quantity
-    
-    result = []
-    start = 0
-    for i in range(quantity):
-        if i < remainder:
-            end = start + avg + 1
-        else:
-            end = start + avg
-        result.append(data_lst[start:end])
-        start = end
-
-    return result
 
 
 def main(deviceID):
@@ -116,7 +74,6 @@ def main(deviceID):
 
 if __name__ == "__main__":
     logging.info("Program started")
-    time.sleep(30)
-    #TODO: Change tine.sleep function to normal function that can check internet and request real time
+    update_time_from_ntp()
     chmod_tty()
     main(f"device{DEVICE_ID}")
