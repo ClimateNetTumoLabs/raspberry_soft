@@ -1,5 +1,6 @@
 colorzero==2.0
 gpiozero==1.6.2
+ntplib==0.4.0
 paho-mqtt==1.6.1
 pkg_resources==0.0.0
 psycopg2-binary==2.9.9

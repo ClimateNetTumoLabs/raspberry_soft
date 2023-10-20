@@ -1,4 +1,3 @@
-import time
 from datetime import datetime
 from read_sensors import ReadSensor
 from network_check import check_network
@@ -8,7 +7,7 @@ from logger_config import *
 from scripts import update_time_from_ntp, split_data, chmod_tty
 
 
-DEVICE_ID = 5
+DEVICE_ID = 6
 
 
 def main(deviceID):
@@ -25,7 +24,7 @@ def main(deviceID):
         None
     """
 
-    sensor_reader = ReadSensor(measuring_time=60)
+    sensor_reader = ReadSensor()
     mqtt_client = MQTTClient(deviceID=deviceID)
     local_db = LocalDatabase(deviceID=deviceID)
     local = False

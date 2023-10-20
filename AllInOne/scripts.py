@@ -10,7 +10,7 @@ from logger_config import *
 from network_check import check_network
 
 def update_time_from_ntp():
-    for i in range(3):
+    while True:
         if check_network():
             tz = pytz.timezone('Asia/Yerevan')
             ntp_server = 'pool.ntp.org'
@@ -28,9 +28,6 @@ def update_time_from_ntp():
             logging.error(f"Failed to establish network connection for changing time")
 
         time.sleep(5)
-
-    logging.error(f"Failed to update time from NTP")
-    return False
 
 
 def get_quantity(data_lst):
