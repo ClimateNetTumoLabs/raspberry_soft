@@ -66,7 +66,10 @@ class TPHSensor:
                     "humidity": round(data.humidity, 2)
                 }
             except Exception as e:
-                logging.error(f"Error occurred during reading data from TPH sensor: {str(e)}", exc_info=True)
+                if isinstance(e, OSError):
+                    logging.error(f"Error occurred during reading data from TPH sensor: [Errno 121] Remote I/O error")
+                else:
+                    logging.error(f"Error occurred during reading data from TPH sensor: {str(e)}", exc_info=True)
                 if i == 2:
                     return {
                         "temperature": None,

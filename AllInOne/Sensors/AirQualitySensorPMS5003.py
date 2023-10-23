@@ -1,4 +1,4 @@
-from .PMS5003_library import PMS5003
+from .PMS5003_library import PMS5003, SerialTimeoutError
 from logger_config import *
 
 
@@ -85,7 +85,10 @@ class AirQualitySensor:
             try:
                 return self.get_data()
             except Exception as e:
-                logging.error(f"Error occurred during reading data from AirQuality sensor: {str(e)}", exc_info=True)
+                if isinstance(e, SerialTimeoutError):
+                    logging.error(f"Error occurred during reading data from AirQuality sensor: PMS5003 Read Timeout: Failed to read start of frame byte")
+                else:
+                    logging.error(f"Error occurred during reading data from AirQuality sensor: {str(e)}", exc_info=True)
                 if i == 2:
                     return {
                         "Air_PM1": None,

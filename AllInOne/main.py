@@ -7,7 +7,7 @@ from logger_config import *
 from scripts import update_time_from_ntp, split_data, chmod_tty
 
 
-DEVICE_ID = 6
+DEVICE_ID = 7
 
 
 def main(deviceID):
