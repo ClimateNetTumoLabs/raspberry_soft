@@ -31,7 +31,7 @@ def main(deviceID):
 
     while True:
         try:
-            data = sensor_reader.get_data()
+            data = sensor_reader.collect_data()
 
             logging.info("Data collection completed.")
             logging.info(f"Collected data -> {data}")

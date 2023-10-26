@@ -94,6 +94,12 @@ class ReadSensor:
         - "direction": Wind direction reading (str) if wind speed is not zero; otherwise, None.
 
         """
+        if self.wind_speed_sensor.get_data() != 0:
+            direction = self.wind_direction_sensor.read_data()
+        else:
+            direction = None
+            time.sleep(300)
+            
         direction = self.wind_direction_sensor.read_data() if self.wind_speed_sensor.get_data() != 0 else None
         data = {}
 
@@ -109,7 +115,7 @@ class ReadSensor:
         data["direction"] = direction
         return data
 
-    def get_data(self):
+    def collect_data(self):
         """
         Collect data from sensors and return it as a dictionary.
 
