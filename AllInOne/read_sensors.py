@@ -20,7 +20,7 @@ class ReadSensor:
     MAX_READING_TIME (int): The maximum time allowed for individual sensor readings.
     """
 
-    def __init__(self, measuring_time=900, max_reading_time=15):
+    def __init__(self, measuring_time=900, max_reading_time=40):
         self.__create_sensor_objects()
 
         self.wind_direction_sensor = WindDirection()
@@ -139,8 +139,12 @@ class ReadSensor:
             time.sleep(self.MEASURING_TIME - self.MAX_READING_TIME)
             collected_data = self.__get_data(start_time)
 
-            remaining_time = self.MEASURING_TIME - (time.time() - start_time)
-            time.sleep(remaining_time)
+            remaining_time = self.MEASURING_TIME - (time.time() - start_time) - 0.04
+            
+            if remaining_time < 0:
+                logging.error(f"Error occurred during sleep: ValueError: sleep length must be non-negative")
+            else:
+                time.sleep(remaining_time)
 
             collected_data["rain"] = self.rain_sensor.read_data()
             return collected_data
