@@ -2,6 +2,7 @@ import json
 import time
 import math
 import os
+from time import sleep
 from gpiozero import MCP3008
 from logger_config import *
 
@@ -54,7 +55,7 @@ class WindDirection:
 
     """
 
-    def __init__(self, adc_channel=0, config_file="directions_config.json", adc_max=1024, adc_vref=5.12, wind_interval=3):
+    def __init__(self, adc_channel=0, config_file="directions_config.json", adc_max=1024, adc_vref=5.12, wind_interval=300):
         """
         Initialize the WindDirection class.
 
@@ -246,6 +247,7 @@ class WindDirection:
                 direction = self.get_dir(adc_value)
                 if direction is not None:
                     data.append(direction)
+                sleep(1)
 
             return self.get_direction_label(self.get_average(data))
         except Exception as e:

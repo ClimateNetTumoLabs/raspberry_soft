@@ -20,7 +20,7 @@ class ReadSensor:
     MAX_READING_TIME (int): The maximum time allowed for individual sensor readings.
     """
 
-    def __init__(self, measuring_time=900, max_reading_time=40):
+    def __init__(self, measuring_time=900, max_reading_time=340):
         self.__create_sensor_objects()
 
         self.wind_direction_sensor = WindDirection()
@@ -94,6 +94,7 @@ class ReadSensor:
         - "direction": Wind direction reading (str) if wind speed is not zero; otherwise, None.
 
         """
+        direction = self.wind_direction_sensor.read_data() if data["speed"] != 0 else None
         data = {}
 
         for sensor, name in self.sensor_name_mapping.items():
@@ -105,7 +106,7 @@ class ReadSensor:
 
         data["speed"] = self.wind_speed_sensor.read_data(time.time() - start_time)
         data["rain"] = 0.0
-        data["direction"] = self.wind_direction_sensor.read_data() if data["speed"] != 0 else None
+        data["direction"] = direction
         return data
 
     def get_data(self):
