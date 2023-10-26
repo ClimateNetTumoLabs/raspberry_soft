@@ -68,6 +68,9 @@ class WindSpeed:
             None
         """
         self.count = 0
+    
+    def get_data(self):
+        return self.count
 
     def read_data(self, interval):
         """

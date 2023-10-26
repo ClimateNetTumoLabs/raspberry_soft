@@ -94,7 +94,7 @@ class ReadSensor:
         - "direction": Wind direction reading (str) if wind speed is not zero; otherwise, None.
 
         """
-        direction = self.wind_direction_sensor.read_data() if data["speed"] != 0 else None
+        direction = self.wind_direction_sensor.read_data() if self.wind_speed_sensor.get_data() != 0 else None
         data = {}
 
         for sensor, name in self.sensor_name_mapping.items():
