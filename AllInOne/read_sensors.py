@@ -98,7 +98,7 @@ class ReadSensor:
             direction = self.wind_direction_sensor.read_data()
         else:
             direction = None
-            time.sleep(300)
+            time.sleep(self.wind_direction_sensor.wind_interval)
             
         direction = self.wind_direction_sensor.read_data() if self.wind_speed_sensor.get_data() != 0 else None
         data = {}
@@ -143,7 +143,7 @@ class ReadSensor:
             logging.info(f"{'+' * 15} Starting data collection.")
             start_time = time.time()
 
-            time.sleep(self.MEASURING_TIME - self.MAX_READING_TIME)
+            time.sleep(self.MEASURING_TIME - self.MAX_READING_TIME - self.wind_direction_sensor.wind_interval)
             collected_data = self.__get_data(start_time)
 
             remaining_time = self.MEASURING_TIME - (time.time() - start_time) - 0.04
