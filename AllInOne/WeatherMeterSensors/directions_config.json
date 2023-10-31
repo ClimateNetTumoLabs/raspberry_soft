@@ -20,14 +20,14 @@
         { "angle": 337.5, "ohms": 21880 }
     ],
     "directions_labels": [
-        { "dir": "S",   "angle_min": 0.0,   "angle_max": 22.5 },
-        { "dir": "SW",  "angle_min": 22.5,  "angle_max": 67.5 },
-        { "dir": "W",   "angle_min": 67.5,  "angle_max": 112.5 },
-        { "dir": "NW",  "angle_min": 112.5, "angle_max": 157.5 },
-        { "dir": "N",   "angle_min": 157.5, "angle_max": 202.5 },
-        { "dir": "NE",  "angle_min": 202.5, "angle_max": 247.5 },
-        { "dir": "E",   "angle_min": 247.5, "angle_max": 292.5 },
-        { "dir": "SE",  "angle_min": 292.5, "angle_max": 337.5 },
-        { "dir": "S",   "angle_min": 337.5, "angle_max": 361 }
+        { "dir": "N",   "angle_min": 0.0,   "angle_max": 22.5 },
+        { "dir": "NE",  "angle_min": 22.5,  "angle_max": 67.5 },
+        { "dir": "E",   "angle_min": 67.5,  "angle_max": 112.5 },
+        { "dir": "SE",  "angle_min": 112.5, "angle_max": 157.5 },
+        { "dir": "S",   "angle_min": 157.5, "angle_max": 202.5 },
+        { "dir": "SW",  "angle_min": 202.5, "angle_max": 247.5 },
+        { "dir": "W",   "angle_min": 247.5, "angle_max": 292.5 },
+        { "dir": "NW",  "angle_min": 292.5, "angle_max": 337.5 },
+        { "dir": "N",   "angle_min": 337.5, "angle_max": 361 }
     ] 
 }
