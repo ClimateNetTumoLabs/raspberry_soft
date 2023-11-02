@@ -24,6 +24,9 @@ def update_time_from_ntp():
                 return True
             except socket.gaierror:
                 logging.error(f"Failed to get time from NTP")
+            except Exception as e:
+                logging.error(f"Error occurred during getting time from NTP: {e}")
+            
         else:
             logging.error(f"Failed to establish network connection for changing time")
 

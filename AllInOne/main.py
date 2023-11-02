@@ -65,7 +65,12 @@ def main(deviceID):
                 
             else:
                 logging.info("Send current data to RDS")
-                mqtt_client.send_data([insert_data])
+                mqtt_res = mqtt_client.send_data([insert_data])
+
+                if not mqtt_res:
+                    logging.info("Send current data to local DB")
+                    local_db.insert_data(insert_data)
+                    local = True
 
         except Exception as e:
             logging.error(f"Error occurred during execution: {str(e)}", exc_info=True)
