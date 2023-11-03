@@ -10,6 +10,60 @@ from scripts import update_time_from_ntp, split_data, chmod_tty
 DEVICE_ID = 7
 
 
+class DataSaver:
+    def __init__(self, deviceID):
+        self.mqtt_client = MQTTClient(deviceID=deviceID)
+        self.local_db = LocalDatabase(deviceID=deviceID)
+
+        self.local = False
+
+    def __save_local(self, data):
+        logging.info('Send current data to local DB')
+        self.local_db.insert_data(data)
+    
+    def __get_local(self, data):
+        local_data = self.local_db.get_data()
+        local_data.append(data)
+
+        splitted_data = split_data(local_data)
+        return splitted_data
+    
+    def __save_rds(self, data, local = False):
+        if local:
+            logging.info('Send local & current data to RDS')
+            
+            mqtt_res = True
+            for lst in self.__get_local(data):
+                mqtt_res = self.mqtt_client.send_data(lst)
+                if not mqtt_res:
+                    break
+
+            if mqtt_res:
+                self.local_db.drop_table()
+                return True
+            else:
+                return False
+
+        else:
+            logging.info('Send current data to RDS')
+            mqtt_res = self.mqtt_client.send_data([data])
+
+            return mqtt_res
+    
+    def save(self, data):
+        if not check_network():
+            self.local = True
+            self.__save_local(data)
+        
+        else:
+            res = self.__save_rds(data, self.local)
+
+            if res:
+                self.local = False
+            else:
+                self.__save_local(data)
+
+
 def main(deviceID):
     """
     Main function for ClimateNet data collection and transmission.
@@ -25,9 +79,7 @@ def main(deviceID):
     """
 
     sensor_reader = ReadSensor()
-    mqtt_client = MQTTClient(deviceID=deviceID)
-    local_db = LocalDatabase(deviceID=deviceID)
-    local = False
+    dataSaver = DataSaver(deviceID)
 
     while True:
         try:
@@ -38,46 +90,13 @@ def main(deviceID):
             
             insert_data = tuple([datetime.now().isoformat()] + list(data.values()))
 
-            if not check_network():
-                local = True
-                local_db.insert_data(insert_data)
-                logging.info("Send current data to local DB")
-            
-            elif local:
-                logging.info("Send local & current data to RDS")
-                local_data = local_db.get_data()
-                local_data.append(insert_data)
-
-                splitted_data = split_data(insert_data)
-                mqtt_res = True
-                for lst in splitted_data:
-                    mqtt_res = mqtt_client.send_data(lst)
-                    if not mqtt_res:
-                        mqtt_res = False
-                        break
-
-                if mqtt_res:
-                    local_db.drop_table()
-                    local = False
-                else:
-                    logging.info("Send current data to local DB")
-                    local_db.insert_data(insert_data)
-                
-            else:
-                logging.info("Send current data to RDS")
-                mqtt_res = mqtt_client.send_data([insert_data])
-
-                if not mqtt_res:
-                    logging.info("Send current data to local DB")
-                    local_db.insert_data(insert_data)
-                    local = True
-
+            dataSaver.save(insert_data)
         except Exception as e:
             logging.error(f"Error occurred during execution: {str(e)}", exc_info=True)
 
 
 if __name__ == "__main__":
-    logging.info("Program started")
     update_time_from_ntp()
     chmod_tty()
+    logging.info("Program started")
     main(f"device{DEVICE_ID}")
