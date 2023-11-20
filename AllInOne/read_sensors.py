@@ -99,8 +99,9 @@ class ReadSensor:
         else:
             direction = None
             time.sleep(self.wind_direction_sensor.wind_interval)
-            
-        direction = self.wind_direction_sensor.read_data() if self.wind_speed_sensor.get_data() != 0 else None
+        
+        speed = self.wind_speed_sensor.read_data(time.time() - start_time)
+        
         data = {}
 
         for sensor, name in self.sensor_name_mapping.items():
@@ -110,7 +111,7 @@ class ReadSensor:
             else:
                 data[name] = res
 
-        data["speed"] = self.wind_speed_sensor.read_data(time.time() - start_time)
+        data["speed"] = speed
         data["rain"] = 0.0
         data["direction"] = direction
         return data
@@ -147,7 +148,6 @@ class ReadSensor:
             collected_data = self.__get_data(start_time)
 
             remaining_time = self.MEASURING_TIME - (time.time() - start_time) - 0.04
-            
             if remaining_time < 0:
                 logging.error(f"Error occurred during sleep: ValueError: sleep length must be non-negative")
             else:
