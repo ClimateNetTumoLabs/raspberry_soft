@@ -1,6 +1,6 @@
 import psycopg2
 import logging
-from LocalDB.config import HOST, USERNAME, PASSWORD, DB_NAME
+from .config import HOST, USERNAME, PASSWORD, DB_NAME
 from logger_config import *
 
 
