@@ -30,7 +30,7 @@ class AirQualitySensor:
             Attempt to read air quality data multiple times, handling exceptions and returning the data as a dictionary.
     """
 
-    def __init__(self, device='/dev/ttyS0', baudrate=9600, pin_enable=27, pin_reset=22):
+    def __init__(self, read, device='/dev/ttyS0', baudrate=9600, pin_enable=27, pin_reset=22):
         """
         Initialize the AirQualitySensor class.
 
@@ -46,13 +46,15 @@ class AirQualitySensor:
         Returns:
             None
         """
-        self.device = device
-        self.baudrate = baudrate
-        self.pin_enable = pin_enable
-        self.pin_reset = pin_reset
-        self.pms5003 = PMS5003(device=device, baudrate=baudrate, pin_enable=pin_enable, pin_reset=pin_reset)
+        self.read = read
+        if self.read:
+            self.device = device
+            self.baudrate = baudrate
+            self.pin_enable = pin_enable
+            self.pin_reset = pin_reset
+            self.pms5003 = PMS5003(device=device, baudrate=baudrate, pin_enable=pin_enable, pin_reset=pin_reset)
 
-    def get_data(self):
+    def __get_data(self):
         """
         Read air quality data from the PMS5003 sensor and return a dictionary of particle concentration values.
 
@@ -65,9 +67,9 @@ class AirQualitySensor:
         data = {}
         all_data = self.pms5003.read()
 
-        data["Air_PM1"] = all_data.pm_ug_per_m3(1.0)
-        data["Air_PM2_5"] = all_data.pm_ug_per_m3(2.5)
-        data["Air_PM10"] = all_data.pm_ug_per_m3(10)
+        data["pm1"] = all_data.pm_ug_per_m3(1.0)
+        data["pm2_5"] = all_data.pm_ug_per_m3(2.5)
+        data["pm10"] = all_data.pm_ug_per_m3(10)
 
         return data
 
@@ -81,19 +83,26 @@ class AirQualitySensor:
         Returns:
             dict: A dictionary containing air quality data with keys "Air_PM1", "Air_PM2_5", and "Air_PM10."
         """
-        for i in range(3):
-            try:
-                return self.get_data()
-            except Exception as e:
-                if isinstance(e, SerialTimeoutError):
-                    logging.error(f"Error occurred during reading data from AirQuality sensor: PMS5003 SerialTimeoutError: Failed to read start of frame byte")
-                elif isinstance(e, ReadTimeoutError):
-                    logging.error(f"Error occurred during reading data from AirQuality sensor: PMS5003 ReadTimeoutError: Could not find start of frame")
-                else:
-                    logging.error(f"Error occurred during reading data from AirQuality sensor: {str(e)}", exc_info=True)
-                if i == 2:
-                    return {
-                        "Air_PM1": None,
-                        "Air_PM2_5": None,
-                        "Air_PM10": None
-                    }
+        if self.read:
+            for i in range(3):
+                try:
+                    return self.__get_data()
+                except Exception as e:
+                    if isinstance(e, SerialTimeoutError):
+                        logging.error(f"Error occurred during reading data from AirQuality sensor: PMS5003 SerialTimeoutError: Failed to read start of frame byte")
+                    elif isinstance(e, ReadTimeoutError):
+                        logging.error(f"Error occurred during reading data from AirQuality sensor: PMS5003 ReadTimeoutError: Could not find start of frame")
+                    else:
+                        logging.error(f"Error occurred during reading data from AirQuality sensor: {str(e)}", exc_info=True)
+                    if i == 2:
+                        return {
+                            "pm1": None,
+                            "pm2_5": None,
+                            "pm10": None
+                        }
+        else:
+            return {
+                "pm1": None,
+                "pm2_5": None,
+                "pm10": None
+            }

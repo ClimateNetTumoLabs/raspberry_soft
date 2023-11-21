@@ -95,6 +95,7 @@ class MQTTClient:
 
         message_json = json.dumps(message)
         logging.info(f"MQTT Data: {str(message_json)}")
+        return True
         self.client.publish("raspberry/devices", message_json)
         
         return True

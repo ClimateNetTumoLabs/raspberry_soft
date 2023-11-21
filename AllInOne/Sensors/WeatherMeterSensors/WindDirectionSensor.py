@@ -5,6 +5,7 @@ import os
 from time import sleep
 from gpiozero import MCP3008
 from logger_config import *
+from config import *
 
 
 class WindDirection:
@@ -55,7 +56,7 @@ class WindDirection:
 
     """
 
-    def __init__(self, adc_channel=0, config_file="directions_config.json", adc_max=1024, adc_vref=5.12, wind_interval=300):
+    def __init__(self, adc_channel=0, config_file="directions_config.json", adc_max=1024, adc_vref=5.12):
         """
         Initialize the WindDirection class.
 
@@ -85,7 +86,7 @@ class WindDirection:
         self.config_file = config_file
         self.adc_max = adc_max
         self.adc_vref = adc_vref
-        self.wind_interval = wind_interval
+        self.wind_interval = WIND_DIRECTION_READING_TIME
         self.adc = MCP3008(adc_channel)
 
         config_file_path = os.path.join(os.path.dirname(__file__), config_file)

@@ -2,6 +2,7 @@ import time
 from .WeatherMeterSensors import *
 from .OtherSensors import *
 from logger_config import *
+from config import *
 
 
 class ReadSensor:
@@ -20,18 +21,21 @@ class ReadSensor:
     MAX_READING_TIME (int): The maximum time allowed for individual sensor readings.
     """
 
-    def __init__(self, measuring_time=350, max_reading_time=40):
+    def __init__(self):
         self.__create_sensor_objects()
 
         self.wind_direction_sensor = WindDirection()
         self.wind_speed_sensor = WindSpeed()
         self.rain_sensor = Rain()
 
-        self.MEASURING_TIME = measuring_time
-        self.MAX_READING_TIME = max_reading_time
+        self.MEASURING_TIME = MEASURING_TIME
+        self.MAX_READING_TIME = MAX_READING_TIME
 
-        self.wind_speed_sensor.sensor.when_pressed = self.wind_speed_sensor.press
-        self.rain_sensor.sensor.when_pressed = self.rain_sensor.press
+        if SENSORS["wind_speed"]:
+            self.wind_speed_sensor.sensor.when_pressed = self.wind_speed_sensor.press
+        
+        if SENSORS["rain"]:
+            self.rain_sensor.sensor.when_pressed = self.rain_sensor.press
 
     def __create_sensor_objects(self):
         """
@@ -46,8 +50,8 @@ class ReadSensor:
         air_quality_sensor (AirQualitySensor): An instance of the AirQualitySensor (PMS5003).
         sensor_name_mapping (dict): A dictionary mapping sensor instances to their respective names.
         """
-
-        sensors = {
+        
+        sensor_name_mapping = {
             LightSensor: {
                 "variable_name": "light_sensor",
                 "name": "Light"
@@ -62,11 +66,14 @@ class ReadSensor:
             }
         }
 
-        self.sensor_name_mapping = {}
+        for sensor in sensor_name_mapping:
+            sensor_name_mapping[sensor]['read'] = SENSORS[sensor_name_mapping[sensor]['variable_name']]
 
-        for sensor, names in sensors.items():
-            setattr(self, names["variable_name"], sensor())
-            self.sensor_name_mapping[self.__dict__[names["variable_name"]]] = names["name"]
+        self.sensors = []
+
+        for sensor, params in sensor_name_mapping.items():
+            setattr(self, params["variable_name"], sensor(read=params["read"]))
+            self.sensors.append(self.__dict__[params["variable_name"]])
 
     def __get_data(self, start_time):
         """
@@ -94,26 +101,21 @@ class ReadSensor:
         - "direction": Wind direction reading (str) if wind speed is not zero; otherwise, None.
 
         """
-        if self.wind_speed_sensor.get_data() != 0:
-            direction = self.wind_direction_sensor.read_data()
-        else:
-            direction = None
-            time.sleep(self.wind_direction_sensor.wind_interval)
-        
-        speed = self.wind_speed_sensor.read_data(time.time() - start_time)
-        
         data = {}
 
-        for sensor, name in self.sensor_name_mapping.items():
+        
+        if self.wind_speed_sensor.get_data() != 0 and SENSORS["wind_direction"]:
+            data["direction"] = self.wind_direction_sensor.read_data()
+        else:
+            data["direction"] = None
+            time.sleep(self.wind_direction_sensor.wind_interval)
+        
+        data["speed"] = self.wind_speed_sensor.read_data(time.time() - start_time) if SENSORS["wind_speed"] else None
+        
+        for sensor in self.sensors:
             res = sensor.read_data()
-            if isinstance(res, dict):
-                data.update(res)
-            else:
-                data[name] = res
+            data.update(res)
 
-        data["speed"] = speed
-        data["rain"] = 0.0
-        data["direction"] = direction
         return data
 
     def collect_data(self):
@@ -152,8 +154,8 @@ class ReadSensor:
                 logging.error(f"Error occurred during sleep: ValueError: sleep length must be non-negative")
             else:
                 time.sleep(remaining_time)
-
-            collected_data["rain"] = self.rain_sensor.read_data()
+            
+            collected_data["rain"] = self.rain_sensor.read_data() if SENSORS["rain"] else None
             return collected_data
 
         except Exception as e:

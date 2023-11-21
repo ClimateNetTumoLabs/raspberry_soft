@@ -47,7 +47,7 @@ class LightSensor:
 
     """
 
-    def __init__(self, addr=0x23):
+    def __init__(self, read, addr=0x23):
         """
         Initialize the LightSensor class.
 
@@ -60,15 +60,20 @@ class LightSensor:
         Returns:
             None
         """
-        self.POWER_DOWN = 0x00
-        self.POWER_ON = 0x01
-        self.RESET = 0x07
+        
+        self.read = read
 
-        self.bus = smbus2.SMBus(1)
-        self.addr = addr
-        self.power_down()
-        self.set_sensitivity()
-        self.ONE_TIME_HIGH_RES_MODE_2 = 0x21
+        if self.read:
+            self.POWER_DOWN = 0x00
+            self.POWER_ON = 0x01
+            self.RESET = 0x07
+
+            self.bus = smbus2.SMBus(1)
+            self.addr = addr
+            self.power_down()
+            self.set_sensitivity()
+            self.ONE_TIME_HIGH_RES_MODE_2 = 0x21
+        
 
     def _set_mode(self, mode):
         """
@@ -195,16 +200,23 @@ class LightSensor:
         Returns:
             float or None: The measured light intensity, or None in case of an error.
         """
-        for i in range(3):
-            try:
-                self.reset()
-                self._set_mode(self.ONE_TIME_HIGH_RES_MODE_2)
-                self.wait_for_result(additional=additional_delay)
-                return round(self.get_result(), 2)
-            except Exception as e:
-                if isinstance(e, OSError):
-                    logging.error(f"Error occurred during reading data from Light sensor: [Errno 121] Remote I/O error")
-                else:
-                    logging.error(f"Error occurred during reading data from Light sensor: {str(e)}", exc_info=True)
-                if i == 2:
-                    return None
+        if self.read:
+            for i in range(3):
+                try:
+                    self.reset()
+                    self._set_mode(self.ONE_TIME_HIGH_RES_MODE_2)
+                    self.wait_for_result(additional=additional_delay)
+                    return {
+                        "light": round(self.get_result(), 2)
+                    }
+                except Exception as e:
+                    if isinstance(e, OSError):
+                        logging.error(f"Error occurred during reading data from Light sensor: [Errno 121] Remote I/O error")
+                    else:
+                        logging.error(f"Error occurred during reading data from Light sensor: {str(e)}", exc_info=True)
+                    if i == 2:
+                        return None
+        else:
+            return {
+                "light": None
+            }
