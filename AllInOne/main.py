@@ -1,5 +1,5 @@
 from datetime import datetime
-from Sensors import ReadSensor
+from Sensors import ReadSensors
 from DataSaver import DataSaver
 from logger_config import *
 from Scripts import update_time_from_ntp, chmod_tty
@@ -19,7 +19,7 @@ def main():
         None
     """
 
-    sensor_reader = ReadSensor()
+    sensor_reader = ReadSensors()
     dataSaver = DataSaver()
 
     while True:
