@@ -1,6 +1,7 @@
 import smbus2
 import time
 from logger_config import *
+from config import SENSORS
 
 class LightSensor:
     """
@@ -47,7 +48,7 @@ class LightSensor:
 
     """
 
-    def __init__(self, read, addr=0x23):
+    def __init__(self, addr=0x23):
         """
         Initialize the LightSensor class.
 
@@ -60,10 +61,11 @@ class LightSensor:
         Returns:
             None
         """
-        
-        self.read = read
+        sensor_info = SENSORS["light_sensor"]
 
-        if self.read:
+        self.working = sensor_info["working"]
+
+        if self.working:
             self.POWER_DOWN = 0x00
             self.POWER_ON = 0x01
             self.RESET = 0x07
@@ -200,7 +202,7 @@ class LightSensor:
         Returns:
             float or None: The measured light intensity, or None in case of an error.
         """
-        if self.read:
+        if self.working:
             for i in range(3):
                 try:
                     self.reset()

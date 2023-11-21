@@ -1,27 +1,35 @@
 DEVICE_ID = 9
 
+# It is recommended to set the value >= than 
+# MAX_READING_TIME + wind_direction["reading_time"] + 10
 MEASURING_TIME = 60
 MAX_READING_TIME = 40
-WIND_DIRECTION_READING_TIME = 10
 
 
 SENSORS = {
-    "light_sensor" : True,
-    "tph_sensor" : True,
-    "air_quality_sensor": True,
-    "wind_speed": True,
-    "wind_direction": True,
-    "rain": True
+    "light_sensor" : {
+        "working": True
+    },
+    "tph_sensor" : {
+        "working": True
+    },
+    "air_quality_sensor": {
+        "working": True,
+        "address": "/dev/ttyS0",
+        "baudrate": 9600,
+        "pin_enable": 27,
+        "pin_reset": 22
+    },
+    "wind_speed": {
+        "working": True,
+        "pin": 5
+    },
+    "wind_direction": {
+        "woking": True,
+        "reading_time": 10
+    },
+    "rain": {
+        "working": True,
+        "pin": 6
+    }
 }
-
-
-# AIR QUALITY SENSOR SETTINGS
-PMS5003_ADDRESS = "/dev/ttyS0"
-PMS5003_BAUDRATE = 9600
-PMS5003_PIN_ENABLE = 27
-PMS5003_PIN_RESET = 22
-
-
-# WEATHER METER KIT
-RAIN_PIN = 6
-SPEED_PIN = 5

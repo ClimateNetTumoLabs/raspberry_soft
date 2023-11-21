@@ -1,5 +1,6 @@
 from .PMS5003_library import PMS5003, SerialTimeoutError, ReadTimeoutError
 from logger_config import *
+from config import SENSORS
 
 
 class AirQualitySensor:
@@ -30,7 +31,7 @@ class AirQualitySensor:
             Attempt to read air quality data multiple times, handling exceptions and returning the data as a dictionary.
     """
 
-    def __init__(self, read, device='/dev/ttyS0', baudrate=9600, pin_enable=27, pin_reset=22):
+    def __init__(self):
         """
         Initialize the AirQualitySensor class.
 
@@ -46,13 +47,17 @@ class AirQualitySensor:
         Returns:
             None
         """
-        self.read = read
-        if self.read:
-            self.device = device
-            self.baudrate = baudrate
-            self.pin_enable = pin_enable
-            self.pin_reset = pin_reset
-            self.pms5003 = PMS5003(device=device, baudrate=baudrate, pin_enable=pin_enable, pin_reset=pin_reset)
+        sensor_info = SENSORS["air_quality_sensor"]
+
+        self.working = sensor_info["working"]
+
+        if self.working:
+            self.pms5003 = PMS5003(
+                device=sensor_info["address"],
+                baudrate=sensor_info["baudrate"],
+                pin_enable=sensor_info["pin_enable"],
+                pin_reset=sensor_info["pin_reset"]
+            )
 
     def __get_data(self):
         """
@@ -94,7 +99,7 @@ class AirQualitySensor:
         Returns:
             dict: A dictionary containing air quality data with keys "Air_PM1", "Air_PM2_5", and "Air_PM10."
         """
-        if self.read:
+        if self.working:
             for i in range(3):
                 try:
                     return self.__get_data()
