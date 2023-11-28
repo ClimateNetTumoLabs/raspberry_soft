@@ -43,6 +43,12 @@ class ReadSensors:
         for sensor, params in sensor_name_mapping.items():
             setattr(self, params["variable_name"], sensor())
             self.sensors.append(self.__dict__[params["variable_name"]])
+    
+    def __calculate_altitude(self, pressure, temperature, sea_level_altitude=1013):
+        if not SENSORS["altitude"]["working"]:
+            return None
+        
+        return ((sea_level_altitude / pressure) ** (1 / 5.257) - 1) * ((temperature + 273.15) / 0.0065)
 
     def __get_data(self, start_time):
         data = {}
@@ -58,6 +64,9 @@ class ReadSensors:
         for sensor in self.sensors:
             res = sensor.read_data()
             data.update(res)
+        
+        if data["temperature"] and data["pressure"]:
+            data['altitude'] = self.__calculate_altitude(pressure=data["pressure"], temperature=data["temperature"])
 
         return data
 

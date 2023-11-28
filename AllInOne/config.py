@@ -31,5 +31,8 @@ SENSORS = {
     "rain": {
         "working": True,
         "pin": 6
+    },
+    "altitude": {
+        "working": True
     }
 }
