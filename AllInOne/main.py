@@ -6,19 +6,6 @@ from Scripts import update_time_from_ntp, chmod_tty
 
 
 def main():
-    """
-    Main function for ClimateNet data collection and transmission.
-
-    This function collects sensor data, sends it to AWS RDS through MQTT,
-    or stores it locally when there is no internet connection.
-
-    Args:
-        deviceID (str): The unique identifier of the device.
-
-    Returns:
-        None
-    """
-
     sensor_reader = ReadSensors()
     dataSaver = DataSaver()
 
@@ -30,8 +17,6 @@ def main():
             logging.info(f"Collected data -> {data}")
 
             data['time'] = datetime.now().isoformat()
-            
-            # insert_data = tuple([datetime.now().isoformat()] + list(data.values()))
 
             dataSaver.save(data)
         except Exception as e:
