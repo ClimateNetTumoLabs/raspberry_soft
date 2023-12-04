@@ -5,7 +5,7 @@ import socket
 import time
 from datetime import datetime
 from logger_config import *
-from .network_check import check_network
+from .network_checker import check_network
 
 
 def update_time_from_ntp():

@@ -1,11 +1,11 @@
 from .LocalDB import LocalDatabase
-from MQTT_Sender import MQTTClient
+from .MQTT_Sender import MQTTClient
 from logger_config import *
 from Scripts import split_data, check_network
-from config import *
+from config import DEVICE_ID
 
 
-class DataSaver:
+class DataHandler:
     def __init__(self):
         self.deviceID = f"device{DEVICE_ID}"
         self.mqtt_client = MQTTClient(deviceID=self.deviceID)

@@ -2,9 +2,9 @@ venv/
 __pycache__/
 .idea/
 
-AllInOne/MQTT_Sender/certificate.pem.crt
-AllInOne/MQTT_Sender/private.pem.key
-AllInOne/MQTT_Sender/public.pem.key
-AllInOne/MQTT_Sender/rootCA.pem
+AllInOne/Data/MQTT_Sender/certificate.pem.crt
+AllInOne/Data/MQTT_Sender/private.pem.key
+AllInOne/Data/MQTT_Sender/public.pem.key
+AllInOne/Data/MQTT_Sender/rootCA.pem
 AllInOne/parsing.log
-AllInOne/DataSaver/LocalDB/config.py
+AllInOne/Data/LocalDB/config.py

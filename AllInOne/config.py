@@ -25,7 +25,7 @@ SENSORS = {
         "pin": 5
     },
     "wind_direction": {
-        "woking": True,
+        "working": True,
         "reading_time": 10
     },
     "rain": {
