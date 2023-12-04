@@ -22,12 +22,6 @@ class ReadSensors:
         
         if config.SENSORS["rain"]["working"]:
             self.rain_sensor.sensor.when_pressed = self.rain_sensor.press
-    
-    def __calculate_altitude(self, pressure, temperature, sea_level_altitude=1013):
-        if not config.SENSORS["altitude"]["working"]:
-            return None
-        
-        return ((sea_level_altitude / pressure) ** (1 / 5.257) - 1) * ((temperature + 273.15) / 0.0065)
 
     def __get_data(self, start_time):
         data = {}
@@ -48,9 +42,6 @@ class ReadSensors:
         for sensor in self.sensors:
             res = sensor.read_data()
             data.update(res)
-        
-        if data["temperature"] and data["pressure"]:
-            data['altitude'] = self.__calculate_altitude(pressure=data["pressure"], temperature=data["temperature"])
 
         return data
 
