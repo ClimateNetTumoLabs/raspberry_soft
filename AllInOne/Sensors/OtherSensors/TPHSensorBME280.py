@@ -1,10 +1,52 @@
+"""
+    Module for interacting with a TPH (Temperature, Pressure, Humidity) sensor.
+
+    This module provides a class, TPHSensor, for reading data from a specified TPH sensor.
+
+    Class Docstring:
+    ----------------
+    TPHSensor:
+        Interacts with a TPH sensor to read temperature, pressure, and humidity data.
+
+    Constructor:
+        Initializes a TPHSensor object based on the configuration specified in the SENSORS module.
+
+    Class Attributes:
+        working (bool): Indicates if the TPH sensor is operational.
+        port (int): The port to which the sensor is connected.
+        address (int): I2C address of the sensor.
+        bus: (smbus2.SMBus): An instance of the SMBus for communication with the sensor.
+        calibration_params: Calibration parameters for the sensor.
+
+    Methods:
+        read_data(self): Read temperature, pressure, and humidity data from the sensor, handling exceptions and returning the data.
+
+    Module Usage:
+    -------------
+    To use this module, create an instance of the TPHSensor class. Call the read_data() method to get TPH data.
+"""
+
 import smbus2
 import bme280
 from logger_config import *
 from config import SENSORS
 
+
 class TPHSensor:
+    """
+    Interacts with a TPH sensor to read temperature, pressure, and humidity data.
+
+    Attributes:
+        working (bool): Indicates if the TPH sensor is operational.
+        port (int): The port to which the sensor is connected.
+        address (int): I2C address of the sensor.
+        bus: (smbus2.SMBus): An instance of the SMBus for communication with the sensor.
+        calibration_params: Calibration parameters for the sensor.
+    """
     def __init__(self, port=1, address=0x76):
+        """
+        Initializes a TPHSensor object based on the configuration specified in the SENSORS module.
+        """
         sensor_info = SENSORS["tph_sensor"]
 
         self.working = sensor_info["working"]
@@ -15,7 +57,13 @@ class TPHSensor:
             self.bus = smbus2.SMBus(self.port)
             self.calibration_params = bme280.load_calibration_params(self.bus, self.address)
 
-    def read_data(self):
+    def read_data(self) -> dict:
+        """
+        Read temperature, pressure, and humidity data from the sensor, handling exceptions and returning the data.
+
+        Returns:
+            dict: A dictionary containing temperature, pressure, and humidity data. If an error occurs, returns a dictionary with None values.
+        """
         if self.working:
             for i in range(3):
                 try:
@@ -27,7 +75,8 @@ class TPHSensor:
                     }
                 except Exception as e:
                     if isinstance(e, OSError):
-                        logging.error(f"Error occurred during reading data from TPH sensor: [Errno 121] Remote I/O error")
+                        logging.error(
+                            f"Error occurred during reading data from TPH sensor: [Errno 121] Remote I/O error")
                     else:
                         logging.error(f"Error occurred during reading data from TPH sensor: {str(e)}", exc_info=True)
                     if i == 2:

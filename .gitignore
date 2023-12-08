@@ -7,4 +7,4 @@ AllInOne/Data/MQTT_Sender/private.pem.key
 AllInOne/Data/MQTT_Sender/public.pem.key
 AllInOne/Data/MQTT_Sender/rootCA.pem
 AllInOne/parsing.log
-AllInOne/Data/LocalDB/config.py
+AllInOne/Data/config.py

@@ -5,12 +5,11 @@ DEVICE_ID = 9
 MEASURING_TIME = 60
 MAX_READING_TIME = 40
 
-
 SENSORS = {
-    "light_sensor" : {
+    "light_sensor": {
         "working": True
     },
-    "tph_sensor" : {
+    "tph_sensor": {
         "working": True
     },
     "air_quality_sensor": {

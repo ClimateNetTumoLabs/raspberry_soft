@@ -1,65 +1,67 @@
+"""
+    Module for interacting with a light sensor.
+
+    This module provides a class, LightSensor, for reading light data from a specified sensor.
+
+    Class Docstring:
+    ----------------
+    LightSensor:
+        Interacts with a light sensor to read light data.
+
+    Constructor:
+        Initializes a LightSensor object based on the configuration specified in the SENSORS module.
+
+    Class Attributes:
+        working (bool): Indicates if the light sensor is operational.
+        POWER_DOWN (int): Power down mode constant.
+        POWER_ON (int): Power on mode constant.
+        RESET (int): Reset mode constant.
+        ONE_TIME_HIGH_RES_MODE_2 (int): One-time high-resolution mode constant.
+        bus: (smbus2.SMBus): An instance of the SMBus for communication with the sensor.
+        addr (int): I2C address of the sensor.
+        mtreg (int): Sensitivity value for the sensor.
+        mode (int): Mode of the sensor.
+
+    Methods:
+        _set_mode(self, mode): Set the mode of the sensor.
+        power_down(self): Power down the sensor.
+        power_on(self): Power on the sensor.
+        reset(self): Reset the sensor.
+        oneshot_high_res2(self): Trigger a one-shot high-resolution measurement.
+        set_sensitivity(self, sensitivity=150): Set the sensitivity of the sensor.
+        get_result(self): Get the result from the sensor.
+        wait_for_result(self, additional=0): Wait for the sensor to provide a result.
+        read_data(self, additional_delay=0): Read light data from the sensor, handling exceptions and returning the data.
+
+    Module Usage:
+    -------------
+    To use this module, create an instance of the LightSensor class. Call the read_data() method to get light data.
+"""
+
 import smbus2
 import time
 from logger_config import *
 from config import SENSORS
 
+
 class LightSensor:
     """
-    Class for reading light intensity using a light sensor.
-
-    This class provides methods for reading light intensity from a light sensor using the I2C protocol.
-
-    Args:
-        addr (int): The I2C address of the light sensor (default is 0x23).
+    Interacts with a light sensor to read light data.
 
     Attributes:
-        POWER_DOWN (int): Power-down mode value.
-        POWER_ON (int): Power-on mode value.
-        RESET (int): Reset mode value.
-        bus (SMBus2.SMBus): The I2C bus for communication.
-        addr (int): The I2C address of the light sensor.
-        mode: The current mode of the light sensor.
-        ONE_TIME_HIGH_RES_MODE_2 (int): Mode for one-time high-resolution measurement.
-
-    Methods:
-        power_down(self):
-            Set the light sensor to power-down mode.
-
-        power_on(self):
-            Set the light sensor to power-on mode.
-
-        reset(self):
-            Reset the light sensor to initial state.
-
-        oneshot_high_res2(self):
-            Perform a one-time high-resolution measurement.
-
-        set_sensitivity(self, sensitivity=150):
-            Set the sensitivity of the light sensor.
-
-        get_result(self):
-            Read and return the measurement result from the light sensor.
-
-        wait_for_result(self, additional=0):
-            Wait for the measurement result to be ready.
-
-        read_data(self, additional_delay=0):
-            Attempt to read light intensity data multiple times, handling exceptions and returning the data.
-
+        working (bool): Indicates if the light sensor is operational.
+        POWER_DOWN (int): Power down mode constant.
+        POWER_ON (int): Power on mode constant.
+        RESET (int): Reset mode constant.
+        ONE_TIME_HIGH_RES_MODE_2 (int): One-time high-resolution mode constant.
+        bus: (smbus2.SMBus): An instance of the SMBus for communication with the sensor.
+        addr (int): I2C address of the sensor.
+        mtreg (int): Sensitivity value for the sensor.
+        mode (int): Mode of the sensor.
     """
-
-    def __init__(self, addr=0x23):
+    def __init__(self, addr=0x23) -> None:
         """
-        Initialize the LightSensor class.
-
-        This method initializes the LightSensor class and sets up the I2C bus, the address of the light sensor,
-        and initial modes.
-
-        Args:
-            addr (int): The I2C address of the light sensor (default is 0x23).
-
-        Returns:
-            None
+        Initializes a LightSensor object based on the configuration specified in the SENSORS module.
         """
         sensor_info = SENSORS["light_sensor"]
 
@@ -75,78 +77,25 @@ class LightSensor:
             self.power_down()
             self.set_sensitivity()
             self.ONE_TIME_HIGH_RES_MODE_2 = 0x21
-        
 
     def _set_mode(self, mode):
-        """
-        Set the mode of the light sensor.
-
-        Args:
-            mode (int): The mode value to set.
-
-        Returns:
-            None
-        """
         self.mode = mode
         self.bus.write_byte(self.addr, self.mode)
 
     def power_down(self):
-        """
-        Set the light sensor to power-down mode.
-
-        This method sets the light sensor to power-down mode.
-
-        Returns:
-            None
-        """
         self._set_mode(self.POWER_DOWN)
 
     def power_on(self):
-        """
-        Set the light sensor to power-on mode.
-
-        This method sets the light sensor to power-on mode.
-
-        Returns:
-            None
-        """
         self._set_mode(self.POWER_ON)
 
     def reset(self):
-        """
-        Reset the light sensor to initial state.
-
-        This method resets the light sensor to its initial state by powering it on and setting it to reset mode.
-
-        Returns:
-            None
-        """
         self.power_on()
         self._set_mode(self.RESET)
 
     def oneshot_high_res2(self):
-        """
-        Perform a one-time high-resolution measurement.
-
-        This method configures the light sensor to perform a one-time high-resolution measurement.
-
-        Returns:
-            None
-        """
         self._set_mode(self.ONE_TIME_HIGH_RES_MODE_2)
 
     def set_sensitivity(self, sensitivity=150):
-        """
-        Set the sensitivity of the light sensor.
-
-        This method sets the sensitivity of the light sensor, taking into account the provided sensitivity value.
-
-        Args:
-            sensitivity (int): The sensitivity value to set (default is 150).
-
-        Returns:
-            None
-        """
         if sensitivity < 31:
             self.mtreg = 31
         elif sensitivity > 254:
@@ -159,15 +108,6 @@ class LightSensor:
         self.power_down()
 
     def get_result(self):
-        """
-        Read and return the measurement result from the light sensor.
-
-        This method reads the measurement result from the light sensor and returns the result as a floating-point value.
-
-        Returns:
-            float: The measured light intensity.
-
-        """
         data = self.bus.read_word_data(self.addr, self.mode)
         count = data >> 8 | (data & 0xff) << 8
         mode2coeff = 2 if (self.mode & 0x03) == 0x01 else 1
@@ -175,32 +115,18 @@ class LightSensor:
         return ratio * count
 
     def wait_for_result(self, additional=0):
-        """
-        Wait for the measurement result to be ready.
-
-        This method waits for the measurement result to be ready, taking into account the sensor's mode and sensitivity.
-
-        Args:
-            additional (float): Additional delay time (default is 0).
-
-        Returns:
-            None
-        """
         basetime = 0.018 if (self.mode & 0x03) == 0x03 else 0.128
         time.sleep(basetime * (self.mtreg / 69.0) + additional)
 
-    def read_data(self, additional_delay=0):
+    def read_data(self, additional_delay=0) -> dict:
         """
-        Attempt to read light intensity data multiple times, handling exceptions and returning the data.
-
-        This method attempts to read light intensity data multiple times, handling exceptions that may occur
-        during the reading process. It returns the light intensity data as a floating-point value or None in case of an error.
+        Read light data from the sensor, handling exceptions and returning the data.
 
         Args:
-            additional_delay (float): Additional delay time (default is 0).
+            additional_delay (int): Additional delay time in seconds.
 
         Returns:
-            float or None: The measured light intensity, or None in case of an error.
+            dict: A dictionary containing the light data. If an error occurs, returns a dictionary with None values.
         """
         if self.working:
             for i in range(3):
@@ -213,11 +139,14 @@ class LightSensor:
                     }
                 except Exception as e:
                     if isinstance(e, OSError):
-                        logging.error(f"Error occurred during reading data from Light sensor: [Errno 121] Remote I/O error")
+                        logging.error(f"Error occurred during reading data from Light sensor: [Errno 121] Remote I/O "
+                                      f"error")
                     else:
                         logging.error(f"Error occurred during reading data from Light sensor: {str(e)}", exc_info=True)
                     if i == 2:
-                        return None
+                        return {
+                            "light": None
+                        }
         else:
             return {
                 "light": None

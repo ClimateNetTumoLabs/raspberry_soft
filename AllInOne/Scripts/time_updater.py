@@ -1,3 +1,18 @@
+"""
+    Script for updating the system time from an NTP server.
+
+    This script provides a function, update_time_from_ntp, for continuously updating the system time from an NTP server.
+
+    Function Docstring:
+    --------------------
+    update_time_from_ntp():
+        Continuously updates the system time from an NTP server. Uses the 'Asia/Yerevan' timezone.
+
+    Module Usage:
+    -------------
+    To use this script, call the update_time_from_ntp() function.
+"""
+
 import pytz
 import ntplib
 import subprocess
@@ -9,6 +24,9 @@ from .network_checker import check_network
 
 
 def update_time_from_ntp():
+    """
+    Continuously updates the system time from an NTP server. Uses the 'Asia/Yerevan' timezone.
+    """
     while True:
         if check_network():
             tz = pytz.timezone('Asia/Yerevan')
@@ -17,7 +35,8 @@ def update_time_from_ntp():
             try:
                 response = ntp_client.request(ntp_server)
                 ntp_time = response.tx_time
-                new_datetime = datetime.utcfromtimestamp(ntp_time).replace(tzinfo=pytz.utc).astimezone(tz=tz).strftime('%Y-%m-%d %H:%M:%S')
+                new_datetime = datetime.utcfromtimestamp(ntp_time).replace(tzinfo=pytz.utc).astimezone(tz=tz).strftime(
+                    '%Y-%m-%d %H:%M:%S')
                 subprocess.call(['sudo', 'date', '-s', new_datetime])
                 logging.info(f'Updated time from NTP server: {new_datetime}')
                 return True
@@ -25,7 +44,7 @@ def update_time_from_ntp():
                 logging.error(f"Failed to get time from NTP")
             except Exception as e:
                 logging.error(f"Error occurred during getting time from NTP: {e}")
-            
+
         else:
             logging.error(f"Failed to establish network connection for changing time")
 

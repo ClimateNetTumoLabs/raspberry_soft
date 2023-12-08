@@ -1,3 +1,29 @@
+"""
+    Module for interacting with an air quality sensor (PMS5003).
+
+    This module provides a class, AirQualitySensor, for reading air quality data from a PMS5003 air quality sensor.
+
+    Class Docstring:
+    ----------------
+    AirQualitySensor:
+        Interacts with a PMS5003 air quality sensor to read air quality data.
+
+    Constructor:
+        Initializes an AirQualitySensor object based on the configuration specified in the SENSORS module.
+
+    Class Attributes:
+        working (bool): Indicates if the air quality sensor is operational.
+        pms5003 (PMS5003): An instance of the PMS5003 air quality sensor.
+
+    Methods:
+        read_data(self) -> dict:
+            Attempts to read air quality data from the PMS5003 sensor, handling exceptions and returning the data as a dictionary.
+
+    Module Usage:
+    -------------
+    To use this module, create an instance of the AirQualitySensor class. Call the read_data() method to get air quality data.
+"""
+
 from .PMS5003_library import PMS5003, SerialTimeoutError, ReadTimeoutError
 from logger_config import *
 from config import SENSORS
@@ -5,47 +31,15 @@ from config import SENSORS
 
 class AirQualitySensor:
     """
-    Class for reading air quality data using a PMS5003 air quality sensor.
-
-    This class provides methods for reading air quality data from a PMS5003 air quality sensor connected to
-    a serial device, typically a Raspberry Pi's UART.
-
-    Args:
-        device (str): The path to the serial device (default is '/dev/ttyS0').
-        baudrate (int): The baud rate for serial communication (default is 9600).
-        pin_enable (int): GPIO pin number for enabling the sensor (default is 27).
-        pin_reset (int): GPIO pin number for resetting the sensor (default is 22).
+    Interacts with a PMS5003 air quality sensor to read air quality data.
 
     Attributes:
-        device (str): The path to the serial device.
-        baudrate (int): The baud rate for serial communication.
-        pin_enable (int): GPIO pin number for enabling the sensor.
-        pin_reset (int): GPIO pin number for resetting the sensor.
+        working (bool): Indicates if the air quality sensor is operational.
         pms5003 (PMS5003): An instance of the PMS5003 air quality sensor.
-
-    Methods:
-        get_data(self):
-            Read air quality data from the PMS5003 sensor and return a dictionary of particle concentration values.
-
-        read_data(self):
-            Attempt to read air quality data multiple times, handling exceptions and returning the data as a dictionary.
     """
-
-    def __init__(self):
+    def __init__(self) -> None:
         """
-        Initialize the AirQualitySensor class.
-
-        This method initializes the AirQualitySensor class and sets up the serial device and GPIO pins.
-        It also creates an instance of the PMS5003 air quality sensor.
-
-        Args:
-            device (str): The path to the serial device (default is '/dev/ttyS0').
-            baudrate (int): The baud rate for serial communication (default is 9600).
-            pin_enable (int): GPIO pin number for enabling the sensor (default is 27).
-            pin_reset (int): GPIO pin number for resetting the sensor (default is 22).
-
-        Returns:
-            None
+        Initializes an AirQualitySensor object based on the configuration specified in the SENSORS module.
         """
         sensor_info = SENSORS["air_quality_sensor"]
 
@@ -59,15 +53,12 @@ class AirQualitySensor:
                 pin_reset=sensor_info["pin_reset"]
             )
 
-    def __get_data(self):
+    def __get_data(self) -> dict:
         """
-        Read air quality data from the PMS5003 sensor and return a dictionary of particle concentration values.
-
-        This method reads air quality data from the PMS5003 sensor, including particle concentration values
-        for different particle sizes (PM1.0, PM2.5, and PM10).
+        Retrieves air quality data from the PMS5003 sensor.
 
         Returns:
-            dict: A dictionary containing air quality data with keys "Air_PM1", "Air_PM2_5", and "Air_PM10."
+            dict: A dictionary containing various air quality measurements.
         """
         data = {}
         all_data = self.pms5003.read()
@@ -89,15 +80,13 @@ class AirQualitySensor:
 
         return data
 
-    def read_data(self):
+    def read_data(self) -> dict:
         """
-        Attempt to read air quality data multiple times, handling exceptions, and returning the data as a dictionary.
-
-        This method attempts to read air quality data from the PMS5003 sensor multiple times, handling exceptions
-        that may occur during the reading process. It returns the data as a dictionary with particle concentration values.
+        Attempts to read air quality data from the PMS5003 sensor, handling exceptions and returning the data as a
+        dictionary.
 
         Returns:
-            dict: A dictionary containing air quality data with keys "Air_PM1", "Air_PM2_5", and "Air_PM10."
+            dict: A dictionary containing air quality data. If an error occurs, returns a dictionary with None values.
         """
         if self.working:
             for i in range(3):
@@ -105,9 +94,11 @@ class AirQualitySensor:
                     return self.__get_data()
                 except Exception as e:
                     if isinstance(e, SerialTimeoutError):
-                        logging.error(f"Error occurred during reading data from AirQuality sensor: PMS5003 SerialTimeoutError: Failed to read start of frame byte")
+                        logging.error(f"Error occurred during reading data from AirQuality sensor: PMS5003 "
+                                      f"SerialTimeoutError: Failed to read start of frame byte")
                     elif isinstance(e, ReadTimeoutError):
-                        logging.error(f"Error occurred during reading data from AirQuality sensor: PMS5003 ReadTimeoutError: Could not find start of frame")
+                        logging.error(f"Error occurred during reading data from AirQuality sensor: PMS5003 "
+                                      f"ReadTimeoutError: Could not find start of frame")
                     else:
                         logging.error(f"Error occurred during reading data from AirQuality sensor: {str(e)}", exc_info=True)
                     if i == 2:
