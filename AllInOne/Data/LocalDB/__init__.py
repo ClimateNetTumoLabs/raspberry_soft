@@ -56,6 +56,7 @@ class LocalDatabase:
         cursor (psycopg2.extensions.cursor): Database cursor for executing SQL queries.
         deviceID (str): Identifier for the device, used as the table name in the database.
     """
+
     def __init__(self, deviceID: str) -> None:
         """
         Initializes a LocalDatabase object and connects to the PostgreSQL database.
@@ -67,6 +68,10 @@ class LocalDatabase:
         self.cursor = None
         self.connect_to_db()
         self.deviceID = deviceID
+
+        self.table_columns = ["time", "light", "temperature", "pressure", "humidity", "pm1", "pm2_5", "pm10",
+                              "atm_pm1", "atm_pm2_5", "atm_pm10", "litre_pm0_3", "litre_pm0_5", "litre_pm1",
+                              "litre_pm2_5", "litre_pm5", "litre_pm10", "speed", "rain", "direction"]
 
     def connect_to_db(self) -> None:
         """
@@ -106,9 +111,18 @@ class LocalDatabase:
                     temperature REAL,
                     pressure REAL,
                     humidity REAL,
-                    PM1 REAL,
-                    PM2_5 REAL,
-                    PM10 REAL,
+                    pm1 REAL,
+                    pm2_5 REAL,
+                    pm10 REAL,
+                    atm_pm1 REAL,
+                    atm_pm2_5 REAL,
+                    atm_pm10 REAL,
+                    litre_pm0_3 REAL,
+                    litre_pm0_5 REAL,
+                    litre_pm1 REAL,
+                    litre_pm2_5 REAL,
+                    litre_pm5 REAL,
+                    litre_pm10 REAL,
                     speed REAL,
                     rain REAL,
                     direction TEXT
@@ -139,13 +153,14 @@ class LocalDatabase:
         Retrieves all data from the table associated with the deviceID.
 
         Returns:
-            list: A list of tuples representing rows of data, each tuple includes timestamp and various sensor readings.
+            list: A list of dicts representing rows of data, each dict includes timestamp and various sensor readings.
         """
-        self.cursor.execute(f"SELECT time, light, temperature, pressure, humidity, PM1, PM2_5, PM10, speed, rain, "
-                            f"direction FROM {self.deviceID};")
+        self.cursor.execute(f"SELECT {', '.join(self.table_columns)} FROM {self.deviceID};")
 
         result = self.cursor.fetchall()
-        result = [(row[0].isoformat(), *row[1:]) for row in result]
+        columns = [desc[0] for desc in self.cursor.description]
+
+        result = [dict(zip(columns, row)) for row in [(row[0].isoformat(), *row[1:]) for row in result]]
 
         return result
 
@@ -161,9 +176,16 @@ class LocalDatabase:
         """
         try:
             self.create_table()
-            query_data = ', '.join([f"'{elem}'" if elem is not None else "NULL" for elem in data.values()])
-            self.cursor.execute(f"INSERT INTO {self.deviceID} (time, light, temperature, pressure, humidity, PM1, "
-                                f"PM2_5, PM10, speed, rain, direction) VALUES ({query_data})")
+
+            fields = []
+            values = []
+            for key, value in data.items():
+                if key in self.table_columns:
+                    fields.append(key)
+                    values.append(f"'{value}'" if value is not None else "NULL")
+
+            self.cursor.execute(f"INSERT INTO {self.deviceID} ({', '.join(fields)}) VALUES ({', '.join(values)})")
+
             self.conn.commit()
         except Exception as e:
             logging.error(f"Error occurred during inserting data to Local DB: {str(e)}", exc_info=True)
