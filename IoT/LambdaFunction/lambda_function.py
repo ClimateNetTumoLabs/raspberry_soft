@@ -11,15 +11,24 @@ def connect_to_db(device_id):
             temperature REAL,
             pressure REAL,
             humidity REAL,
-            PM1 REAL,
-            PM2_5 REAL,
-            PM10 REAL,
+            pm1 REAL,
+            pm2_5 REAL,
+            pm10 REAL,
+            atm_pm1 REAL,
+            atm_pm2_5 REAL,
+            atm_pm10 REAL,
+            litre_pm0_3 REAL,
+            litre_pm0_5 REAL,
+            litre_pm1 REAL,
+            litre_pm2_5 REAL,
+            litre_pm5 REAL,
+            litre_pm10 REAL,
             speed REAL,
             rain REAL,
             direction TEXT
         );
         """
-    
+
     try:
         connection = psycopg2.connect(
             host=host,
@@ -27,34 +36,43 @@ def connect_to_db(device_id):
             password=password,
             database=db_name
         )
-    
-    
+
         cursor = connection.cursor()
-    
+
         cursor.execute(create_table_query)
         connection.commit()
-        
+
         return connection, cursor
-        
+
     except Exception as ex:
         print("Error", ex)
         return False
 
 
 def add_message(info, connection, cursor):
+    table_columns = ["time", "light", "temperature", "pressure", "humidity", "pm1", "pm2_5", "pm10",
+                     "atm_pm1", "atm_pm2_5", "atm_pm10", "litre_pm0_3", "litre_pm0_5", "litre_pm1",
+                     "litre_pm2_5", "litre_pm5", "litre_pm10", "speed", "rain", "direction"]
+
     device = info['device']
 
     for data in info['data']:
-        insert_data = ', '.join([f"'{elem}'" if elem is not None else "NULL" for elem in data])
-        cursor.execute(f"INSERT INTO {device} (time, light, temperature, pressure, humidity, PM1, PM2_5, PM10, speed, rain, direction) VALUES ({insert_data})")
-    
+        fields = []
+        values = []
+        for key, value in data.items():
+            if key in table_columns:
+                fields.append(key)
+                values.append(f"'{value}'" if value is not None else "NULL")
+
+        cursor.execute(f"INSERT INTO {device} ({', '.join(fields)}) VALUES ({', '.join(values)})")
+
     connection.commit()
 
 
 def lambda_handler(event, context):
     conn, cursor = connect_to_db(event["device"])
-    
+
     add_message(event, conn, cursor)
-    
+
     conn.close()
     return True
