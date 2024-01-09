@@ -190,3 +190,13 @@ class LocalDatabase:
         except Exception as e:
             logging.error(f"Error occurred during inserting data to Local DB: {str(e)}", exc_info=True)
             raise
+    
+    def get_count(self) -> list:
+        try:
+            self.cursor.execute(f"SELECT COUNT(*) FROM {self.deviceID}")
+
+            result = self.cursor.fetchall()
+
+            return result[0][0]
+        except psycopg2.errors.UndefinedTable:
+            return 0

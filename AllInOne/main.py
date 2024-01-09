@@ -10,6 +10,9 @@ def main():
     sensor_reader = ReadSensors()
     dataHandler = DataHandler()
 
+    if dataHandler.local_db.get_count():
+        dataHandler.send_only_local()
+
     # Main loop for continuous data collection and handling
     while True:
         try:

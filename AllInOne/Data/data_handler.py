@@ -77,7 +77,7 @@ class DataHandler:
         logging.info('Send current data to local DB')
         self.local_db.insert_data(data)
 
-    def __get_local(self, data: dict) -> list:
+    def __get_local(self) -> list:
         """
         Retrieves local data and combines it with the current data.
 
@@ -88,10 +88,8 @@ class DataHandler:
             list: A list of tuples representing rows of data, each tuple includes timestamp and various sensor readings.
         """
         local_data = self.local_db.get_data()
-        local_data.append(data)
-
-        splitted_data = split_data(local_data)
-        return splitted_data
+        
+        return local_data
 
     def __send_mqtt(self, data: dict, local=False) -> bool:
         """
@@ -108,7 +106,13 @@ class DataHandler:
             logging.info('Send local & current data to RDS')
 
             mqtt_res = True
-            for elem in self.__get_local(data):
+
+            all_data = self.__get_local()
+            all_data.append(data)
+
+            splitted_data = split_data(all_data)
+
+            for elem in splitted_data:
                 mqtt_res = self.mqtt_client.send_data(elem)
                 if not mqtt_res:
                     break
@@ -124,6 +128,25 @@ class DataHandler:
             mqtt_res = self.mqtt_client.send_data([data])
 
             return mqtt_res
+    
+    def send_only_local(self):
+        logging.info('Send local data to RDS')
+        mqtt_res = True
+        
+        data = self.__get_local()
+        splitted_data = split_data(data)
+
+        for elem in splitted_data:
+                mqtt_res = self.mqtt_client.send_data(elem)
+                if not mqtt_res:
+                    break
+
+        if mqtt_res:
+            self.local_db.drop_table()
+            return True
+        else:
+            self.local = True
+            return False
 
     def save(self, data: dict) -> None:
         """

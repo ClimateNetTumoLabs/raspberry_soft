@@ -7,7 +7,7 @@ MAX_READING_TIME = 40
 
 SENSORS = {
     "light_sensor": {
-        "working": True
+        "working": False
     },
     "tph_sensor": {
         "working": True

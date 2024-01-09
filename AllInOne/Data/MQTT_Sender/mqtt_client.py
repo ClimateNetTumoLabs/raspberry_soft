@@ -35,7 +35,7 @@ import time
 import socket
 import paho.mqtt.client as mqtt
 from logger_config import *
-from Data.config import MQTT_BROKER_ENDPOINT
+from Data.config import MQTT_BROKER_ENDPOINT, MQTT_TOPIC
 
 
 class MQTTClient:
@@ -109,6 +109,6 @@ class MQTTClient:
         message_json = json.dumps(message)
         logging.info(f"MQTT Data: {str(message_json)}")
 
-        self.client.publish("raspberry/devices", message_json)
+        self.client.publish(MQTT_TOPIC, message_json)
 
         return True
