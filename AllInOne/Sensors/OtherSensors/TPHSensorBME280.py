@@ -70,7 +70,7 @@ class TPHSensor:
                     data = bme280.sample(self.bus, self.address, self.calibration_params)
                     return {
                         "temperature": round(data.temperature, 2),
-                        "pressure": round(data.pressure, 2),
+                        "pressure": round(data.pressure * 0.750061, 2),
                         "humidity": round(data.humidity, 2)
                     }
                 except Exception as e:
