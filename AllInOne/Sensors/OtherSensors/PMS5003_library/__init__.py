@@ -4,6 +4,7 @@ import struct
 import time
 
 
+
 __version__ = '0.0.5'
 
 PMS5003_SOF = bytearray(b'\x42\x4d')
@@ -95,7 +96,7 @@ class PMS5003:
     PMS5003 Sensor interface class.
     """
 
-    def __init__(self, device='/dev/ttyAMA0', baudrate=9600, pin_enable=22, pin_reset=27):
+    def __init__(self, device='/dev/ttyAMA0', baudrate=9600, pin_enable=22, pin_reset=27, pin_enable_working=False, pin_reset_working=False):
         """
         Initialize PMS5003 sensor.
 
@@ -109,7 +110,10 @@ class PMS5003:
         self._device = device
         self._baudrate = baudrate
         self._pin_enable = pin_enable
+        self._pin_enable_working = pin_enable_working
         self._pin_reset = pin_reset
+        self._pin_reset_working = pin_reset_working
+        
         self.setup()
 
     def setup(self):
@@ -118,15 +122,18 @@ class PMS5003:
         """
         GPIO.setwarnings(False)
         GPIO.setmode(GPIO.BCM)
-        GPIO.setup(self._pin_enable, GPIO.OUT, initial=GPIO.HIGH)
-        GPIO.setup(self._pin_reset, GPIO.OUT, initial=GPIO.HIGH)
+        if self._pin_enable_working:
+            GPIO.setup(self._pin_enable, GPIO.OUT, initial=GPIO.HIGH)
+        if self._pin_reset_working:
+            GPIO.setup(self._pin_reset, GPIO.OUT, initial=GPIO.HIGH)
 
         if self._serial is not None:
             self._serial.close()
 
         self._serial = serial.Serial(self._device, baudrate=self._baudrate, timeout=4)
-
-        self.reset()
+        
+        if self._pin_reset_working:
+            self.reset()
 
     def reset(self):
         """

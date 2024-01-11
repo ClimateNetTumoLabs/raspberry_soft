@@ -1,4 +1,4 @@
-DEVICE_ID = 9
+DEVICE_ID = 2
 
 # It is recommended to set the value >= than 
 # MAX_READING_TIME + wind_direction["reading_time"] + 10
@@ -16,8 +16,10 @@ SENSORS = {
         "working": True,
         "address": "/dev/ttyS0",
         "baudrate": 9600,
-        "pin_enable": 27,
-        "pin_reset": 22
+        "pin_enable": 22,
+        "pin_enable_working": False,
+        "pin_reset": 27,
+        "pin_reset_working": False
     },
     "wind_speed": {
         "working": True,
