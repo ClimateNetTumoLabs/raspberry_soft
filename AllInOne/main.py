@@ -2,7 +2,7 @@ from datetime import datetime
 from Sensors import ReadSensors
 from Data import DataHandler
 from logger_config import *
-from Scripts import update_time_from_ntp, chmod_tty
+from Scripts import update_time, chmod_tty
 
 
 def main():
@@ -35,7 +35,7 @@ def main():
 
 if __name__ == "__main__":
     # Perform initial setup tasks before starting the main program
-    update_time_from_ntp()
+    update_time()
     chmod_tty()
 
     # Log the start of the program

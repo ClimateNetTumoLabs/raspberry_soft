@@ -21,13 +21,14 @@ import time
 from datetime import datetime
 from logger_config import *
 from .network_checker import check_network
+from .rtc import RTCControl
 
 
-def update_time_from_ntp():
+def update_time():
     """
-    Continuously updates the system time from an NTP server. Uses the 'Asia/Yerevan' timezone.
+    Updates the system time from an NTP server. Uses the 'Asia/Yerevan' timezone.
     """
-    while True:
+    for i in range(3):
         if check_network():
             tz = pytz.timezone('Asia/Yerevan')
             ntp_server = 'pool.ntp.org'
@@ -49,3 +50,20 @@ def update_time_from_ntp():
             logging.error(f"Failed to establish network connection for changing time")
 
         time.sleep(5)
+    
+    rtc = RTCControl()
+    rtc_time = rtc.get_time()
+
+    if rtc_time:
+        try:
+            new_time = rtc_time.strftime('%Y-%m-%d %H:%M:%S')
+
+            subprocess.call(['sudo', 'date', '-s', new_time])
+            logging.info(f'Updated time from RTC: {new_time}')
+            return True
+        except Exception as e:
+            logging.error(f"Error occurred during updating time from RTC: {e}")
+    else:
+        logging.error("Failed to get time from RTC")
+
+    return False
