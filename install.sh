@@ -21,11 +21,22 @@ sudo -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'climatenet2024';"
 git config --global core.editor "vim"
 
 # Copy service files
-cp raspberry_soft/ServiceFiles/InetCheckConnect/InetCheckConnect.service /etc/systemd/system/
+cp ServiceFiles/InetCheckConnect/InetCheckConnect.service /etc/systemd/system/
 mkdir -p "/home/raspberry/scripts/"
-mv raspberry_soft/ServiceFiles/InetCheckConnect/InetCheckConnect.py /home/raspberry/scripts/
+mv ServiceFiles/InetCheckConnect/InetCheckConnect.py /home/raspberry/scripts/
 
-cp raspberry_soft/ServiceFiles/ProgramAutoRun/ProgramAutoRun.service /etc/systemd/system/
+cp ServiceFiles/ProgramAutoRun/ProgramAutoRun.service /etc/systemd/system/
+
+
+python3 -m venv AllInOne/venv
+source AllInOne/venv/bin/activate
+
+# Install Python dependencies
+pip install -r AllInOne/requirements.txt
+
+# Deactivate virtual environment
+deactivate
+
 
 # Reload systemd to recognize new service files
 sudo systemctl daemon-reload
