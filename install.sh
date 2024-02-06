@@ -23,7 +23,7 @@ git config --global core.editor "vim"
 # Copy service files
 cp ServiceFiles/InternetCheckConnect/InetCheckConnect.service /etc/systemd/system/
 mkdir -p "/home/raspberry/scripts/"
-mv ServiceFiles/InternetCheckConnect/InetCheckConnect.py /home/raspberry/scripts/
+cp ServiceFiles/InternetCheckConnect/InetCheckConnect.py /home/raspberry/scripts/
 
 cp ServiceFiles/ProgramAutoRun/ProgramAutoRun.service /etc/systemd/system/
 
