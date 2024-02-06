@@ -2,12 +2,13 @@ DEVICE_ID = 2
 
 # It is recommended to set the value >= than 
 # MAX_READING_TIME + wind_direction["reading_time"] + 10
-MEASURING_TIME = 60
-MAX_READING_TIME = 40
+MEASURING_TIME = 120
+MAX_READING_TIME = 100
 
 SENSORS = {
     "light_sensor": {
-        "working": False
+        "working": True,
+        "reading_time": 60
     },
     "tph_sensor": {
         "working": True
