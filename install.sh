@@ -21,9 +21,9 @@ sudo -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'climatenet2024';"
 git config --global core.editor "vim"
 
 # Copy service files
-cp ServiceFiles/InetCheckConnect/InetCheckConnect.service /etc/systemd/system/
+cp ServiceFiles/InternetCheckConnect/InetCheckConnect.service /etc/systemd/system/
 mkdir -p "/home/raspberry/scripts/"
-mv ServiceFiles/InetCheckConnect/InetCheckConnect.py /home/raspberry/scripts/
+mv ServiceFiles/InternetCheckConnect/InetCheckConnect.py /home/raspberry/scripts/
 
 cp ServiceFiles/ProgramAutoRun/ProgramAutoRun.service /etc/systemd/system/
 
