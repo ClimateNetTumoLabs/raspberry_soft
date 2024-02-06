@@ -1,0 +1,13 @@
+[Unit]
+Description=AllInOne AutoRun
+After=network.target
+
+[Service]
+ExecStart=/home/raspberry/workspace/raspberry_soft/AllInOne/venv/bin/python3 /home/raspberry/workspace/raspberry_soft/AllInOne/main.py
+WorkingDirectory=/home/raspberry/workspace/raspberry_soft/AllInOne
+Restart=always
+User=raspberry
+Group=raspberry
+
+[Install]
+WantedBy=multi-user.target
