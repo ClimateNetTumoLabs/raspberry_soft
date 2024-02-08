@@ -2,33 +2,43 @@ import psycopg2
 from config import host, user, password, db_name
 
 
-def connect_to_db(device_id):
-    create_table_query = f"""
-        CREATE TABLE IF NOT EXISTS {device_id} (
-            id SERIAL PRIMARY KEY,
-            time TIMESTAMP,
-            light REAL,
-            temperature REAL,
-            pressure REAL,
-            humidity REAL,
-            pm1 REAL,
-            pm2_5 REAL,
-            pm10 REAL,
-            atm_pm1 REAL,
-            atm_pm2_5 REAL,
-            atm_pm10 REAL,
-            litre_pm0_3 REAL,
-            litre_pm0_5 REAL,
-            litre_pm1 REAL,
-            litre_pm2_5 REAL,
-            litre_pm5 REAL,
-            litre_pm10 REAL,
-            speed REAL,
-            rain REAL,
-            direction TEXT
-        );
-        """
+columns = {
+    "time": "TIMESTAMP",
+    "light_vis": "REAL",
+    "light_uv": "REAL",
+    "light_ir": "REAL",
+    "temperature": "REAL",
+    "pressure": "REAL",
+    "humidity": "REAL",
+    "pm1": "REAL",
+    "pm2_5": "REAL",
+    "pm10": "REAL",
+    "atm_pm1": "REAL",
+    "atm_pm2_5": "REAL",
+    "atm_pm10": "REAL",
+    "litre_pm0_3": "REAL",
+    "litre_pm0_5": "REAL",
+    "litre_pm1": "REAL",
+    "litre_pm2_5": "REAL",
+    "litre_pm5": "REAL",
+    "litre_pm10": "REAL",
+    "speed": "REAL",
+    "rain": "REAL",
+    "direction": "TEXT"
+}
 
+
+def connect_to_db(device_id):
+    column_definitions = [f"{column_name} {column_type}" for column_name, column_type in columns.items()]
+    query_columns = ",\n    ".join(column_definitions)
+
+    create_table_query = f"""
+CREATE TABLE IF NOT EXISTS {device_id} (
+    id SERIAL PRIMARY KEY,
+    {query_columns}
+);
+ """
+    
     try:
         connection = psycopg2.connect(
             host=host,
@@ -50,9 +60,7 @@ def connect_to_db(device_id):
 
 
 def add_message(info, connection, cursor):
-    table_columns = ["time", "light", "temperature", "pressure", "humidity", "pm1", "pm2_5", "pm10",
-                     "atm_pm1", "atm_pm2_5", "atm_pm10", "litre_pm0_3", "litre_pm0_5", "litre_pm1",
-                     "litre_pm2_5", "litre_pm5", "litre_pm10", "speed", "rain", "direction"]
+    table_columns = list(columns.keys())
 
     device = info['device']
 
@@ -76,3 +84,4 @@ def lambda_handler(event, context):
 
     conn.close()
     return True
+
