@@ -28,6 +28,16 @@ columns = {
 }
 
 
+def validate_value(value):
+    try:
+        if value is None:
+            return "NULL"
+
+        return f"'{round(float(value))}'"
+    except ValueError:
+        return f"'{value}'"
+
+
 def connect_to_db(device_id):
     column_definitions = [f"{column_name} {column_type}" for column_name, column_type in columns.items()]
     query_columns = ",\n    ".join(column_definitions)
@@ -70,7 +80,7 @@ def add_message(info, connection, cursor):
         for key, value in data.items():
             if key in table_columns:
                 fields.append(key)
-                values.append(f"'{value}'" if value is not None else "NULL")
+                values.append(validate_value(value))
 
         cursor.execute(f"INSERT INTO {device} ({', '.join(fields)}) VALUES ({', '.join(values)})")
 
