@@ -5,7 +5,7 @@ from datetime import datetime
 
 # Known Wi-Fi networks and their corresponding passwords
 known_wifi = {
-    "TUMOLabsStudents": "!@#Cat2023Yerevan$"
+    "SSID": "PASSWORD"
 }
 
 
