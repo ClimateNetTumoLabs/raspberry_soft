@@ -5,7 +5,7 @@ from config import host, user, password, db_name
 columns = {
     "time": "TIMESTAMP",
     "light_vis": "SMALLINT",
-    "light_uv": "SMALLINT",
+    "light_uv": "REAL",
     "light_ir": "SMALLINT",
     "temperature": "SMALLINT",
     "pressure": "SMALLINT",
@@ -22,18 +22,21 @@ columns = {
     "litre_pm2_5": "SMALLINT",
     "litre_pm5": "SMALLINT",
     "litre_pm10": "SMALLINT",
-    "speed": "SMALLINT",
-    "rain": "SMALLINT",
+    "speed": "REAL",
+    "rain": "REAL",
     "direction": "TEXT"
 }
 
 
-def validate_value(value):
+def validate_value(key, value):
     try:
         if value is None:
             return "NULL"
 
-        return f"'{round(float(value))}'"
+        if columns[key] == "SMALLINT":
+            return f"'{round(float(value))}'"
+        
+        return f"'{value}'"
     except ValueError:
         return f"'{value}'"
 
@@ -80,7 +83,7 @@ def add_message(info, connection, cursor):
         for key, value in data.items():
             if key in table_columns:
                 fields.append(key)
-                values.append(validate_value(value))
+                values.append(validate_value(key, value))
 
         cursor.execute(f"INSERT INTO {device} ({', '.join(fields)}) VALUES ({', '.join(values)})")
 
@@ -94,4 +97,3 @@ def lambda_handler(event, context):
 
     conn.close()
     return True
-
