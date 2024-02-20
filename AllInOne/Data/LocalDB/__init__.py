@@ -41,6 +41,7 @@
         To use this module, create an instance of the LocalDatabase class, passing the deviceID as an argument.
         Use the various methods to manage tables and perform data operations on the PostgreSQL database.
 """
+from typing import Union, Any
 
 import psycopg2
 from Data.config import LOCAL_DB_HOST, LOCAL_DB_USERNAME, LOCAL_DB_PASSWORD, LOCAL_DB_DB_NAME
@@ -69,7 +70,7 @@ class LocalDatabase:
         self.connect_to_db()
         self.deviceID = deviceID
 
-        self.table_columns = ["time", "light", "temperature", "pressure", "humidity", "pm1", "pm2_5", "pm10",
+        self.table_columns = ["time", "light_vis", "light_uv", "light_ir", "temperature", "pressure", "humidity", "pm1", "pm2_5", "pm10",
                               "atm_pm1", "atm_pm2_5", "atm_pm10", "litre_pm0_3", "litre_pm0_5", "litre_pm1",
                               "litre_pm2_5", "litre_pm5", "litre_pm10", "speed", "rain", "direction"]
 
@@ -107,22 +108,24 @@ class LocalDatabase:
                 CREATE TABLE IF NOT EXISTS {self.deviceID} (
                     id SERIAL PRIMARY KEY,
                     time TIMESTAMP,
-                    light REAL,
-                    temperature REAL,
-                    pressure REAL,
-                    humidity REAL,
-                    pm1 REAL,
-                    pm2_5 REAL,
-                    pm10 REAL,
-                    atm_pm1 REAL,
-                    atm_pm2_5 REAL,
-                    atm_pm10 REAL,
-                    litre_pm0_3 REAL,
-                    litre_pm0_5 REAL,
-                    litre_pm1 REAL,
-                    litre_pm2_5 REAL,
-                    litre_pm5 REAL,
-                    litre_pm10 REAL,
+                    light_vis SMALLINT,
+                    light_uv REAL,
+                    light_ir SMALLINT,
+                    temperature SMALLINT,
+                    pressure SMALLINT,
+                    humidity SMALLINT,
+                    pm1 SMALLINT,
+                    pm2_5 SMALLINT,
+                    pm10 SMALLINT,
+                    atm_pm1 SMALLINT,
+                    atm_pm2_5 SMALLINT,
+                    atm_pm10 SMALLINT,
+                    litre_pm0_3 SMALLINT,
+                    litre_pm0_5 SMALLINT,
+                    litre_pm1 SMALLINT,
+                    litre_pm2_5 SMALLINT,
+                    litre_pm5 SMALLINT,
+                    litre_pm10 SMALLINT,
                     speed REAL,
                     rain REAL,
                     direction TEXT
@@ -191,7 +194,7 @@ class LocalDatabase:
             logging.error(f"Error occurred during inserting data to Local DB: {str(e)}", exc_info=True)
             raise
     
-    def get_count(self) -> list:
+    def get_count(self) -> Union[int, Any]:
         try:
             self.cursor.execute(f"SELECT COUNT(*) FROM {self.deviceID}")
 

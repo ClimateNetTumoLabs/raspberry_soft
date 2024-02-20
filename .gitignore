@@ -1,6 +1,7 @@
 venv/
 __pycache__/
 .idea/
+.DS_Store
 
 AllInOne/Data/MQTT_Sender/certificate.pem.crt
 AllInOne/Data/MQTT_Sender/private.pem.key
