@@ -1,6 +1,7 @@
 import time
 from Sensors.WeatherMeterSensors import *
 from Sensors.OtherSensors import *
+from Scripts.rtc import RTCControl
 import config
 import os
 
@@ -10,6 +11,10 @@ class TestSensors:
         self.light = LightSensor(testing=True)
         self.tph = TPHSensor(testing=True)
         self.air_quality = AirQualitySensor(testing=True)
+        try:
+            self.rtc = RTCControl()
+        except Exception:
+            self.rtc = None
 
         self.wind_direction_sensor = WindDirection(testing=True)
         self.wind_speed_sensor = WindSpeed()
@@ -27,7 +32,8 @@ class TestSensors:
             "AirQualitySensor": [True],
             "WindDirection": [True],
             "WindSpeed": False,
-            "Rain": False
+            "Rain": False,
+            "RTC": False
         }
 
     def print_res(self):
@@ -70,6 +76,13 @@ class TestSensors:
         self.results["WindDirection"].append(res_wind_direction)
         if res_wind_direction is None:
             self.results["WindDirection"][0] = False
+
+        if self.rtc is not None:
+            try:
+                res_rtc = self.rtc.get_time()
+                self.results["RTC"] = [True, res_rtc.strftime("%d-%m-%Y %H:%M:%S")]
+            except Exception:
+                self.results["RTC"] = False
 
         self.print_res()
 
