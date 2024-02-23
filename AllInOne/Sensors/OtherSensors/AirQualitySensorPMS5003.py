@@ -37,15 +37,16 @@ class AirQualitySensor:
         working (bool): Indicates if the air quality sensor is operational.
         pms5003 (PMS5003): An instance of the PMS5003 air quality sensor.
     """
-    def __init__(self) -> None:
+    def __init__(self, testing=False) -> None:
         """
         Initializes an AirQualitySensor object based on the configuration specified in the SENSORS module.
         """
         sensor_info = SENSORS["air_quality_sensor"]
 
         self.working = sensor_info["working"]
+        self.testing = testing
 
-        if self.working:
+        if self.working or self.testing:
             self.pms5003 = PMS5003(
                 device=sensor_info["address"],
                 baudrate=sensor_info["baudrate"],
@@ -88,7 +89,7 @@ class AirQualitySensor:
         Returns:
             dict: A dictionary containing air quality data. If an error occurs, returns a dictionary with None values.
         """
-        if self.working:
+        if self.working or self.testing:
             for i in range(3):
                 try:
                     return self.__get_data()

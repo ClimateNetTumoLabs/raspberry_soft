@@ -43,15 +43,15 @@ class TPHSensor:
         bus: (smbus2.SMBus): An instance of the SMBus for communication with the sensor.
         calibration_params: Calibration parameters for the sensor.
     """
-    def __init__(self, port=1, address=0x76):
+    def __init__(self, port=1, address=0x76, testing=False):
         """
         Initializes a TPHSensor object based on the configuration specified in the SENSORS module.
         """
         sensor_info = SENSORS["tph_sensor"]
-
+        self.testing = testing
         self.working = sensor_info["working"]
 
-        if self.working:
+        if self.working or self.testing:
             self.port = port
             self.address = address
             self.bus = smbus2.SMBus(self.port)
@@ -64,7 +64,7 @@ class TPHSensor:
         Returns:
             dict: A dictionary containing temperature, pressure, and humidity data. If an error occurs, returns a dictionary with None values.
         """
-        if self.working:
+        if self.working or self.testing:
             for i in range(3):
                 try:
                     data = bme280.sample(self.bus, self.address, self.calibration_params)

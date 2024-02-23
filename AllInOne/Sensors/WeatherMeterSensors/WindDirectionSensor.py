@@ -58,7 +58,7 @@ class WindDirection:
         config (dict): Wind direction configuration loaded from the config_file.
     """
 
-    def __init__(self, adc_channel=0, config_file="directions_config.json", adc_max=1024, adc_vref=5.12) -> None:
+    def __init__(self, adc_channel=0, config_file="directions_config.json", adc_max=1024, adc_vref=5.12, testing=False) -> None:
         """
         Initializes a WindDirection object based on the configuration specified in the SENSORS module.
         """
@@ -77,6 +77,8 @@ class WindDirection:
 
         self.calculate_vout_adc()
         self.calculate_max_min_adc()
+
+        self.testing = testing
 
     def calculate_vout_adc(self) -> None:
         """
@@ -188,7 +190,7 @@ class WindDirection:
             average = arc
         elif c < 0:
             average = arc + 180
-        elif s < 0 and c > 0:
+        elif s < 0 < c:
             average = arc + 360
 
         return 0.0 if average == 360 else average
@@ -204,7 +206,7 @@ class WindDirection:
             start_time = time.time()
             data = []
 
-            while time.time() - start_time <= self.wind_interval:
+            while time.time() - start_time <= (self.wind_interval if not self.testing else 3):
                 adc_value = self.adc.value * 1000
                 direction = self.get_dir(adc_value)
                 if direction is not None:

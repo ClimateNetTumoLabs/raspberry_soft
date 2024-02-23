@@ -1,8 +1,8 @@
-DEVICE_ID = 2
+DEVICE_ID = 999
 
-# It is recommended to set the value >= than 
+# It is recommended to set the value >= than
 # MAX_READING_TIME + wind_direction["reading_time"] + 10
-MEASURING_TIME = 120
+MEASURING_TIME = 900
 MAX_READING_TIME = 100
 
 SENSORS = {
