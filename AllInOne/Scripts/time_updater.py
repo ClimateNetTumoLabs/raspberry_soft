@@ -40,6 +40,11 @@ def update_time():
                     '%Y-%m-%d %H:%M:%S')
                 subprocess.call(['sudo', 'date', '-s', new_datetime])
                 logging.info(f'Updated time from NTP server: {new_datetime}')
+                try:
+                    rtc = RTCControl()
+                    rtc.change_time(datetime.utcfromtimestamp(ntp_time).replace(tzinfo=pytz.utc).astimezone(tz=tz))
+                except Exception as e:
+                    logging.error(f"Failed to change RTC time: {e}")
                 return True
             except socket.gaierror:
                 logging.error(f"Failed to get time from NTP")
