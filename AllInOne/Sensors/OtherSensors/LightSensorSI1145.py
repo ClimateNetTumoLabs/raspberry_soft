@@ -15,8 +15,19 @@ class LightSensor:
         self.testing = testing
 
         if self.working or testing:
-            self.i2c = busio.I2C(board.SCL, board.SDA)
-            self.sensor = SI1145(self.i2c)
+            for i in range(3):
+                try:
+                    self.i2c = busio.I2C(board.SCL, board.SDA)
+                    self.sensor = SI1145(self.i2c)
+                    break
+                except OSError or ValueError:
+                    logging.error(
+                        "Error occurred during creating object for Light sensor: No I2C device at address: 0x60")
+                except Exception as e:
+                    logging.error(f"Error occurred during creating object for Light sensor: {str(e)}")
+
+                if i == 2:
+                    self.working = False
 
     def test_read(self):
         for i in range(3):

@@ -47,12 +47,19 @@ class AirQualitySensor:
         self.testing = testing
 
         if self.working or self.testing:
-            self.pms5003 = PMS5003(
-                device=sensor_info["address"],
-                baudrate=sensor_info["baudrate"],
-                pin_enable=sensor_info["pin_enable"],
-                pin_reset=sensor_info["pin_reset"]
-            )
+            for i in range(3):
+                try:
+                    self.pms5003 = PMS5003(
+                        device=sensor_info["address"],
+                        baudrate=sensor_info["baudrate"],
+                        pin_enable=sensor_info["pin_enable"],
+                        pin_reset=sensor_info["pin_reset"]
+                    )
+                    break
+                except Exception as e:
+                    if i == 2:
+                        self.working = False
+                    logging.error(f"Error occurred during creating object for AirQuality sensor: {str(e)}", exc_info=True)
 
     def __get_data(self) -> dict:
         """

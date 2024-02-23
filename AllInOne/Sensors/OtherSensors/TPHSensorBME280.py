@@ -52,10 +52,20 @@ class TPHSensor:
         self.working = sensor_info["working"]
 
         if self.working or self.testing:
-            self.port = port
-            self.address = address
-            self.bus = smbus2.SMBus(self.port)
-            self.calibration_params = bme280.load_calibration_params(self.bus, self.address)
+            for i in range(3):
+                try:
+                    self.port = port
+                    self.address = address
+                    self.bus = smbus2.SMBus(self.port)
+                    self.calibration_params = bme280.load_calibration_params(self.bus, self.address)
+                    break
+                except OSError:
+                    logging.error("Error occurred during creating object for TPH sensor: [Errno 5] Input/output error")
+                except Exception as e:
+                    logging.error(f"Error occurred during creating object for TPH sensor: {str(e)}", exc_info=True)
+
+                if i == 2:
+                    self.working = False
 
     def read_data(self) -> dict:
         """
