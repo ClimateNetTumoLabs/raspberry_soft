@@ -2,12 +2,14 @@ import time
 from Sensors.WeatherMeterSensors import *
 from Sensors.OtherSensors import *
 from Scripts.rtc import RTCControl
+from Scripts import chmod_tty
 import config
 import os
 
 
 class TestSensors:
     def __init__(self) -> None:
+        chmod_tty()
         self.light = LightSensor(testing=True)
         self.tph = TPHSensor(testing=True)
         self.air_quality = AirQualitySensor(testing=True)
