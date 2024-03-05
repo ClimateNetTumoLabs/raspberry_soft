@@ -5,8 +5,10 @@ from Scripts.rtc import RTCControl
 from Scripts.network_checker import check_network
 from Scripts.time_updater import update_rtc_time
 from Scripts import chmod_tty
+from prettytable import PrettyTable
 import config
 import os
+import json
 
 
 class TestSensors:
@@ -23,6 +25,7 @@ class TestSensors:
         self.wind_direction_sensor = WindDirection(testing=True)
         self.wind_speed_sensor = WindSpeed()
         self.rain_sensor = Rain()
+        os.system("clear")
 
         if config.SENSORS["wind_speed"]["working"]:
             self.wind_speed_sensor.sensor.when_pressed = self.speed_ok
@@ -41,18 +44,43 @@ class TestSensors:
             "RTC": False
         }
 
-    def print_res(self):
+    def format_result(self, result):
         os.system("clear")
+
+        if isinstance(result, list):
+            is_success, formatted_data = result
+
+            if isinstance(formatted_data, dict):
+                d = []
+                for key, value in formatted_data.items():
+                    d.append(f"{key}: {value}")
+                formatted_data = '\n'.join(d)
+
+            return f"{is_success}\n\n{formatted_data}"
+        else:
+            return result
+
+    def print_results(self):
+        table = PrettyTable()
+        table.field_names = ["Key", "Value"]
+
         for key, value in self.results.items():
-            print(f"{key}  ->  {value}")
+            formatted_value = self.format_result(value)
+            table.add_row([key, formatted_value], divider=True)
+
+        table.align = "l"
+
+        print(table)
 
     def speed_ok(self):
-        self.results["WindSpeed"] = True
-        self.print_res()
+        if not self.results["WindSpeed"]:
+            self.results["WindSpeed"] = True
+            self.print_results()
 
     def rain_ok(self):
-        self.results["Rain"] = True
-        self.print_res()
+        if not self.results["Rain"]:
+            self.results["Rain"] = True
+            self.print_results()
 
     def check_devices(self):
         res_light = self.light.read_data()
@@ -96,7 +124,7 @@ class TestSensors:
             except Exception:
                 self.results["RTC"] = False
 
-        self.print_res()
+        self.print_results()
 
 
 a = TestSensors()
