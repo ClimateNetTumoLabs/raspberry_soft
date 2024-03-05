@@ -2,6 +2,8 @@ import time
 from Sensors.WeatherMeterSensors import *
 from Sensors.OtherSensors import *
 from Scripts.rtc import RTCControl
+from Scripts.network_checker import check_network
+from Scripts.time_updater import update_rtc_time
 from Scripts import chmod_tty
 import config
 import os
@@ -35,6 +37,7 @@ class TestSensors:
             "WindDirection": [True],
             "WindSpeed": False,
             "Rain": False,
+            "Network": False,
             "RTC": False
         }
 
@@ -79,8 +82,15 @@ class TestSensors:
         if res_wind_direction is None:
             self.results["WindDirection"][0] = False
 
+        if check_network():
+            self.results["Network"] = True
+
         if self.rtc is not None:
             try:
+                res = update_rtc_time()
+                if not res:
+                    self.results["Network"] = False
+
                 res_rtc = self.rtc.get_time()
                 self.results["RTC"] = [True, res_rtc.strftime("%d-%m-%Y %H:%M:%S")]
             except Exception:

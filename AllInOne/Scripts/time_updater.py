@@ -24,6 +24,33 @@ from .network_checker import check_network
 from .rtc import RTCControl
 
 
+def update_rtc_time():
+    for i in range(3):
+        if check_network():
+            tz = pytz.timezone('Asia/Yerevan')
+            ntp_server = 'pool.ntp.org'
+            ntp_client = ntplib.NTPClient()
+            try:
+                response = ntp_client.request(ntp_server)
+                ntp_time = response.tx_time
+                new_datetime = datetime.utcfromtimestamp(ntp_time).replace(tzinfo=pytz.utc).astimezone(tz=tz).strftime(
+                    '%Y-%m-%d %H:%M:%S')
+
+                try:
+                    rtc = RTCControl()
+                    rtc.change_time(datetime.utcfromtimestamp(ntp_time).replace(tzinfo=pytz.utc).astimezone(tz=tz))
+                    return True
+                except Exception as e:
+                    logging.error(f"Failed to change RTC time: {e}")
+                    return False
+            except Exception:
+                return False
+
+        time.sleep(5)
+
+    return False
+
+
 def update_time():
     """
     Updates the system time from an NTP server. Uses the 'Asia/Yerevan' timezone.
