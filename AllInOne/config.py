@@ -1,4 +1,4 @@
-DEVICE_ID = 999
+DEVICE_ID = None
 
 # It is recommended to set the value >= than
 # MAX_READING_TIME + wind_direction["reading_time"] + 10
