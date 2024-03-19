@@ -48,6 +48,5 @@ sudo systemctl start NetworkManager
 sudo systemctl enable InetCheckConnect
 sudo systemctl enable ProgramAutoRun
 sudo systemctl start InetCheckConnect
-sudo systemctl start ProgramAutoRun
 
 echo "Installation completed successfully."
