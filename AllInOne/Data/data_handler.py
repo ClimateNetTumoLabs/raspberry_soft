@@ -1,45 +1,3 @@
-"""
-    Data handling module for managing sensor data storage and transmission.
-
-    This module provides a class, DataHandler, for handling the storage and transmission of sensor data.
-    The class includes methods for saving data to a local database and sending it to an MQTT broker.
-
-    Class Docstring:
-    ----------------
-    DataHandler:
-        Manages the storage and transmission of sensor data.
-
-    Constructor:
-        Initializes a DataHandler object, creates instances of LocalDatabase and MQTTClient.
-
-    Class Attributes:
-        deviceID (str): Identifier for the device.
-        mqtt_client (MQTTClient): MQTT Client for sending data to an MQTT broker.
-        local_db (LocalDatabase): Local database for storing sensor data.
-        local (bool): Flag indicating whether the device is currently operating in local mode.
-
-    Methods:
-        __init__(self):
-            Initializes a DataHandler object.
-
-        __save_local(self, data: dict):
-            Saves data to the local database.
-
-        __get_local(self, data: dict) -> list:
-            Retrieves local data and combines it with the current data.
-
-        __send_mqtt(self, data: dict, local=False) -> bool:
-            Sends data to the MQTT broker.
-
-        save(self, data: dict):
-            Saves sensor data either locally or to an MQTT broker based on network availability.
-
-    Module Usage:
-    -------------
-    To use this module, create an instance of the DataHandler class.
-    Call the save() method with sensor data as an argument to manage storage and transmission.
-"""
-
 from .LocalDB import LocalDatabase
 from .MQTT_Sender import MQTTClient
 from logger_config import *
@@ -48,18 +6,12 @@ from config import DEVICE_ID
 
 
 class DataHandler:
-    """
-    Manages the storage and transmission of sensor data.
-
-    Attributes:
-        deviceID (str): Identifier for the device.
-        mqtt_client (MQTTClient): MQTT Client for sending data to an MQTT broker.
-        local_db (LocalDatabase): Local database for storing sensor data.
-        local (bool): Flag indicating whether the device is currently operating in local mode.
-    """
     def __init__(self) -> None:
         """
-        Initializes a DataHandler object, creates instances of LocalDatabase and MQTTClient.
+        Initializes a DataHandler instance.
+
+        Returns:
+            None
         """
         self.deviceID = f"device{DEVICE_ID}"
         self.mqtt_client = MQTTClient(deviceID=self.deviceID)
@@ -72,23 +24,23 @@ class DataHandler:
         Saves data to the local database.
 
         Args:
-            data (dict): Sensor data to be saved locally.
+            data (dict): The data to be saved.
+
+        Returns:
+            None
         """
         logging.info('Send current data to local DB')
         self.local_db.insert_data(data)
 
     def __get_local(self) -> list:
         """
-        Retrieves local data and combines it with the current data.
-
-        Args:
-            data (dict): Current sensor data.
+        Retrieves data from the local database.
 
         Returns:
-            list: A list of tuples representing rows of data, each tuple includes timestamp and various sensor readings.
+            list: A list containing the retrieved data.
         """
         local_data = self.local_db.get_data()
-        
+
         return local_data
 
     def __send_mqtt(self, data: dict, local=False) -> bool:
@@ -96,11 +48,11 @@ class DataHandler:
         Sends data to the MQTT broker.
 
         Args:
-            data (dict): Sensor data to be sent.
-            local (bool): Flag indicating whether the data includes local data.
+            data (dict): The data to be sent.
+            local (bool): Indicates whether to send local data along with the current data.
 
         Returns:
-            bool: True if the data is sent successfully, False otherwise.
+            bool: True if the data is successfully sent, False otherwise.
         """
         if local:
             logging.info('Send local & current data to RDS')
@@ -128,18 +80,24 @@ class DataHandler:
             mqtt_res = self.mqtt_client.send_data([data])
 
             return mqtt_res
-    
+
     def send_only_local(self):
+        """
+        Sends only local data to the remote server.
+
+        Returns:
+            bool: True if the local data is successfully sent, False otherwise.
+        """
         logging.info('Send local data to RDS')
         mqtt_res = True
-        
+
         data = self.__get_local()
         splitted_data = split_data(data)
 
         for elem in splitted_data:
-                mqtt_res = self.mqtt_client.send_data(elem)
-                if not mqtt_res:
-                    break
+            mqtt_res = self.mqtt_client.send_data(elem)
+            if not mqtt_res:
+                break
 
         if mqtt_res:
             self.local_db.drop_table()
@@ -150,10 +108,13 @@ class DataHandler:
 
     def save(self, data: dict) -> None:
         """
-        Saves sensor data either locally or to an MQTT broker based on network availability.
+        Saves data based on the availability of the network.
 
         Args:
-            data (dict): Sensor data to be saved.
+            data (dict): The data to be saved.
+
+        Returns:
+            None
         """
         if not check_network():
             self.local = True

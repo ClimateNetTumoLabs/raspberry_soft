@@ -1,31 +1,3 @@
-"""
-    Module for interacting with a TPH (Temperature, Pressure, Humidity) sensor.
-
-    This module provides a class, TPHSensor, for reading data from a specified TPH sensor.
-
-    Class Docstring:
-    ----------------
-    TPHSensor:
-        Interacts with a TPH sensor to read temperature, pressure, and humidity data.
-
-    Constructor:
-        Initializes a TPHSensor object based on the configuration specified in the SENSORS module.
-
-    Class Attributes:
-        working (bool): Indicates if the TPH sensor is operational.
-        port (int): The port to which the sensor is connected.
-        address (int): I2C address of the sensor.
-        bus: (smbus2.SMBus): An instance of the SMBus for communication with the sensor.
-        calibration_params: Calibration parameters for the sensor.
-
-    Methods:
-        read_data(self): Read temperature, pressure, and humidity data from the sensor, handling exceptions and returning the data.
-
-    Module Usage:
-    -------------
-    To use this module, create an instance of the TPHSensor class. Call the read_data() method to get TPH data.
-"""
-
 import smbus2
 import bme280
 from logger_config import *
@@ -34,18 +6,39 @@ from config import SENSORS
 
 class TPHSensor:
     """
-    Interacts with a TPH sensor to read temperature, pressure, and humidity data.
+    Represents a temperature, pressure, and humidity (TPH) sensor for environmental monitoring.
+
+    This class interacts with a BME280 sensor module to measure temperature, pressure, and humidity in the environment.
+
+    Args:
+        port (int, optional): The port number to which the sensor is connected. Defaults to 1.
+        address (int, optional): The I2C address of the sensor. Defaults to 0x76.
+        testing (bool, optional): Specifies whether the sensor is in testing mode. Defaults to False.
 
     Attributes:
-        working (bool): Indicates if the TPH sensor is operational.
-        port (int): The port to which the sensor is connected.
-        address (int): I2C address of the sensor.
-        bus: (smbus2.SMBus): An instance of the SMBus for communication with the sensor.
-        calibration_params: Calibration parameters for the sensor.
+        testing (bool): Specifies whether the sensor is in testing mode.
+        working (bool): Indicates if the sensor is functioning properly.
+        port (int): The port number to which the sensor is connected.
+        address (int): The I2C address of the sensor.
+        bus (smbus2.SMBus): Instance of the SMBus interface for communication with the sensor module.
+        calibration_params (bme280.CalibrationParams): Calibration parameters for the BME280 sensor.
+
+    Methods:
+        read_data() -> dict: Reads data from the sensor and returns a dictionary of temperature, pressure, and humidity values.
+
     """
+
     def __init__(self, port=1, address=0x76, testing=False):
         """
-        Initializes a TPHSensor object based on the configuration specified in the SENSORS module.
+        Initializes the TPHSensor object.
+
+        If the sensor is working or in testing mode, attempts to create an object for the TPH sensor module.
+        Logs any errors encountered during the initialization process.
+
+        Args:
+            port (int, optional): The port number to which the sensor is connected. Defaults to 1.
+            address (int, optional): The I2C address of the sensor. Defaults to 0x76.
+            testing (bool, optional): Specifies whether the sensor is in testing mode. Defaults to False.
         """
         sensor_info = SENSORS["tph_sensor"]
         self.testing = testing
@@ -69,10 +62,13 @@ class TPHSensor:
 
     def read_data(self) -> dict:
         """
-        Read temperature, pressure, and humidity data from the sensor, handling exceptions and returning the data.
+        Reads data from the TPH sensor and returns a dictionary of temperature, pressure, and humidity values.
+
+        If the sensor is working or in testing mode, attempts to read TPH data.
+        Logs any errors encountered during the reading process.
 
         Returns:
-            dict: A dictionary containing temperature, pressure, and humidity data. If an error occurs, returns a dictionary with None values.
+            dict: Dictionary containing temperature, pressure, and humidity values.
         """
         if self.working or self.testing:
             for i in range(3):

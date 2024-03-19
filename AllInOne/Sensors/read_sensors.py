@@ -1,32 +1,3 @@
-"""
-    Module for reading data from various sensors.
-
-    This module provides a ReadSensors class for collecting data from a set of sensors.
-
-    Class Docstring:
-    ----------------
-    ReadSensors:
-        Reads data from different sensors including light, temperature, pressure, humidity, air quality, wind direction, wind speed, and rain.
-
-    Constructor:
-        Initializes a ReadSensors object with instances of various sensor classes.
-
-    Class Attributes:
-        sensors (list): List of sensor instances including LightSensor, TPHSensor, and AirQualitySensor.
-        wind_direction_sensor (WindDirection): Instance of WindDirection class for reading wind direction data.
-        wind_speed_sensor (WindSpeed): Instance of WindSpeed class for reading wind speed data.
-        rain_sensor (Rain): Instance of Rain class for reading rain data.
-
-    Methods:
-        __get_data(self, start_time): Private method to collect data from sensors and calculate wind direction and speed.
-        collect_data(self): Public method to collect data from sensors including wind direction and speed.
-
-    Module Usage:
-    -------------
-    To use this module, create an instance of the ReadSensors class. Call collect_data() to obtain a dictionary containing data from various sensors.
-
-"""
-
 import time
 from .WeatherMeterSensors import *
 from .OtherSensors import *
@@ -36,11 +7,29 @@ import config
 
 class ReadSensors:
     """
-    Reads data from different sensors including light, temperature, pressure, humidity, air quality, wind direction, wind speed, and rain.
+    Represents a data collector for various environmental sensors.
+
+    This class collects data from a variety of sensors, including light sensors, temperature, pressure, and humidity
+    sensors, air quality sensors, wind direction sensors, wind speed sensors, and rain sensors. It compiles the collected
+    data into a dictionary for further processing or logging.
+
+    Attributes:
+        sensors (list): A list of sensor objects for light, temperature, pressure, humidity, and air quality measurements.
+        wind_direction_sensor (WindDirection): An instance of the WindDirection class for measuring wind direction.
+        wind_speed_sensor (WindSpeed): An instance of the WindSpeed class for measuring wind speed.
+        rain_sensor (Rain): An instance of the Rain class for measuring rainfall.
+
+    Methods:
+        collect_data() -> dict: Collects data from all sensors and returns a dictionary containing the collected data.
+
     """
+
     def __init__(self) -> None:
         """
-        Initializes a ReadSensors object with instances of various sensor classes.
+        Initializes the ReadSensors object.
+
+        Creates instances of various sensor classes for collecting environmental data, including light, temperature,
+        pressure, humidity, air quality, wind direction, wind speed, and rain sensors.
         """
         self.sensors = [
             LightSensor(),
@@ -60,13 +49,13 @@ class ReadSensors:
 
     def __get_data(self, start_time: float) -> dict:
         """
-        Private method to collect data from sensors and calculate wind direction and speed.
+        Retrieves data from all sensors.
 
-        Parameters:
-            start_time (float): Time at the start of data collection.
+        Args:
+            start_time (float): The start time of the data collection process.
 
         Returns:
-            dict: Dictionary containing data from various sensors.
+            dict: A dictionary containing the collected sensor data.
         """
         data = {}
 
@@ -89,10 +78,10 @@ class ReadSensors:
 
     def collect_data(self) -> dict:
         """
-        Public method to collect data from sensors including wind direction and speed.
+        Collects data from all sensors and returns a dictionary containing the collected data.
 
         Returns:
-            dict: Dictionary containing data from various sensors.
+            dict: A dictionary containing the collected sensor data.
         """
         try:
             self.wind_speed_sensor.clear_data()

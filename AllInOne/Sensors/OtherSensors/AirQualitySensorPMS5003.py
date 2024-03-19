@@ -1,29 +1,3 @@
-"""
-    Module for interacting with an air quality sensor (PMS5003).
-
-    This module provides a class, AirQualitySensor, for reading air quality data from a PMS5003 air quality sensor.
-
-    Class Docstring:
-    ----------------
-    AirQualitySensor:
-        Interacts with a PMS5003 air quality sensor to read air quality data.
-
-    Constructor:
-        Initializes an AirQualitySensor object based on the configuration specified in the SENSORS module.
-
-    Class Attributes:
-        working (bool): Indicates if the air quality sensor is operational.
-        pms5003 (PMS5003): An instance of the PMS5003 air quality sensor.
-
-    Methods:
-        read_data(self) -> dict:
-            Attempts to read air quality data from the PMS5003 sensor, handling exceptions and returning the data as a dictionary.
-
-    Module Usage:
-    -------------
-    To use this module, create an instance of the AirQualitySensor class. Call the read_data() method to get air quality data.
-"""
-
 from .PMS5003_library import PMS5003, SerialTimeoutError, ReadTimeoutError
 from logger_config import *
 from config import SENSORS
@@ -31,15 +5,33 @@ from config import SENSORS
 
 class AirQualitySensor:
     """
-    Interacts with a PMS5003 air quality sensor to read air quality data.
+    Represents an air quality sensor for measuring particulate matter (PM) concentration.
+
+    This class interacts with a PMS5003 air quality sensor module to measure various aspects of particulate matter
+    concentration in the air, including PM1, PM2.5, and PM10.
+
+    Args:
+        testing (bool, optional): Specifies whether the sensor is in testing mode. Defaults to False.
 
     Attributes:
-        working (bool): Indicates if the air quality sensor is operational.
-        pms5003 (PMS5003): An instance of the PMS5003 air quality sensor.
+        working (bool): Indicates if the sensor is functioning properly.
+        testing (bool): Specifies whether the sensor is in testing mode.
+        pms5003 (PMS5003): Instance of the PMS5003 air quality sensor module.
+
+    Methods:
+        read_data() -> dict: Reads data from the sensor and returns a dictionary of air quality values.
+
     """
+
     def __init__(self, testing=False) -> None:
         """
-        Initializes an AirQualitySensor object based on the configuration specified in the SENSORS module.
+        Initializes the AirQualitySensor object.
+
+        If the sensor is working or in testing mode, attempts to create an object for the air quality sensor module.
+        Logs any errors encountered during the initialization process.
+
+        Args:
+            testing (bool, optional): Specifies whether the sensor is in testing mode. Defaults to False.
         """
         sensor_info = SENSORS["air_quality_sensor"]
 
@@ -63,10 +55,10 @@ class AirQualitySensor:
 
     def __get_data(self) -> dict:
         """
-        Retrieves air quality data from the PMS5003 sensor.
+        Reads raw data from the air quality sensor and calculates various air quality values.
 
         Returns:
-            dict: A dictionary containing various air quality measurements.
+            dict: Dictionary containing air quality values.
         """
         data = {}
         all_data = self.pms5003.read()
@@ -90,11 +82,13 @@ class AirQualitySensor:
 
     def read_data(self) -> dict:
         """
-        Attempts to read air quality data from the PMS5003 sensor, handling exceptions and returning the data as a
-        dictionary.
+        Reads data from the air quality sensor and returns a dictionary of air quality values.
+
+        If the sensor is working or in testing mode, attempts to read air quality data.
+        Logs any errors encountered during the reading process.
 
         Returns:
-            dict: A dictionary containing air quality data. If an error occurs, returns a dictionary with None values.
+            dict: Dictionary containing air quality values.
         """
         if self.working or self.testing:
             for i in range(3):

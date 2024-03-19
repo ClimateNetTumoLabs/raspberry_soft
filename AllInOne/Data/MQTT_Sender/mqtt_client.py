@@ -1,33 +1,3 @@
-"""
-    MQTT Client module for sending sensor data to an MQTT Broker.
-
-    This module provides a class, MQTTClient, for initializing an MQTT client and sending sensor data to an MQTT Broker.
-
-    Class Docstring:
-    ----------------
-    MQTTClient:
-        Represents an MQTT client for sending sensor data to an MQTT Broker.
-
-    Constructor Args:
-        deviceID (str): Identifier for the device.
-
-    Class Attributes:
-        client (mqtt.Client): MQTT Client object.
-        deviceID (str): Identifier for the device.
-
-    Methods:
-        __init__(self, deviceID: str):
-            Initializes an MQTTClient object and establishes a connection to the MQTT Broker.
-
-        send_data(self, data: list) -> bool:
-            Sends sensor data to the MQTT Broker.
-
-    Module Usage:
-    -------------
-    To use this module, create an instance of the MQTTClient class, passing the deviceID as an argument.
-    Call the send_data() method to send sensor data to the MQTT Broker.
-"""
-
 import json
 import ssl
 import os
@@ -39,20 +9,15 @@ from Data.config import MQTT_BROKER_ENDPOINT, MQTT_TOPIC
 
 
 class MQTTClient:
-    """
-    Represents an MQTT client for sending sensor data to an MQTT Broker.
-
-    Attributes:
-        client (mqtt.Client): MQTT Client object.
-        deviceID (str): Identifier for the device.
-    """
-
     def __init__(self, deviceID: str) -> None:
         """
-        Initializes an MQTTClient object and establishes a connection to the MQTT Broker.
+        Initializes an MQTTClient instance.
 
         Args:
-            deviceID (str): Identifier for the device.
+            deviceID (str): The unique identifier for the device associated with the MQTT client.
+
+        Returns:
+            None
         """
         self.client = mqtt.Client()
         self.client.tls_set(ca_certs=os.path.join(os.path.dirname(__file__), 'rootCA.pem'),
@@ -66,13 +31,13 @@ class MQTTClient:
 
     def send_data(self, data: list) -> bool:
         """
-        Sends sensor data to the MQTT Broker.
+        Sends data to the MQTT broker.
 
         Args:
-            data (list): Sensor data to be sent.
+            data (list): The data to be sent.
 
         Returns:
-            bool: True if the data is sent successfully, False otherwise.
+            bool: True if the data is successfully sent, False otherwise.
         """
         if not self.client.is_connected():
             logging.info("Reconnecting to MQTT Broker...")

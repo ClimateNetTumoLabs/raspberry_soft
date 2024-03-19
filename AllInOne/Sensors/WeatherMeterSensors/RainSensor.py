@@ -1,74 +1,68 @@
-"""
-    Module for interacting with a rain sensor.
-
-    This module provides a Rain class for reading data from a rain sensor.
-
-    Class Docstring:
-    ----------------
-    Rain:
-        Interacts with a rain sensor to measure the amount of rainfall.
-
-    Constructor:
-        Initializes a Rain object based on the configuration specified in the SENSORS module.
-
-    Class Attributes:
-        sensor: (Button): An instance of the Button class from the gpiozero library for rain sensor input.
-        count (int): Count of rain sensor activations.
-        bucket_size (float): Size of the rain sensor bucket in millimeters.
-
-    Methods:
-        press(self): Increment the count when the rain sensor is activated.
-        clear_data(self): Reset the count to zero.
-        read_data(self): Calculate and return the total amount of rainfall based on the count and bucket size.
-
-    Module Usage:
-    -------------
-    To use this module, create an instance of the Rain class. Use the press() method to increment the count when the rain sensor is activated.
-    Call read_data() to get the total amount of rainfall, and use clear_data() to reset the count.
-"""
-
 from gpiozero import Button
 from config import SENSORS
 
 
 class Rain:
     """
-    Interacts with a rain sensor to measure the amount of rainfall.
+    Represents a rain sensor for measuring rainfall.
+
+    This class utilizes a GPIO button input to detect rain events. Each rain event increments a count, and the total
+    rainfall is calculated based on the count and the size of the rain bucket.
+
+    Args:
+        bucket_size (float, optional): The size of the rain bucket in millimeters. Defaults to 0.2794.
 
     Attributes:
-        sensor: (Button): An instance of the Button class from the gpiozero library for rain sensor input.
-        count (int): Count of rain sensor activations.
-        bucket_size (float): Size of the rain sensor bucket in millimeters.
+        sensor (Button): GPIO button input connected to the rain sensor.
+        count (int): The count of rain events.
+        bucket_size (float): The size of the rain bucket in millimeters.
+
+    Methods:
+        press() -> None: Increments the rain count when a rain event is detected.
+        clear_data() -> None: Resets the rain count to zero.
+        read_data() -> float: Reads the accumulated rainfall data and resets the count to zero.
+
     """
 
     def __init__(self, bucket_size=0.2794) -> None:
         """
-        Initializes a Rain object based on the configuration specified in the SENSORS module.
+        Initializes the Rain object.
+
+        Creates a GPIO button input instance connected to the rain sensor and initializes the rain count and bucket size.
+
+        Args:
+            bucket_size (float, optional): The size of the rain bucket in millimeters. Defaults to 0.2794.
         """
         sensor_info = SENSORS["rain"]
-
         self.sensor = Button(sensor_info["pin"])
         self.count = 0
         self.bucket_size = bucket_size
 
     def press(self) -> None:
         """
-        Increment the count when the rain sensor is activated.
+        Registers a rain event.
+
+        Increments the rain count when a rain event is detected by the sensor.
         """
         self.count += 1
 
     def clear_data(self) -> None:
         """
-        Reset the count to zero.
+        Clears accumulated rainfall data.
+
+        Resets the rain count to zero.
         """
         self.count = 0
 
     def read_data(self) -> float:
         """
-        Calculate and return the total amount of rainfall based on the count and bucket size.
+        Reads the accumulated rainfall data.
+
+        Calculates and returns the total rainfall based on the count of rain events and the size of the rain bucket.
+        Resets the rain count to zero after reading.
 
         Returns:
-            float: The total amount of rainfall in millimeters.
+            float: The accumulated rainfall in millimeters.
         """
         result = self.count * self.bucket_size
         self.count = 0
