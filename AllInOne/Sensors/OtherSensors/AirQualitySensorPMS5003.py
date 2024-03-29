@@ -67,17 +67,6 @@ class AirQualitySensor:
         data["pm2_5"] = all_data.pm_ug_per_m3(size=2.5)
         data["pm10"] = all_data.pm_ug_per_m3(size=10)
 
-        data["atm_pm1"] = all_data.pm_ug_per_m3(size=1.0, atmospheric_environment=True)
-        data["atm_pm2_5"] = all_data.pm_ug_per_m3(size=2.5, atmospheric_environment=True)
-        data["atm_pm10"] = all_data.pm_ug_per_m3(size=10, atmospheric_environment=True)
-
-        data["litre_pm0_3"] = all_data.pm_per_1l_air(size=0.3)
-        data["litre_pm0_5"] = all_data.pm_per_1l_air(size=0.5)
-        data["litre_pm1"] = all_data.pm_per_1l_air(size=1.0)
-        data["litre_pm2_5"] = all_data.pm_per_1l_air(size=2.5)
-        data["litre_pm5"] = all_data.pm_per_1l_air(size=5)
-        data["litre_pm10"] = all_data.pm_per_1l_air(size=10)
-
         return data
 
     def read_data(self) -> dict:
@@ -107,30 +96,12 @@ class AirQualitySensor:
                         return {
                             "pm1": None,
                             "pm2_5": None,
-                            "pm10": None,
-                            "atm_pm1": None,
-                            "atm_pm2_5": None,
-                            "atm_pm10": None,
-                            "litre_pm0_3": None,
-                            "litre_pm0_5": None,
-                            "litre_pm1": None,
-                            "litre_pm2_5": None,
-                            "litre_pm5": None,
-                            "litre_pm10": None
+                            "pm10": None
                         }
 
         else:
             return {
                 "pm1": None,
                 "pm2_5": None,
-                "pm10": None,
-                "atm_pm1": None,
-                "atm_pm2_5": None,
-                "atm_pm10": None,
-                "litre_pm0_3": None,
-                "litre_pm0_5": None,
-                "litre_pm1": None,
-                "litre_pm2_5": None,
-                "litre_pm5": None,
-                "litre_pm10": None
+                "pm10": None
             }
