@@ -11,7 +11,8 @@ SENSORS = {
         "reading_time": 60
     },
     "tph_sensor": {
-        "working": True
+        "working": True,
+        "reading_time": 60
     },
     "air_quality_sensor": {
         "working": True,
@@ -20,7 +21,8 @@ SENSORS = {
         "pin_enable": 22,
         "pin_enable_working": False,
         "pin_reset": 27,
-        "pin_reset_working": False
+        "pin_reset_working": False,
+        "reading_time": 60
     },
     "wind_speed": {
         "working": True,

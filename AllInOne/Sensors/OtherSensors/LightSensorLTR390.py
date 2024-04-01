@@ -20,9 +20,9 @@ Classes:
 import time
 import board
 import busio
+from Scripts.kalman_data_collector import KalmanDataCollector
 from logger_config import *
 from config import SENSORS
-from Scripts.kalman import KalmanFilter
 import adafruit_ltr390
 
 
@@ -70,13 +70,7 @@ class LightSensor:
                 if i == 2:
                     self.working = False
 
-    def test_reading(self):
-        """
-        Simulates sensor readings for testing purposes.
-
-        Returns:
-            dict: Dictionary containing simulated UV index and lux readings.
-        """
+    def __get_data(self):
         uvi = self.sensor.uvi
         lux = self.sensor.lux
 
@@ -93,43 +87,37 @@ class LightSensor:
             dict: Dictionary containing UV index and lux readings.
         """
         if self.testing:
-            return self.test_reading()
+            return self.__get_data()
 
         if self.working:
-            uv_filter = KalmanFilter()
-            lux_filter = KalmanFilter()
-
-            data_uv = []
-            data_lux = []
+            kalman_data_collector = KalmanDataCollector('uv', 'lux')
 
             start_time = time.time()
+            errors = []
 
             while time.time() - start_time <= self.reading_time:
                 try:
-                    uvi = self.sensor.uvi
-                    lux = self.sensor.lux
-
-                    data_uv.append(uv_filter.update(uvi))
-                    data_lux.append(lux_filter.update(lux))
+                    data = self.__get_data()
+                    kalman_data_collector.add_data(data)
 
                     time.sleep(3)
                 except Exception as e:
-                    logging.error(f"Error occurred during reading data from LTR390 sensor: {str(e)}",
+                    errors.append(e)
+
+            if not kalman_data_collector.is_valid():
+                for error in errors:
+                    logging.error(f"Error occurred during reading data from LTR390 sensor: {str(error)}",
                                   exc_info=True)
 
-            if len(data_uv) < 11 or len(data_lux) < 11:
+                errors.clear()
+
                 return {
                     "uv": None,
                     "lux": None
                 }
 
-            uv_value = sum(data_uv[10:]) / len(data_uv[10:])
-            lux_value = sum(data_lux[10:]) / len(data_lux[10:])
+            return kalman_data_collector.get_result()
 
-            return {
-                "uv": round(uv_value, 2),
-                "lux": round(lux_value, 2)
-            }
         else:
             return {
                 "uv": None,

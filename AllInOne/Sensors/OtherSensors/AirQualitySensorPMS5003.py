@@ -1,6 +1,8 @@
-from .PMS5003_library import PMS5003, SerialTimeoutError, ReadTimeoutError
+import time
+from .PMS5003_library import PMS5003
 from logger_config import *
 from config import SENSORS
+from Scripts.kalman_data_collector import KalmanDataCollector
 
 
 class AirQualitySensor:
@@ -36,6 +38,7 @@ class AirQualitySensor:
         sensor_info = SENSORS["air_quality_sensor"]
 
         self.working = sensor_info["working"]
+        self.reading_time = sensor_info["reading_time"]
         self.testing = testing
 
         if self.working or self.testing:
@@ -51,7 +54,8 @@ class AirQualitySensor:
                 except Exception as e:
                     if i == 2:
                         self.working = False
-                    logging.error(f"Error occurred during creating object for AirQuality sensor: {str(e)}", exc_info=True)
+                    logging.error(f"Error occurred during creating object for AirQuality sensor: {str(e)}",
+                                  exc_info=True)
 
     def __get_data(self) -> dict:
         """
@@ -79,25 +83,38 @@ class AirQualitySensor:
         Returns:
             dict: Dictionary containing air quality values.
         """
-        if self.working or self.testing:
-            for i in range(3):
+        if self.testing:
+            return self.__get_data()
+
+        if self.working:
+            kalman_data_collector = KalmanDataCollector('pm1', 'pm2_5', 'pm10')
+
+            start_time = time.time()
+            errors = []
+
+            while time.time() - start_time < self.reading_time:
                 try:
-                    return self.__get_data()
+                    data = self.__get_data()
+                    kalman_data_collector.add_data(data)
+
+                    time.sleep(3)
                 except Exception as e:
-                    if isinstance(e, SerialTimeoutError):
-                        logging.error(f"Error occurred during reading data from AirQuality sensor: PMS5003 "
-                                      f"SerialTimeoutError: Failed to read start of frame byte")
-                    elif isinstance(e, ReadTimeoutError):
-                        logging.error(f"Error occurred during reading data from AirQuality sensor: PMS5003 "
-                                      f"ReadTimeoutError: Could not find start of frame")
-                    else:
-                        logging.error(f"Error occurred during reading data from AirQuality sensor: {str(e)}", exc_info=True)
-                    if i == 2:
-                        return {
-                            "pm1": None,
-                            "pm2_5": None,
-                            "pm10": None
-                        }
+                    errors.append(e)
+
+            if not kalman_data_collector.is_valid():
+                for error in errors:
+                    logging.error(f"Error occurred during reading data from AirQuality sensor: {str(error)}",
+                                  exc_info=True)
+
+                errors.clear()
+
+                return {
+                    "pm1": None,
+                    "pm2_5": None,
+                    "pm10": None
+                }
+
+            return kalman_data_collector.get_result()
 
         else:
             return {

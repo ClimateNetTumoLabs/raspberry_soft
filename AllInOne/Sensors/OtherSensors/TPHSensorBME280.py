@@ -1,5 +1,7 @@
+import time
 import smbus2
 import bme280
+from Scripts.kalman_data_collector import KalmanDataCollector
 from logger_config import *
 from config import SENSORS
 
@@ -43,6 +45,7 @@ class TPHSensor:
         sensor_info = SENSORS["tph_sensor"]
         self.testing = testing
         self.working = sensor_info["working"]
+        self.reading_time = sensor_info['reading_time']
 
         if self.working or self.testing:
             for i in range(3):
@@ -53,12 +56,22 @@ class TPHSensor:
                     self.calibration_params = bme280.load_calibration_params(self.bus, self.address)
                     break
                 except OSError:
-                    logging.error("Error occurred during creating object for TPH sensor: [Errno 5] Input/output error")
+                    logging.error("Error occurred during creating object for BME280 sensor: [Errno 5] Input/output "
+                                  "error")
                 except Exception as e:
-                    logging.error(f"Error occurred during creating object for TPH sensor: {str(e)}", exc_info=True)
+                    logging.error(f"Error occurred during creating object for BME280 sensor: {str(e)}", exc_info=True)
 
                 if i == 2:
                     self.working = False
+
+    def __get_data(self):
+        data = bme280.sample(self.bus, self.address, self.calibration_params)
+
+        return {
+            "temperature": round(data.temperature, 2),
+            "pressure": round(data.pressure * 0.750061, 2),
+            "humidity": round(data.humidity, 2)
+        }
 
     def read_data(self) -> dict:
         """
@@ -70,27 +83,38 @@ class TPHSensor:
         Returns:
             dict: Dictionary containing temperature, pressure, and humidity values.
         """
-        if self.working or self.testing:
-            for i in range(3):
+        if self.testing:
+            return self.__get_data()
+
+        if self.working:
+            kalman_data_collector = KalmanDataCollector('temperature', 'pressure', 'humidity')
+
+            start_time = time.time()
+            errors = []
+
+            while time.time() - start_time <= self.reading_time:
                 try:
-                    data = bme280.sample(self.bus, self.address, self.calibration_params)
-                    return {
-                        "temperature": round(data.temperature, 2),
-                        "pressure": round(data.pressure * 0.750061, 2),
-                        "humidity": round(data.humidity, 2)
-                    }
+                    data = self.__get_data()
+                    kalman_data_collector.add_data(data)
+
+                    time.sleep(3)
                 except Exception as e:
-                    if isinstance(e, OSError):
-                        logging.error(
-                            f"Error occurred during reading data from TPH sensor: [Errno 121] Remote I/O error")
-                    else:
-                        logging.error(f"Error occurred during reading data from TPH sensor: {str(e)}", exc_info=True)
-                    if i == 2:
-                        return {
-                            "temperature": None,
-                            "pressure": None,
-                            "humidity": None
-                        }
+                    errors.append(e)
+
+            if not kalman_data_collector.is_valid():
+                for error in errors:
+                    logging.error(f"Error occurred during reading data from BME280 sensor: {str(error)}",
+                                  exc_info=True)
+
+                errors.clear()
+
+                return {
+                    "temperature": None,
+                    "pressure": None,
+                    "humidity": None
+                }
+
+            return kalman_data_collector.get_result()
         else:
             return {
                 "temperature": None,
