@@ -3,7 +3,7 @@ DEVICE_ID = None
 # It is recommended to set the value >= than
 # MAX_READING_TIME + wind_direction["reading_time"] + 10
 MEASURING_TIME = 900
-MAX_READING_TIME = 100
+MAX_READING_TIME = 260
 
 SENSORS = {
     "light_sensor": {
