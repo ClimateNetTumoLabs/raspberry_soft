@@ -14,6 +14,7 @@ Global Variables:
 """
 
 import time
+import serial
 from .PMS5003_library import PMS5003
 from logger_config import *
 from config import SENSORS
@@ -102,6 +103,9 @@ class AirQualitySensor:
                     kalman_data_collector.add_data(data)
 
                     time.sleep(3)
+                except serial.serialutil.SerialException:
+                    logging.error("serial.serialutil.SerialException: device reports readiness to read but returned "
+                                  "no data (device disconnected or multiple access on port?)")
                 except Exception as er:
                     logging.error(f"Error occurred during reading data from AirQuality sensor: {str(er)}",
                                   exc_info=True)
