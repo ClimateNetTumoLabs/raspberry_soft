@@ -1,3 +1,18 @@
+"""
+Description:
+This module provides functionality for interfacing with the Air Quality sensor (PMS5003).
+
+Dependencies:
+    - time: Time-related functions.
+    - .PMS5003_library: Custom library for the PMS5003 sensor.
+    - logger_config: Logging configuration.
+    - config: Configuration file containing sensors information.
+    - Scripts.kalman_data_collector: Custom KalmanDataCollector class for filtering data.
+
+Global Variables:
+    - None
+"""
+
 import time
 from .PMS5003_library import PMS5003
 from logger_config import *
@@ -7,33 +22,21 @@ from Scripts.kalman_data_collector import KalmanDataCollector
 
 class AirQualitySensor:
     """
-    Represents an air quality sensor for measuring particulate matter (PM) concentration.
-
-    This class interacts with a PMS5003 air quality sensor module to measure various aspects of particulate matter
-    concentration in the air, including PM1, PM2.5, and PM10.
-
-    Args:
-        testing (bool, optional): Specifies whether the sensor is in testing mode. Defaults to False.
+    A class to represent an Air Quality Sensor.
 
     Attributes:
-        working (bool): Indicates if the sensor is functioning properly.
-        testing (bool): Specifies whether the sensor is in testing mode.
-        pms5003 (PMS5003): Instance of the PMS5003 air quality sensor module.
-
-    Methods:
-        read_data() -> dict: Reads data from the sensor and returns a dictionary of air quality values.
-
+        working (bool): Indicates whether the sensor should be operational or not.
+        reading_time (int): The duration for reading sensor data.
+        testing (bool): Flag indicating if the sensor is in testing mode.
+        pms5003: Instance of the PMS5003 sensor.
     """
 
     def __init__(self, testing=False) -> None:
         """
         Initializes the AirQualitySensor object.
 
-        If the sensor is working or in testing mode, attempts to create an object for the air quality sensor module.
-        Logs any errors encountered during the initialization process.
-
         Args:
-            testing (bool, optional): Specifies whether the sensor is in testing mode. Defaults to False.
+            testing (bool, optional): Flag to indicate testing mode. Defaults to False.
         """
         sensor_info = SENSORS["air_quality_sensor"]
 
@@ -59,11 +62,12 @@ class AirQualitySensor:
 
     def __get_data(self) -> dict:
         """
-        Reads raw data from the air quality sensor and calculates various air quality values.
+        Private method to retrieve data from the Air Quality sensor.
 
         Returns:
-            dict: Dictionary containing air quality values.
+            dict: A dictionary containing PM1, PM2.5, and PM10 values in micrograms per cubic meter (µg/m³).
         """
+        self.pms5003.setup()
         data = {}
         all_data = self.pms5003.read()
 
@@ -75,22 +79,22 @@ class AirQualitySensor:
 
     def read_data(self) -> dict:
         """
-        Reads data from the air quality sensor and returns a dictionary of air quality values.
-
-        If the sensor is working or in testing mode, attempts to read air quality data.
-        Logs any errors encountered during the reading process.
+        Reads data from the Air Quality sensor.
 
         Returns:
-            dict: Dictionary containing air quality values.
+            dict: A dictionary containing PM1, PM2.5, and PM10 values in micrograms per cubic meter (µg/m³). If the sensor
+            is in testing mode, returns raw data. If operational, applies Kalman filtering to the data before returning.
+
+        Raises:
+            Exception: If any error occurs during the process, it's logged and None values are returned for PM1, PM2.5,
+            and PM10.
         """
         if self.testing:
             return self.__get_data()
-
-        if self.working:
+        elif self.working:
             kalman_data_collector = KalmanDataCollector('pm1', 'pm2_5', 'pm10')
 
             start_time = time.time()
-            errors = []
 
             while time.time() - start_time < self.reading_time:
                 try:
@@ -98,21 +102,9 @@ class AirQualitySensor:
                     kalman_data_collector.add_data(data)
 
                     time.sleep(3)
-                except Exception as e:
-                    errors.append(e)
-
-            if not kalman_data_collector.is_valid():
-                for error in errors:
-                    logging.error(f"Error occurred during reading data from AirQuality sensor: {str(error)}",
+                except Exception as er:
+                    logging.error(f"Error occurred during reading data from AirQuality sensor: {str(er)}",
                                   exc_info=True)
-
-                errors.clear()
-
-                return {
-                    "pm1": None,
-                    "pm2_5": None,
-                    "pm10": None
-                }
 
             return kalman_data_collector.get_result()
 

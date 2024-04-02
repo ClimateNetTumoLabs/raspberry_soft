@@ -1,3 +1,19 @@
+"""
+Description:
+This module provides functionality for interfacing with the TPH (Temperature, Pressure, Humidity) sensor (BME280).
+
+Dependencies:
+    - time: Time-related functions.
+    - smbus2: Python3 support library for I2C access.
+    - bme280: Library for the BME280 sensor.
+    - Scripts.kalman_data_collector: Custom KalmanDataCollector class for filtering data.
+    - logger_config: Logging configuration.
+    - config: Configuration file containing sensors information.
+
+Global Variables:
+    - None
+"""
+
 import time
 import smbus2
 import bme280
@@ -8,39 +24,26 @@ from config import SENSORS
 
 class TPHSensor:
     """
-    Represents a temperature, pressure, and humidity (TPH) sensor for environmental monitoring.
-
-    This class interacts with a BME280 sensor module to measure temperature, pressure, and humidity in the environment.
-
-    Args:
-        port (int, optional): The port number to which the sensor is connected. Defaults to 1.
-        address (int, optional): The I2C address of the sensor. Defaults to 0x76.
-        testing (bool, optional): Specifies whether the sensor is in testing mode. Defaults to False.
+    A class to represent a TPH (Temperature, Pressure, Humidity) Sensor.
 
     Attributes:
-        testing (bool): Specifies whether the sensor is in testing mode.
-        working (bool): Indicates if the sensor is functioning properly.
-        port (int): The port number to which the sensor is connected.
+        port (int): The I2C port number.
         address (int): The I2C address of the sensor.
-        bus (smbus2.SMBus): Instance of the SMBus interface for communication with the sensor module.
-        calibration_params (bme280.CalibrationParams): Calibration parameters for the BME280 sensor.
-
-    Methods:
-        read_data() -> dict: Reads data from the sensor and returns a dictionary of temperature, pressure, and humidity values.
-
+        testing (bool): Flag to indicate testing mode.
+        working (bool): Indicates whether the sensor should be operational or not.
+        reading_time (int): The duration for reading sensor data.
+        bus: Instance of the I2C bus for communication.
+        calibration_params: Calibration parameters for the sensor.
     """
 
     def __init__(self, port=1, address=0x76, testing=False):
         """
         Initializes the TPHSensor object.
 
-        If the sensor is working or in testing mode, attempts to create an object for the TPH sensor module.
-        Logs any errors encountered during the initialization process.
-
         Args:
-            port (int, optional): The port number to which the sensor is connected. Defaults to 1.
+            port (int, optional): The I2C port number. Defaults to 1.
             address (int, optional): The I2C address of the sensor. Defaults to 0x76.
-            testing (bool, optional): Specifies whether the sensor is in testing mode. Defaults to False.
+            testing (bool, optional): Flag to indicate testing mode. Defaults to False.
         """
         sensor_info = SENSORS["tph_sensor"]
         self.testing = testing
@@ -65,6 +68,12 @@ class TPHSensor:
                     self.working = False
 
     def __get_data(self):
+        """
+        Private method to retrieve data from the TPH sensor.
+
+        Returns:
+            dict: A dictionary containing temperature, pressure, and humidity values.
+        """
         data = bme280.sample(self.bus, self.address, self.calibration_params)
 
         return {
@@ -75,22 +84,22 @@ class TPHSensor:
 
     def read_data(self) -> dict:
         """
-        Reads data from the TPH sensor and returns a dictionary of temperature, pressure, and humidity values.
-
-        If the sensor is working or in testing mode, attempts to read TPH data.
-        Logs any errors encountered during the reading process.
+        Reads data from the TPH sensor.
 
         Returns:
-            dict: Dictionary containing temperature, pressure, and humidity values.
+            dict: A dictionary containing temperature, pressure, and humidity values. If the sensor is in testing mode,
+            returns unfiltered data. If operational, applies Kalman filtering to the data before returning.
+
+        Raises:
+            Exception: If any error occurs during the process, it's logged and None values are returned for temperature,
+            pressure, and humidity.
         """
         if self.testing:
             return self.__get_data()
-
-        if self.working:
+        elif self.working:
             kalman_data_collector = KalmanDataCollector('temperature', 'pressure', 'humidity')
 
             start_time = time.time()
-            errors = []
 
             while time.time() - start_time <= self.reading_time:
                 try:
@@ -98,21 +107,9 @@ class TPHSensor:
                     kalman_data_collector.add_data(data)
 
                     time.sleep(3)
-                except Exception as e:
-                    errors.append(e)
-
-            if not kalman_data_collector.is_valid():
-                for error in errors:
-                    logging.error(f"Error occurred during reading data from BME280 sensor: {str(error)}",
+                except Exception as er:
+                    logging.error(f"Error occurred during reading data from BME280 sensor: {str(er)}",
                                   exc_info=True)
-
-                errors.clear()
-
-                return {
-                    "temperature": None,
-                    "pressure": None,
-                    "humidity": None
-                }
 
             return kalman_data_collector.get_result()
         else:
