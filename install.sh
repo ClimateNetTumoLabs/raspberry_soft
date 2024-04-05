@@ -28,11 +28,11 @@ cp ServiceFiles/InternetCheckConnect/InetCheckConnect.py /home/raspberry/scripts
 cp ServiceFiles/ProgramAutoRun/ProgramAutoRun.service /etc/systemd/system/
 
 
-python3 -m venv AllInOne/venv
-source AllInOne/venv/bin/activate
+python3 -m venv App/venv
+source App/venv/bin/activate
 
 # Install Python dependencies
-pip install -r AllInOne/requirements.txt
+pip install -r App/requirements.txt
 
 # Deactivate virtual environment
 deactivate

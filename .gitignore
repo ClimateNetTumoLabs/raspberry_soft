@@ -3,9 +3,9 @@ __pycache__/
 .idea/
 .DS_Store
 
-AllInOne/Data/MQTT_Sender/certificate.pem.crt
-AllInOne/Data/MQTT_Sender/private.pem.key
-AllInOne/Data/MQTT_Sender/public.pem.key
-AllInOne/Data/MQTT_Sender/rootCA.pem
-AllInOne/parsing.log
-AllInOne/Data/config.py
+App/Data/MQTT_Sender/certificate.pem.crt
+App/Data/MQTT_Sender/private.pem.key
+App/Data/MQTT_Sender/public.pem.key
+App/Data/MQTT_Sender/rootCA.pem
+App/parsing.log
+App/Data/config.py

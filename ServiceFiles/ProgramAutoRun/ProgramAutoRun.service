@@ -1,10 +1,10 @@
 [Unit]
-Description=AllInOne AutoRun
+Description=App AutoRun
 After=network.target
 
 [Service]
-ExecStart=/home/raspberry/workspace/raspberry_soft/AllInOne/venv/bin/python3 /home/raspberry/workspace/raspberry_soft/AllInOne/main.py
-WorkingDirectory=/home/raspberry/workspace/raspberry_soft/AllInOne
+ExecStart=/home/raspberry/workspace/raspberry_soft/App/venv/bin/python3 /home/raspberry/workspace/raspberry_soft/App/main.py
+WorkingDirectory=/home/raspberry/workspace/raspberry_soft/App
 Restart=always
 User=raspberry
 Group=raspberry
