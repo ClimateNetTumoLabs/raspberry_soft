@@ -1,6 +1,5 @@
-import time
-from .WeatherMeterSensors import *
-from .OtherSensors import *
+from .weather_meter_sensors import *
+from .other_sensors import *
 from logger_config import *
 import config
 

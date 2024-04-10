@@ -6,7 +6,7 @@ Dependencies:
     - time: Time-related functions.
     - smbus2: Python3 support library for I2C access.
     - bme280: Library for the BME280 sensor.
-    - Scripts.kalman_data_collector: Custom KalmanDataCollector class for filtering data.
+    - scripts.kalman_data_collector: Custom KalmanDataCollector class for filtering data.
     - logger_config: Logging configuration.
     - config: Configuration file containing sensors information.
 

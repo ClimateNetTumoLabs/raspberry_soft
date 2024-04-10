@@ -3,7 +3,7 @@ Description:
 This module provides functionality for collecting and filtering data using Kalman filtering.
 
 Dependencies:
-    - Scripts.kalman: Module containing the KalmanFilter class.
+    - scripts.kalman: Module containing the KalmanFilter class.
 
 Global Variables:
     - None

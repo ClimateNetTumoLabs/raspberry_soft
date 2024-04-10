@@ -7,7 +7,7 @@ Dependencies:
     - .PMS5003_library: Custom library for the PMS5003 sensor.
     - logger_config: Logging configuration.
     - config: Configuration file containing sensors information.
-    - Scripts.kalman_data_collector: Custom KalmanDataCollector class for filtering data.
+    - scripts.kalman_data_collector: Custom KalmanDataCollector class for filtering data.
 
 Global Variables:
     - None
@@ -15,10 +15,10 @@ Global Variables:
 
 import time
 import serial
-from .PMS5003_library import PMS5003
+from .PMS5003_lib import PMS5003
 from logger_config import *
 from config import SENSORS
-from Scripts.kalman_data_collector import KalmanDataCollector
+from scripts.kalman_data_collector import KalmanDataCollector
 
 
 class AirQualitySensor:

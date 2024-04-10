@@ -6,7 +6,7 @@ Dependencies:
     - time: Time-related functions.
     - board: CircuitPython board module.
     - busio: CircuitPython module for bus communication.
-    - Scripts.kalman_data_collector: Custom KalmanDataCollector class for filtering data.
+    - scripts.kalman_data_collector: Custom KalmanDataCollector class for filtering data.
     - logger_config: Logging configuration.
     - config: Configuration file containing sensors information.
     - adafruit_ltr390: Adafruit library for the LTR390 light sensor.

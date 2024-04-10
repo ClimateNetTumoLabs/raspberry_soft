@@ -5,7 +5,7 @@ import time
 import socket
 import paho.mqtt.client as mqtt
 from logger_config import *
-from Data.config import MQTT_BROKER_ENDPOINT, MQTT_TOPIC
+from data.config import MQTT_BROKER_ENDPOINT, MQTT_TOPIC
 
 
 class MQTTClient:

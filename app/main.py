@@ -29,10 +29,10 @@ Example:
 """
 
 from datetime import datetime
-from Sensors import ReadSensors
-from Data import DataHandler
+from sensors import ReadSensors
+from data import DataHandler
 from logger_config import *
-from Scripts import update_time, chmod_tty
+from scripts import update_time, chmod_tty
 
 
 def main():
