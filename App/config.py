@@ -1,9 +1,12 @@
 DEVICE_ID = None
 
 # It is recommended to set the value >= than
-# MAX_READING_TIME + wind_direction["reading_time"] + 10
+# MAX_READING_TIME + 10
 MEASURING_TIME = 900
-MAX_READING_TIME = 100
+
+# It is recommended to set the value >= than
+# sum of sensors reading_times
+MAX_READING_TIME = 300
 
 SENSORS = {
     "light_sensor": {
@@ -11,7 +14,8 @@ SENSORS = {
         "reading_time": 60
     },
     "tph_sensor": {
-        "working": True
+        "working": True,
+        "reading_time": 60
     },
     "air_quality_sensor": {
         "working": True,
@@ -20,7 +24,8 @@ SENSORS = {
         "pin_enable": 22,
         "pin_enable_working": False,
         "pin_reset": 27,
-        "pin_reset_working": False
+        "pin_reset_working": False,
+        "reading_time": 60
     },
     "wind_speed": {
         "working": True,

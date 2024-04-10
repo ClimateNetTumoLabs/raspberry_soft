@@ -1,4 +1,0 @@
-pkg_resources==0.0.0
-pytz==2023.3
-RPi.bme280==0.2.4
-smbus2==0.4.2
