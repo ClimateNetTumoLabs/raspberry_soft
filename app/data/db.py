@@ -1,6 +1,6 @@
-from typing import Union, Any
 import psycopg2
-from Data.config import LOCAL_DB_HOST, LOCAL_DB_USERNAME, LOCAL_DB_PASSWORD, LOCAL_DB_DB_NAME
+from typing import Union, Any
+
 from logger_config import logging
 
 
@@ -22,13 +22,17 @@ class LocalDatabase:
         get_count: Retrieves the count of records in the database.
     """
 
-    def __init__(self, deviceID: str) -> None:
+    def __init__(self, deviceID: str, host: str, username: str, password: str, db_name: str) -> None:
         """
         Initializes the LocalDatabase object.
 
         Args:
             deviceID (str): Identifier for the device associated with the database.
         """
+        self.host = host
+        self.username = username
+        self.password = password
+        self.db_name = db_name
         self.conn = None
         self.cursor = None
         self.connect_to_db()
@@ -55,10 +59,10 @@ class LocalDatabase:
         """
         try:
             connection = psycopg2.connect(
-                host=LOCAL_DB_HOST,
-                user=LOCAL_DB_USERNAME,
-                password=LOCAL_DB_PASSWORD,
-                database=LOCAL_DB_DB_NAME
+                host=self.host,
+                user=self.username,
+                password=self.password,
+                database=self.db_name
             )
 
             cursor = connection.cursor()

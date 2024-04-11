@@ -1,4 +1,19 @@
-DEVICE_ID = None
+import os
+
+from dotenv import load_dotenv
+
+load_dotenv()
+
+LOCAL_DB_HOST = os.getenv('LOCAL_DB_HOST', '')
+LOCAL_DB_USERNAME = os.getenv('LOCAL_DB_USERNAME', '')
+LOCAL_DB_PASSWORD = os.getenv('LOCAL_DB_PASSWORD', '')
+LOCAL_DB_DB_NAME = os.getenv('LOCAL_DB_DB_NAME', '')
+
+MQTT_BROKER_ENDPOINT = os.getenv('MQTT_BROKER_ENDPOINT', '')
+
+MQTT_TOPIC = "raspberry/devices2"
+
+DEVICE_ID = os.getenv('DEVICE_ID', '')
 
 # It is recommended to set the value >= than
 # MAX_READING_TIME + 10
