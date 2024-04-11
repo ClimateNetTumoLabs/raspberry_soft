@@ -30,8 +30,8 @@ Example:
 
 from datetime import datetime
 from sensors import ReadSensors
-from data import DataHandler
-from logger_config import *
+from data.data_handler import DataHandler
+from logger_config import logging
 from scripts import update_time, chmod_tty
 
 

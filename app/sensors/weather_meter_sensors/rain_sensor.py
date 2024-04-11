@@ -28,7 +28,8 @@ class Rain:
         """
         Initializes the Rain object.
 
-        Creates a GPIO button input instance connected to the rain sensor and initializes the rain count and bucket size.
+        Creates a GPIO button input instance connected to the rain sensor and initializes the rain count and bucket
+        size.
 
         Args:
             bucket_size (float, optional): The size of the rain bucket in millimeters. Defaults to 0.2794.

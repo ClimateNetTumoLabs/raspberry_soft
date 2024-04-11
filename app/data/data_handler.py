@@ -1,7 +1,7 @@
-from .LocalDB import LocalDatabase
+from .db import LocalDatabase
 from .MQTT_Sender import MQTTClient
-from logger_config import *
-from Scripts import split_data, check_network
+from logger_config import logging
+from scripts import split_data, check_network
 from config import DEVICE_ID
 
 

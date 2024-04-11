@@ -9,7 +9,7 @@ Global Variables:
     - None
 """
 
-from Scripts.kalman import KalmanFilter
+from scripts.kalman import KalmanFilter
 
 
 class KalmanDataCollector:
@@ -52,9 +52,9 @@ class KalmanDataCollector:
         result = {}
 
         for key, value in self.data.items():
-            l = len(value)
+            length = len(value)
             try:
-                result[key] = round(sum(value[int(l / 4):]) / len(value[int(l / 4):]), 2)
+                result[key] = round(sum(value[int(length / 4):]) / len(value[int(length / 4):]), 2)
             except ZeroDivisionError:
                 result[key] = None
 

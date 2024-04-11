@@ -1,7 +1,16 @@
-from .weather_meter_sensors import *
-from .other_sensors import *
-from logger_config import *
+import time
+
 import config
+
+from .weather_meter_sensors.rain_sensor import Rain
+from .weather_meter_sensors.wind_direction_sensor import WindDirection
+from .weather_meter_sensors.wind_speed_sensor import WindSpeed
+
+from .other_sensors.air_quality_sensor_PMS5003 import AirQualitySensor
+from .other_sensors.light_sensor_LTR390 import LightSensor
+from .other_sensors.TPH_sensor_BME280 import TPHSensor
+
+from logger_config import logging
 
 
 class ReadSensors:
@@ -9,11 +18,12 @@ class ReadSensors:
     Represents a data collector for various environmental sensors.
 
     This class collects data from a variety of sensors, including light sensors, temperature, pressure, and humidity
-    sensors, air quality sensors, wind direction sensors, wind speed sensors, and rain sensors. It compiles the collected
-    data into a dictionary for further processing or logging.
+    sensors, air quality sensors, wind direction sensors, wind speed sensors, and rain sensors. It compiles
+    the collected data into a dictionary for further processing or logging.
 
     Attributes:
-        sensors (list): A list of sensor objects for light, temperature, pressure, humidity, and air quality measurements.
+        sensors (list): A list of sensor objects for light, temperature, pressure, humidity, and air quality
+        measurements.
         wind_direction_sensor (WindDirection): An instance of the WindDirection class for measuring wind direction.
         wind_speed_sensor (WindSpeed): An instance of the WindSpeed class for measuring wind speed.
         rain_sensor (Rain): An instance of the Rain class for measuring rainfall.
@@ -94,7 +104,7 @@ class ReadSensors:
 
             remaining_time = config.MEASURING_TIME - (time.time() - start_time) - 0.04
             if remaining_time < 0:
-                logging.error(f"Error occurred during sleep: ValueError: sleep length must be non-negative")
+                logging.error("Error occurred during sleep: ValueError: sleep length must be non-negative")
             else:
                 time.sleep(remaining_time)
 

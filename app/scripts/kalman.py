@@ -2,14 +2,17 @@ class KalmanFilter:
     """
     Represents a Kalman Filter for sensor fusion and state estimation.
 
-    This class implements a Kalman Filter algorithm for estimating the state of a linear dynamic system based on noisy measurements.
+    This class implements a Kalman Filter algorithm for estimating the state of a linear dynamic system
+    based on noisy measurements.
 
     Args:
         process_covariance (float, optional): Process covariance, representing the error in the process model.
             Defaults to 0.000001.
-        measurement_covariance (float, optional): Measurement covariance, representing the error in the sensor measurements.
+        measurement_covariance (float, optional): Measurement covariance, representing the error in the sensor
+        measurements.
             Defaults to 0.01.
-        prediction_covariance (float, optional): Initial prediction covariance, representing the initial uncertainty in the state estimation.
+        prediction_covariance (float, optional): Initial prediction covariance, representing the initial uncertainty
+        in the state estimation.
             Defaults to 0.1.
 
     Attributes:

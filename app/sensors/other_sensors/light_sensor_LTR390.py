@@ -18,8 +18,8 @@ Global Variables:
 import time
 import board
 import busio
-from Scripts.kalman_data_collector import KalmanDataCollector
-from logger_config import *
+from scripts.kalman_data_collector import KalmanDataCollector
+from logger_config import logging
 from config import SENSORS
 import adafruit_ltr390
 

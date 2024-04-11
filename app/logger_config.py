@@ -1,7 +1,8 @@
 """
 Logging Configuration
 
-The logging configuration is designed to record parsing activities and relevant information for future analysis and troubleshooting.
+The logging configuration is designed to record parsing activities and relevant information for future analysis
+and troubleshooting.
 
 Attributes:
     - filename (str): The name of the log file where log entries will be written.
@@ -20,7 +21,8 @@ Example:
     ```
 
 Note:
-    To control the verbosity of log messages, you can change the 'level' attribute in this module to a different log level (e.g., logging.DEBUG for more detailed logs or logging.ERROR for critical errors only).
+    To control the verbosity of log messages, you can change the 'level' attribute in this module to a different
+    log level (e.g., logging.DEBUG for more detailed logs or logging.ERROR for critical errors only).
 
 """
 

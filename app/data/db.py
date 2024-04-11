@@ -1,7 +1,7 @@
 from typing import Union, Any
 import psycopg2
 from Data.config import LOCAL_DB_HOST, LOCAL_DB_USERNAME, LOCAL_DB_PASSWORD, LOCAL_DB_DB_NAME
-from logger_config import *
+from logger_config import logging
 
 
 class LocalDatabase:
@@ -73,7 +73,9 @@ class LocalDatabase:
         Creates a table in the database.
         """
         try:
-            column_definitions = [f"{column_name} {column_type}" for column_name, column_type in self.table_columns.items()]
+            column_definitions = [
+                f"{column_name} {column_type}" for column_name, column_type in self.table_columns.items()
+            ]
             query_columns = ",\n    ".join(column_definitions)
 
             create_table_query = f"""

@@ -1,10 +1,12 @@
 import pytz
 import ntplib
+
 import subprocess
 import socket
 import time
 from datetime import datetime
-from logger_config import *
+
+from logger_config import logging
 from .network_checker import check_network
 from .rtc import RTCControl
 
@@ -74,12 +76,12 @@ def update_time():
                     logging.error(f"Failed to change RTC time: {e}")
                 return True
             except socket.gaierror:
-                logging.error(f"Failed to get time from NTP")
+                logging.error("Failed to get time from NTP")
             except Exception as e:
                 logging.error(f"Error occurred during getting time from NTP: {e}")
 
         else:
-            logging.error(f"Failed to establish network connection for changing time")
+            logging.error("Failed to establish network connection for changing time")
 
         time.sleep(5)
 

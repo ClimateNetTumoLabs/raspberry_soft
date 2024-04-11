@@ -1,5 +1,6 @@
 import subprocess
-from logger_config import *
+
+from logger_config import logging
 
 
 def get_network_interface() -> str:

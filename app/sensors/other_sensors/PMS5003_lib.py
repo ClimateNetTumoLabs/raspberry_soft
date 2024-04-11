@@ -96,7 +96,13 @@ class PMS5003:
     PMS5003 Sensor interface class.
     """
 
-    def __init__(self, device='/dev/ttyAMA0', baudrate=9600, pin_enable=22, pin_reset=27, pin_enable_working=False, pin_reset_working=False):
+    def __init__(self,
+                 device='/dev/ttyAMA0',
+                 baudrate=9600,
+                 pin_enable=22,
+                 pin_reset=27,
+                 pin_enable_working=False,
+                 pin_reset_working=False):
         """
         Initialize PMS5003 sensor.
 
@@ -113,7 +119,7 @@ class PMS5003:
         self._pin_enable_working = pin_enable_working
         self._pin_reset = pin_reset
         self._pin_reset_working = pin_reset_working
-        
+
         self.setup()
 
     def setup(self):
@@ -131,7 +137,7 @@ class PMS5003:
             self._serial.close()
 
         self._serial = serial.Serial(self._device, baudrate=self._baudrate, timeout=4)
-        
+
         if self._pin_reset_working:
             self.reset()
 
@@ -184,14 +190,14 @@ class PMS5003:
 
         raw_data = bytearray(self._serial.read(frame_length))
         if len(raw_data) != frame_length:
-            raise SerialTimeoutError("PMS5003 Read Timeout: Invalid frame length. Got {} bytes, expected {}.".format(len(raw_data), frame_length))
+            raise SerialTimeoutError("PMS5003 Read Timeout: Invalid frame length. Got {} bytes, expected {}."
+                                     .format(len(raw_data), frame_length))
 
         data = PMS5003Data(raw_data)
-        
+
         checksum += sum(raw_data[:-2])
 
         if checksum != data.checksum:
             raise ChecksumMismatchError("PMS5003 Checksum Mismatch {} != {}".format(checksum, data.checksum))
 
         return data
-

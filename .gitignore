@@ -3,9 +3,10 @@ __pycache__/
 .idea/
 .DS_Store
 
-App/Data/MQTT_Sender/certificate.pem.crt
-App/Data/MQTT_Sender/private.pem.key
-App/Data/MQTT_Sender/public.pem.key
-App/Data/MQTT_Sender/rootCA.pem
-App/parsing.log
-App/Data/config.py
+app/data/certificate/certificate.pem.crt
+app/data/certificate/private.pem.key
+app/data/certificate/public.pem.key
+app/data/certificate/rootCA.pem
+app/parsing.log
+app/data/config.py
+app/tox.ini

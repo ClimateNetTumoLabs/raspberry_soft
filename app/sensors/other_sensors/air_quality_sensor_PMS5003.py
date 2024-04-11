@@ -16,7 +16,7 @@ Global Variables:
 import time
 import serial
 from .PMS5003_lib import PMS5003
-from logger_config import *
+from logger_config import logging
 from config import SENSORS
 from scripts.kalman_data_collector import KalmanDataCollector
 
@@ -83,8 +83,9 @@ class AirQualitySensor:
         Reads data from the Air Quality sensor.
 
         Returns:
-            dict: A dictionary containing PM1, PM2.5, and PM10 values in micrograms per cubic meter (µg/m³). If the sensor
-            is in testing mode, returns raw data. If operational, applies Kalman filtering to the data before returning.
+            dict: A dictionary containing PM1, PM2.5, and PM10 values in micrograms per cubic meter (µg/m³).
+            If the sensor is in testing mode, returns raw data. If operational, applies Kalman filtering to the data
+            before returning.
 
         Raises:
             Exception: If any error occurs during the process, it's logged and None values are returned for PM1, PM2.5,

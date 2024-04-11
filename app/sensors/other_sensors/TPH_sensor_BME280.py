@@ -17,8 +17,8 @@ Global Variables:
 import time
 import smbus2
 import bme280
-from Scripts.kalman_data_collector import KalmanDataCollector
-from logger_config import *
+from scripts.kalman_data_collector import KalmanDataCollector
+from logger_config import logging
 from config import SENSORS
 
 

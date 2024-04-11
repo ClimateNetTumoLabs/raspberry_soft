@@ -4,7 +4,7 @@ import math
 import os
 from time import sleep
 from gpiozero import MCP3008
-from logger_config import *
+from logger_config import logging
 from config import SENSORS
 
 
@@ -35,17 +35,22 @@ class WindDirection:
         testing (bool): Flag indicating whether the sensor is in testing mode.
 
     Methods:
-        calculate_vout_adc() -> None: Calculates voltage output and ADC values for each direction based on calibration data.
+        calculate_vout_adc() -> None: Calculates voltage output and ADC values for each direction
+        based on calibration data.
         calculate_max_min_adc() -> None: Calculates the minimum and maximum ADC values for each direction.
         calculate_vout(ra, rb, vin) -> float: Calculates voltage output based on voltage divider parameters.
         get_dir(adc_value) -> int: Determines the wind direction angle based on ADC value.
         get_direction_label(angle) -> str: Determines the wind direction label based on angle.
         get_average(angles) -> float: Calculates the average wind direction from a list of angles.
         read_data() -> str: Reads wind direction data from the sensor and returns the average direction label.
-
     """
 
-    def __init__(self, adc_channel=0, config_file="directions_config.json", adc_max=1024, adc_vref=5.12, testing=False) -> None:
+    def __init__(self,
+                 adc_channel=0,
+                 config_file="directions_config.json",
+                 adc_max=1024,
+                 adc_vref=5.12,
+                 testing=False) -> None:
         """
         Initializes the WindDirection object.
 
