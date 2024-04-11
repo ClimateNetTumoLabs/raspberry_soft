@@ -17,7 +17,7 @@ import time
 import serial
 from .PMS5003_lib import PMS5003
 from logger_config import logging
-from config import SENSORS
+from app.config import SENSORS
 from scripts.kalman_data_collector import KalmanDataCollector
 
 

@@ -2,6 +2,7 @@ venv/
 __pycache__/
 .idea/
 .DS_Store
+app/.env
 
 app/data/certificate/certificate.pem.crt
 app/data/certificate/private.pem.key
@@ -9,4 +10,3 @@ app/data/certificate/public.pem.key
 app/data/certificate/rootCA.pem
 app/parsing.log
 app/data/config.py
-app/tox.ini

@@ -19,7 +19,7 @@ import smbus2
 import bme280
 from scripts.kalman_data_collector import KalmanDataCollector
 from logger_config import logging
-from config import SENSORS
+from app.config import SENSORS
 
 
 class TPHSensor:

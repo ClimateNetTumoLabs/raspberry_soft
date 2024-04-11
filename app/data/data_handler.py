@@ -1,21 +1,20 @@
-from .db import LocalDatabase
-from .MQTT_Sender import MQTTClient
+from .mqtt_client import MQTTClient
 from logger_config import logging
-from scripts import split_data, check_network
-from config import DEVICE_ID
+from scripts.data_splitter import split_data
+from scripts.network_checker import check_network
 
 
 class DataHandler:
-    def __init__(self) -> None:
+    def __init__(self, device_id, local_database) -> None:
         """
         Initializes a DataHandler instance.
 
         Returns:
             None
         """
-        self.deviceID = f"device{DEVICE_ID}"
+        self.deviceID = f"device{device_id}"
         self.mqtt_client = MQTTClient(deviceID=self.deviceID)
-        self.local_db = LocalDatabase(deviceID=self.deviceID)
+        self.local_db = local_database
 
         self.local = False
 

@@ -29,16 +29,25 @@ Example:
 """
 
 from datetime import datetime
-from sensors import ReadSensors
+
+import config
 from data.data_handler import DataHandler
+from data.db import LocalDatabase
+from sensors.read_sensors import ReadSensors
 from logger_config import logging
-from scripts import update_time, chmod_tty
+from scripts.time_updater import update_time
+from scripts.change_permissions import chmod_tty
 
 
 def main():
     """Main function for collecting and storing sensor data."""
     sensor_reader = ReadSensors()
-    dataHandler = DataHandler()
+    local_database = LocalDatabase(deviceID=config.DEVICE_ID,
+                                   host=config.LOCAL_DB_HOST,
+                                   username=config.LOCAL_DB_USERNAME,
+                                   password=config.LOCAL_DB_PASSWORD,
+                                   db_name=config.LOCAL_DB_DB_NAME)
+    dataHandler = DataHandler(device_id=config.DEVICE_ID, local_database=local_database)
 
     # Check if there is any existing data in the local database
     if dataHandler.local_db.get_count():
