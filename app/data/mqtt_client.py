@@ -20,9 +20,9 @@ class MQTTClient:
             None
         """
         self.client = mqtt.Client()
-        self.client.tls_set(ca_certs=os.path.join(os.path.dirname(__file__), 'rootCA.pem'),
-                            certfile=os.path.join(os.path.dirname(__file__), 'certificate.pem.crt'),
-                            keyfile=os.path.join(os.path.dirname(__file__), 'private.pem.key'),
+        self.client.tls_set(ca_certs=os.path.join(os.path.dirname(__file__), 'certificates/rootCA.pem'),
+                            certfile=os.path.join(os.path.dirname(__file__), 'certificates/certificate.pem.crt'),
+                            keyfile=os.path.join(os.path.dirname(__file__), 'certificates/private.pem.key'),
                             tls_version=ssl.PROTOCOL_SSLv23)
         self.client.tls_insecure_set(True)
         self.client.connect(MQTT_BROKER_ENDPOINT, 8883, 60)

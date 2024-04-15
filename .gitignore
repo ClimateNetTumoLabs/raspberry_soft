@@ -4,9 +4,9 @@ __pycache__/
 .DS_Store
 app/.env
 
-app/data/certificate/certificate.pem.crt
-app/data/certificate/private.pem.key
-app/data/certificate/public.pem.key
-app/data/certificate/rootCA.pem
+app/data/certificates/certificate.pem.crt
+app/data/certificates/private.pem.key
+app/data/certificates/public.pem.key
+app/data/certificates/rootCA.pem
 parsing.log
 app/data/config.py

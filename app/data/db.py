@@ -36,7 +36,7 @@ class LocalDatabase:
         self.conn = None
         self.cursor = None
         self.connect_to_db()
-        self.deviceID = deviceID
+        self.deviceID = f"device{deviceID}"
 
         self.table_columns = {
             "time": "TIMESTAMP",
