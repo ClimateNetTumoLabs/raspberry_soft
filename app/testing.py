@@ -3,7 +3,7 @@ from prettytable import PrettyTable
 import time
 import os
 
-from app import config
+import config
 from sensors.weather_meter_sensors.rain_sensor import Rain
 from sensors.weather_meter_sensors.wind_direction_sensor import WindDirection
 from sensors.weather_meter_sensors.wind_speed_sensor import WindSpeed
