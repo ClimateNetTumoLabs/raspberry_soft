@@ -32,7 +32,8 @@ from datetime import datetime
 
 import config
 from data.data_handler import DataHandler
-from data.db import LocalDatabase
+from data.local_db import LocalDatabase
+from data.mqtt_client import MQTTClient
 from sensors.read_sensors import ReadSensors
 from logger_config import logging
 from scripts.time_updater import update_time
@@ -47,7 +48,9 @@ def main():
                                    username=config.LOCAL_DB_USERNAME,
                                    password=config.LOCAL_DB_PASSWORD,
                                    db_name=config.LOCAL_DB_DB_NAME)
-    dataHandler = DataHandler(device_id=config.DEVICE_ID, local_database=local_database)
+    mqtt_client = MQTTClient(deviceID=config.DEVICE_ID)
+
+    dataHandler = DataHandler(mqtt_client=mqtt_client, local_database=local_database)
 
     # Check if there is any existing data in the local database
     if dataHandler.local_db.get_count():

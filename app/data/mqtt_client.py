@@ -27,7 +27,7 @@ class MQTTClient:
         self.client.tls_insecure_set(True)
         self.client.connect(MQTT_BROKER_ENDPOINT, 8883, 60)
         self.client.loop_start()
-        self.deviceID = deviceID
+        self.deviceID = f"device{deviceID}"
 
     def send_data(self, data: list) -> bool:
         """
