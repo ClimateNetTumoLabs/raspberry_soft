@@ -3,7 +3,7 @@ Description=Internet Connection check/connect
 After=network.target
 
 [Service]
-ExecStart=/bin/bash -c "/usr/bin/python3 /home/raspberry/scripts/InetCheckConnect.py >> /home/raspberry/Desktop/internet.log 2>&1"
+ExecStart=/bin/bash -c "/usr/bin/python3 /home/raspberry/scripts/inet_check_connect.py >> /home/raspberry/Desktop/internet.log 2>&1"
 WorkingDirectory=/home/raspberry/scripts
 Restart=always
 RestartSec=60s

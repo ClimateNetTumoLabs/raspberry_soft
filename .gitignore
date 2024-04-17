@@ -2,10 +2,11 @@ venv/
 __pycache__/
 .idea/
 .DS_Store
+app/.env
 
-App/Data/MQTT_Sender/certificate.pem.crt
-App/Data/MQTT_Sender/private.pem.key
-App/Data/MQTT_Sender/public.pem.key
-App/Data/MQTT_Sender/rootCA.pem
-App/parsing.log
-App/Data/config.py
+app/data/certificates/certificate.pem.crt
+app/data/certificates/private.pem.key
+app/data/certificates/public.pem.key
+app/data/certificates/rootCA.pem
+parsing.log
+app/data/config.py
