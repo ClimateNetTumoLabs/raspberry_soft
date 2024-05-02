@@ -15,7 +15,7 @@ MQTT_TOPIC = "raspberry/devices2"
 
 DEVICE_ID = os.getenv('DEVICE_ID', '')
 
-# It is recommended to set the value >= than
+# It is recommended to set the value > than
 # MAX_READING_TIME + 10
 MEASURING_TIME = 900
 
