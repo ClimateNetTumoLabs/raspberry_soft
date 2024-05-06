@@ -68,16 +68,16 @@ class ReadSensors:
         """
         data = {}
 
-        if config.SENSORS["wind_direction"]["working"] and self.wind_speed_sensor.get_data() != 0:
-            data["direction"] = self.wind_direction_sensor.read_data()
-        else:
-            data["direction"] = None
-            time.sleep(self.wind_direction_sensor.wind_interval)
-
         if config.SENSORS["wind_speed"]["working"]:
             data["speed"] = self.wind_speed_sensor.read_data(time.time() - start_time)
         else:
             data["speed"] = None
+
+        if config.SENSORS["wind_direction"]["working"] and data["speed"]:
+            data["direction"] = self.wind_direction_sensor.read_data()
+        else:
+            data["direction"] = None
+            time.sleep(self.wind_direction_sensor.wind_interval)
 
         for sensor in self.sensors:
             res = sensor.read_data()
