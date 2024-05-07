@@ -23,16 +23,16 @@ git config --global core.editor "vim"
 # Copy service files
 cp ServiceFiles/InternetCheckConnect/InetCheckConnect.service /etc/systemd/system/
 mkdir -p "/home/raspberry/scripts/"
-cp ServiceFiles/InternetCheckConnect/InetCheckConnect.py /home/raspberry/scripts/
+cp ServiceFiles/InternetCheckConnect/inet_check_connect.py /home/raspberry/scripts/
 
 cp ServiceFiles/ProgramAutoRun/ProgramAutoRun.service /etc/systemd/system/
 
 
-python3 -m venv App/venv
-source App/venv/bin/activate
+python3 -m venv app/venv
+source app/venv/bin/activate
 
 # Install Python dependencies
-pip install -r App/requirements.txt
+pip install -r app/requirements.txt
 
 # Deactivate virtual environment
 deactivate

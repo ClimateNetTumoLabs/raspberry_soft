@@ -3,8 +3,8 @@ Description=App AutoRun
 After=network.target
 
 [Service]
-ExecStart=/home/raspberry/workspace/raspberry_soft/App/venv/bin/python3 /home/raspberry/workspace/raspberry_soft/App/main.py
-WorkingDirectory=/home/raspberry/workspace/raspberry_soft/App
+ExecStart=/home/raspberry/workspace/raspberry_soft/app/venv/bin/python3 /home/raspberry/workspace/raspberry_soft/app/main.py
+WorkingDirectory=/home/raspberry/workspace/raspberry_soft/app
 Restart=always
 User=raspberry
 Group=raspberry
