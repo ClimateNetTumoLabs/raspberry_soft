@@ -70,7 +70,11 @@ class AirQualitySensor:
         """
         self.pms5003.setup()
         data = {}
-        all_data = self.pms5003.read()
+        try:
+            all_data = self.pms5003.read()
+        except:
+            time.sleep(1)
+            all_data = self.pms5003.read()
 
         data["pm1"] = all_data.pm_ug_per_m3(size=1.0)
         data["pm2_5"] = all_data.pm_ug_per_m3(size=2.5)

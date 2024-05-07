@@ -91,8 +91,9 @@ class TestSensors:
         """
         os.system("clear")
 
-        if isinstance(result, list):
-            is_success, formatted_data = result
+        if isinstance(result, list) and len(result) > 1:
+            is_success = result[0]
+            formatted_data = result[1]
 
             if isinstance(formatted_data, dict):
                 d = []
