@@ -70,8 +70,11 @@ class LightSensor:
         Returns:
             dict: A dictionary containing UV index and Lux values.
         """
-        uvi = self.sensor.uvi
-        lux = self.sensor.lux
+        try:
+            uvi = self.sensor.uvi
+            lux = self.sensor.lux
+        except:
+            return None
 
         return {
             "uv": round(uvi, 2),

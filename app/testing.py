@@ -144,36 +144,35 @@ class TestSensors:
         Updates test results dictionary with the status of each sensor and network connectivity.
         """
 
-        try:
-            res_light = self.light.read_data()
-        except AttributeError:
-            self.results["LightSensor"] = False
-        else:
+        res_light = self.light.read_data()
+        if res_light:
             self.results["LightSensor"].append(res_light)
             for elem in res_light.values():
                 if elem is None:
                     self.results["LightSensor"][0] = False
                     break
-        try:
-            res_tph = self.tph.read_data()
-        except AttributeError:
-            self.results["TPHSensor"] = False
         else:
+            self.results["LightSensor"] = False
+
+        res_tph = self.tph.read_data()
+        if res_tph:
             self.results["TPHSensor"].append(res_tph)
             for elem in res_tph.values():
                 if elem is None:
                     self.results["TPHSensor"][0] = False
                     break
-        try:
-            res_air_quality = self.air_quality.read_data()
-        except SerialTimeoutError:
-            self.results["AirQualitySensor"] = False
         else:
+            self.results["TPHSensor"] = False
+
+        res_air_quality = self.air_quality.read_data()
+        if res_air_quality:
             self.results["AirQualitySensor"].append(res_air_quality)
             for elem in res_air_quality.values():
                 if elem is None:
                     self.results["AirQualitySensor"][0] = False
                     break
+        else:
+            self.results["AirQualitySensor"] = False
 
         res_wind_direction = self.wind_direction_sensor.read_data()
         self.results["WindDirection"].append(res_wind_direction)

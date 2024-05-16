@@ -74,7 +74,10 @@ class TPHSensor:
         Returns:
             dict: A dictionary containing temperature, pressure, and humidity values.
         """
-        data = bme280.sample(self.bus, self.address, self.calibration_params)
+        try:
+            data = bme280.sample(self.bus, self.address, self.calibration_params)
+        except:
+            return None
 
         return {
             "temperature": round(data.temperature, 2),

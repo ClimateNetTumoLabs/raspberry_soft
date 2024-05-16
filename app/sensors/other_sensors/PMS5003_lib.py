@@ -163,9 +163,9 @@ class PMS5003:
         sof_index = 0
 
         while True:
-            # elapsed = time.time() - start
-            # if elapsed > 5:
-            #     raise ReadTimeoutError("PMS5003 Read Timeout: Could not find start of frame")
+            elapsed = time.time() - start
+            if elapsed > 5:
+                raise ReadTimeoutError("PMS5003 Read Timeout: Could not find start of frame")
 
             sof = self._serial.read(1)
             if len(sof) == 0:
