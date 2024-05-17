@@ -10,7 +10,6 @@ from sensors.weather_meter_sensors.wind_speed_sensor import WindSpeed
 from sensors.other_sensors.air_quality_sensor_PMS5003 import AirQualitySensor
 from sensors.other_sensors.light_sensor_LTR390 import LightSensor
 from sensors.other_sensors.TPH_sensor_BME280 import TPHSensor
-from sensors.other_sensors.PMS5003_lib import SerialTimeoutError
 from scripts.rtc import RTCControl
 from scripts.network_checker import check_network
 from scripts.time_updater import update_rtc_time

@@ -73,13 +73,13 @@ class LightSensor:
         try:
             uvi = self.sensor.uvi
             lux = self.sensor.lux
-        except:
-            return None
-
-        return {
-            "uv": round(uvi, 2),
-            "lux": round(lux, 2)
-        }
+        except AttributeError:
+            logging.error("Serial Timeout error.")
+        except Exception as e:
+            logging.error(e)
+        else:
+            return {"uv": round(uvi, 2), "lux": round(lux, 2)}
+        return {}
 
     def read_data(self) -> dict:
         """
@@ -100,19 +100,11 @@ class LightSensor:
             start_time = time.time()
 
             while time.time() - start_time <= self.reading_time:
-                try:
-                    data = self.__get_data()
+                data = self.__get_data()
+                if data:
                     kalman_data_collector.add_data(data)
-
                     time.sleep(3)
-                except Exception as er:
-                    logging.error(f"Error occurred during reading data from LTR390 sensor: {str(er)}",
-                                  exc_info=True)
 
             return kalman_data_collector.get_result()
 
-        else:
-            return {
-                "uv": None,
-                "lux": None
-            }
+        return {"uv": None, "lux": None}

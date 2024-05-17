@@ -15,7 +15,7 @@ Global Variables:
 
 import time
 import serial
-from .PMS5003_lib import PMS5003
+from .PMS5003_lib import PMS5003, SerialTimeoutError
 from logger_config import logging
 from config import SENSORS
 from scripts.kalman_data_collector import KalmanDataCollector
@@ -70,16 +70,17 @@ class AirQualitySensor:
         """
         self.pms5003.setup()
         data = {}
-        # time.sleep(1)
 
         try:
             all_data = self.pms5003.read()
-        except:
-            return None
-
-        data["pm1"] = all_data.pm_ug_per_m3(size=1.0)
-        data["pm2_5"] = all_data.pm_ug_per_m3(size=2.5)
-        data["pm10"] = all_data.pm_ug_per_m3(size=10)
+        except SerialTimeoutError:
+            logging.error("Serial Timeout Error")
+        except Exception as e:
+            logging.error(e)
+        else:
+            data["pm1"] = all_data.pm_ug_per_m3(size=1.0)
+            data["pm2_5"] = all_data.pm_ug_per_m3(size=2.5)
+            data["pm10"] = all_data.pm_ug_per_m3(size=10)
 
         return data
 
@@ -104,23 +105,11 @@ class AirQualitySensor:
             start_time = time.time()
 
             while time.time() - start_time < self.reading_time:
-                try:
-                    data = self.__get_data()
+                data = self.__get_data()
+                if data:
                     kalman_data_collector.add_data(data)
-
                     time.sleep(3)
-                except serial.serialutil.SerialException:
-                    logging.error("serial.serialutil.SerialException: device reports readiness to read but returned "
-                                  "no data (device disconnected or multiple access on port?)")
-                except Exception as er:
-                    logging.error(f"Error occurred during reading data from AirQuality sensor: {str(er)}",
-                                  exc_info=True)
 
             return kalman_data_collector.get_result()
 
-        else:
-            return {
-                "pm1": None,
-                "pm2_5": None,
-                "pm10": None
-            }
+        return {"pm1": None, "pm2_5": None, "pm10": None}

@@ -76,14 +76,17 @@ class TPHSensor:
         """
         try:
             data = bme280.sample(self.bus, self.address, self.calibration_params)
-        except:
-            return None
-
-        return {
-            "temperature": round(data.temperature, 2),
-            "pressure": round(data.pressure * 0.750061, 2),
-            "humidity": round(data.humidity, 2)
-        }
+        except AttributeError:
+            logging.error("Attribute error.")
+        except Exception as e:
+            logging.error(e, exc_info=True)
+        else:
+            return {
+                "temperature": round(data.temperature, 2),
+                "pressure": round(data.pressure * 0.750061, 2),
+                "humidity": round(data.humidity, 2)
+            }
+        return {}
 
     def read_data(self) -> dict:
         """
@@ -103,21 +106,12 @@ class TPHSensor:
             kalman_data_collector = KalmanDataCollector('temperature', 'pressure', 'humidity')
 
             start_time = time.time()
-
             while time.time() - start_time <= self.reading_time:
-                try:
-                    data = self.__get_data()
+                data = self.__get_data()
+                if data:
                     kalman_data_collector.add_data(data)
-
                     time.sleep(3)
-                except Exception as er:
-                    logging.error(f"Error occurred during reading data from BME280 sensor: {str(er)}",
-                                  exc_info=True)
 
             return kalman_data_collector.get_result()
-        else:
-            return {
-                "temperature": None,
-                "pressure": None,
-                "humidity": None
-            }
+
+        return {"temperature": None, "pressure": None, "humidity": None}
