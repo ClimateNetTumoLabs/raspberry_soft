@@ -102,8 +102,8 @@ class TestSensors:
                 formatted_data = '\n'.join(d)
 
             return f"{is_success}\n\n{formatted_data}"
-        else:
-            return result
+
+        return result
 
     def print_results(self):
         """

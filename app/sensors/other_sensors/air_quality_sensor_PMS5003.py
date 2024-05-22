@@ -74,7 +74,7 @@ class AirQualitySensor:
         try:
             all_data = self.pms5003.read()
         except SerialTimeoutError:
-            logging.error("Serial Timeout Error")
+            logging.error("Sensor PMS5003: Serial Timeout Error")
         except Exception as e:
             logging.error(e)
         else:

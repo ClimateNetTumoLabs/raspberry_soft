@@ -74,7 +74,7 @@ class LightSensor:
             uvi = self.sensor.uvi
             lux = self.sensor.lux
         except AttributeError:
-            logging.error("Serial Timeout error.")
+            logging.error("Sensor LTR390: Serial Timeout error")
         except Exception as e:
             logging.error(e)
         else:

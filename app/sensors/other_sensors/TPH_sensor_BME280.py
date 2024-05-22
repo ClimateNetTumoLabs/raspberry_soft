@@ -77,7 +77,7 @@ class TPHSensor:
         try:
             data = bme280.sample(self.bus, self.address, self.calibration_params)
         except AttributeError:
-            logging.error("Attribute error.")
+            logging.error("Sensor BME280: Attribute Error")
         except Exception as e:
             logging.error(e, exc_info=True)
         else:
