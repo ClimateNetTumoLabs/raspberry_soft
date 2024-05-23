@@ -54,11 +54,8 @@ class LightSensor:
                     self.i2c = busio.I2C(board.SCL, board.SDA)
                     self.sensor = adafruit_ltr390.LTR390(self.i2c)
                     break
-                except OSError or ValueError:
-                    logging.error(
-                        "Error occurred during creating object for LTR390 sensor: No I2C device at address")
                 except Exception as e:
-                    logging.error(f"Error occurred during creating object for LTR390 sensor: {str(e)}")
+                    logging.error(f"Error occurred during creating object for LTR390 sensor: {e}")
 
                 if i == 2:
                     self.working = False
@@ -70,13 +67,16 @@ class LightSensor:
         Returns:
             dict: A dictionary containing UV index and Lux values.
         """
-        uvi = self.sensor.uvi
-        lux = self.sensor.lux
-
-        return {
-            "uv": round(uvi, 2),
-            "lux": round(lux, 2)
-        }
+        try:
+            uvi = self.sensor.uvi
+            lux = self.sensor.lux
+        except AttributeError as e:
+            logging.error(f"Attribute error while reading LTR390: {e}")
+        except Exception as e:
+            logging.error(f"Unhandled exception while reading LTR390: {e}", exc_info=True)
+        else:
+            return {"uv": round(uvi, 2), "lux": round(lux, 2)}
+        return {}
 
     def read_data(self) -> dict:
         """
@@ -97,19 +97,12 @@ class LightSensor:
             start_time = time.time()
 
             while time.time() - start_time <= self.reading_time:
-                try:
-                    data = self.__get_data()
+                data = self.__get_data()
+                if data:
                     kalman_data_collector.add_data(data)
-
-                    time.sleep(3)
-                except Exception as er:
-                    logging.error(f"Error occurred during reading data from LTR390 sensor: {str(er)}",
-                                  exc_info=True)
+                    time.sleep(2)
+                time.sleep(1)
 
             return kalman_data_collector.get_result()
 
-        else:
-            return {
-                "uv": None,
-                "lux": None
-            }
+        return {"uv": None, "lux": None}

@@ -58,11 +58,8 @@ class TPHSensor:
                     self.bus = smbus2.SMBus(self.port)
                     self.calibration_params = bme280.load_calibration_params(self.bus, self.address)
                     break
-                except OSError:
-                    logging.error("Error occurred during creating object for BME280 sensor: [Errno 5] Input/output "
-                                  "error")
                 except Exception as e:
-                    logging.error(f"Error occurred during creating object for BME280 sensor: {str(e)}", exc_info=True)
+                    logging.error(f"Error occurred during creating object for BME280 sensor: {e}")
 
                 if i == 2:
                     self.working = False
@@ -74,13 +71,19 @@ class TPHSensor:
         Returns:
             dict: A dictionary containing temperature, pressure, and humidity values.
         """
-        data = bme280.sample(self.bus, self.address, self.calibration_params)
-
-        return {
-            "temperature": round(data.temperature, 2),
-            "pressure": round(data.pressure * 0.750061, 2),
-            "humidity": round(data.humidity, 2)
-        }
+        try:
+            data = bme280.sample(self.bus, self.address, self.calibration_params)
+        except AttributeError as e:
+            logging.error(f"Attribute error while reading BME280: {e}")
+        except Exception as e:
+            logging.error(f"Unhandled exception while reading BME280: {e}", exc_info=True)
+        else:
+            return {
+                "temperature": round(data.temperature, 2),
+                "pressure": round(data.pressure * 0.750061, 2),
+                "humidity": round(data.humidity, 2)
+            }
+        return {}
 
     def read_data(self) -> dict:
         """
@@ -100,21 +103,13 @@ class TPHSensor:
             kalman_data_collector = KalmanDataCollector('temperature', 'pressure', 'humidity')
 
             start_time = time.time()
-
             while time.time() - start_time <= self.reading_time:
-                try:
-                    data = self.__get_data()
+                data = self.__get_data()
+                if data:
                     kalman_data_collector.add_data(data)
-
-                    time.sleep(3)
-                except Exception as er:
-                    logging.error(f"Error occurred during reading data from BME280 sensor: {str(er)}",
-                                  exc_info=True)
+                    time.sleep(2)
+                time.sleep(1)
 
             return kalman_data_collector.get_result()
-        else:
-            return {
-                "temperature": None,
-                "pressure": None,
-                "humidity": None
-            }
+
+        return {"temperature": None, "pressure": None, "humidity": None}

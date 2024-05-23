@@ -9,4 +9,3 @@ app/data/certificates/private.pem.key
 app/data/certificates/public.pem.key
 app/data/certificates/rootCA.pem
 parsing.log
-app/data/config.py

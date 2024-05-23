@@ -5,6 +5,7 @@ sudo raspi-config nonint do_ssh 0
 sudo raspi-config nonint do_i2c 0
 sudo raspi-config nonint do_spi 0
 sudo raspi-config nonint do_serial 0
+echo dtoverlay=disable-bt
 
 # Install vim
 sudo apt update
