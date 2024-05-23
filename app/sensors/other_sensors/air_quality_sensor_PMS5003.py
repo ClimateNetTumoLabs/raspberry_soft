@@ -14,7 +14,6 @@ Global Variables:
 """
 
 import time
-import serial
 from .PMS5003_lib import PMS5003, SerialTimeoutError
 from logger_config import logging
 from config import SENSORS
@@ -56,10 +55,10 @@ class AirQualitySensor:
                     )
                     break
                 except Exception as e:
-                    if i == 2:
-                        self.working = False
-                    logging.error(f"Error occurred during creating object for AirQuality sensor: {str(e)}",
-                                  exc_info=True)
+                    logging.error(f"Error occurred during creating object for PMS5003 sensor: {e}")
+
+                if i == 2:
+                    self.working = False
 
     def __get_data(self) -> dict:
         """
@@ -73,10 +72,10 @@ class AirQualitySensor:
 
         try:
             all_data = self.pms5003.read()
-        except SerialTimeoutError:
-            logging.error("Sensor PMS5003: Serial Timeout Error")
+        except SerialTimeoutError as e:
+            logging.error(f"SerialTimeout error while reading PMS5003: {e}")
         except Exception as e:
-            logging.error(e)
+            logging.error(f"Unhandled exception while reading PMS5003: {e}", exc_info=True)
         else:
             data["pm1"] = all_data.pm_ug_per_m3(size=1.0)
             data["pm2_5"] = all_data.pm_ug_per_m3(size=2.5)
@@ -108,7 +107,8 @@ class AirQualitySensor:
                 data = self.__get_data()
                 if data:
                     kalman_data_collector.add_data(data)
-                    time.sleep(3)
+                    time.sleep(2)
+                time.sleep(1)
 
             return kalman_data_collector.get_result()
 

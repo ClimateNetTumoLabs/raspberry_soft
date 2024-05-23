@@ -58,11 +58,8 @@ class TPHSensor:
                     self.bus = smbus2.SMBus(self.port)
                     self.calibration_params = bme280.load_calibration_params(self.bus, self.address)
                     break
-                except OSError:
-                    logging.error("Error occurred during creating object for BME280 sensor: [Errno 5] Input/output "
-                                  "error")
                 except Exception as e:
-                    logging.error(f"Error occurred during creating object for BME280 sensor: {str(e)}", exc_info=True)
+                    logging.error(f"Error occurred during creating object for BME280 sensor: {e}")
 
                 if i == 2:
                     self.working = False
@@ -76,10 +73,10 @@ class TPHSensor:
         """
         try:
             data = bme280.sample(self.bus, self.address, self.calibration_params)
-        except AttributeError:
-            logging.error("Sensor BME280: Attribute Error")
+        except AttributeError as e:
+            logging.error(f"Attribute error while reading BME280: {e}")
         except Exception as e:
-            logging.error(e, exc_info=True)
+            logging.error(f"Unhandled exception while reading BME280: {e}", exc_info=True)
         else:
             return {
                 "temperature": round(data.temperature, 2),
@@ -110,7 +107,8 @@ class TPHSensor:
                 data = self.__get_data()
                 if data:
                     kalman_data_collector.add_data(data)
-                    time.sleep(3)
+                    time.sleep(2)
+                time.sleep(1)
 
             return kalman_data_collector.get_result()
 
