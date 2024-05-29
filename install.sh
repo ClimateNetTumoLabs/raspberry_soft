@@ -11,13 +11,6 @@ echo dtoverlay=disable-bt
 sudo apt update
 sudo apt install -y vim
 
-# Install PostgreSQL
-sudo apt install -y postgresql postgresql-contrib
-
-# Create PostgreSQL database and change password
-sudo -u postgres createdb raspi_data
-sudo -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'climatenet2024';"
-
 # Configure git editor
 git config --global core.editor "vim"
 

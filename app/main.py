@@ -44,9 +44,6 @@ def main():
     """Main function for collecting and storing sensor data."""
     sensor_reader = ReadSensors()
     local_database = LocalDatabase(deviceID=config.DEVICE_ID,
-                                   host=config.LOCAL_DB_HOST,
-                                   username=config.LOCAL_DB_USERNAME,
-                                   password=config.LOCAL_DB_PASSWORD,
                                    db_name=config.LOCAL_DB_DB_NAME)
     mqtt_client = MQTTClient(deviceID=config.DEVICE_ID)
 
