@@ -5,53 +5,21 @@ from scripts.network_checker import check_network
 
 class DataHandler:
     def __init__(self, mqtt_client, local_database) -> None:
-        """
-        Initializes a DataHandler instance.
-
-        Returns:
-            None
-        """
         self.mqtt_client = mqtt_client
         self.local_db = local_database
 
         self.local = False
 
     def __save_local(self, data: dict) -> None:
-        """
-        Saves data to the local database.
-
-        Args:
-            data (dict): The data to be saved.
-
-        Returns:
-            None
-        """
         logging.info('Send current data to local DB')
         self.local_db.insert_data(data)
 
     def __get_local(self) -> list:
-        """
-        Retrieves data from the local database.
-
-        Returns:
-            list: A list containing the retrieved data.
-        """
         local_data = self.local_db.get_data()
-
         return local_data
 
-    def __send_mqtt(self, data: dict, local=False) -> bool:
-        """
-        Sends data to the MQTT broker.
-
-        Args:
-            data (dict): The data to be sent.
-            local (bool): Indicates whether to send local data along with the current data.
-
-        Returns:
-            bool: True if the data is successfully sent, False otherwise.
-        """
-        if local:
+    def __send_mqtt(self, data: dict) -> bool:
+        if self.local_db.get_count():
             logging.info('Send local & current data to RDS')
 
             mqtt_res = True
@@ -79,12 +47,6 @@ class DataHandler:
             return mqtt_res
 
     def send_only_local(self):
-        """
-        Sends only local data to the remote server.
-
-        Returns:
-            bool: True if the local data is successfully sent, False otherwise.
-        """
         logging.info('Send local data to RDS')
         mqtt_res = True
 
@@ -104,23 +66,11 @@ class DataHandler:
             return False
 
     def save(self, data: dict) -> None:
-        """
-        Saves data based on the availability of the network.
-
-        Args:
-            data (dict): The data to be saved.
-
-        Returns:
-            None
-        """
         if not check_network():
-            self.local = True
             self.__save_local(data)
 
         else:
-            res = self.__send_mqtt(data, self.local)
+            res = self.__send_mqtt(data)
 
-            if res:
-                self.local = False
-            else:
+            if not res:
                 self.__save_local(data)

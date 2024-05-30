@@ -1,7 +1,6 @@
 import subprocess
-from time import sleep
 from datetime import datetime
-
+from time import sleep
 
 # Known Wi-Fi networks and their corresponding passwords
 known_wifi = {

@@ -1,19 +1,19 @@
+import os
+import time
+
 from prettytable import PrettyTable
 
-import time
-import os
-
 import config
+from scripts.change_permissions import chmod_tty
+from scripts.network_checker import check_network
+from scripts.rtc import RTCControl
+from scripts.time_updater import update_rtc_time
+from sensors.other_sensors.TPH_sensor_BME280 import TPHSensor
+from sensors.other_sensors.air_quality_sensor_PMS5003 import AirQualitySensor
+from sensors.other_sensors.light_sensor_LTR390 import LightSensor
 from sensors.weather_meter_sensors.rain_sensor import Rain
 from sensors.weather_meter_sensors.wind_direction_sensor import WindDirection
 from sensors.weather_meter_sensors.wind_speed_sensor import WindSpeed
-from sensors.other_sensors.air_quality_sensor_PMS5003 import AirQualitySensor
-from sensors.other_sensors.light_sensor_LTR390 import LightSensor
-from sensors.other_sensors.TPH_sensor_BME280 import TPHSensor
-from scripts.rtc import RTCControl
-from scripts.network_checker import check_network
-from scripts.time_updater import update_rtc_time
-from scripts.change_permissions import chmod_tty
 
 
 class TestSensors:

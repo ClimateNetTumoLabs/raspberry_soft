@@ -8,4 +8,6 @@ app/data/certificates/certificate.pem.crt
 app/data/certificates/private.pem.key
 app/data/certificates/public.pem.key
 app/data/certificates/rootCA.pem
+
+app/data.db
 parsing.log

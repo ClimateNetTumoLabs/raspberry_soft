@@ -34,19 +34,16 @@ import config
 from data.data_handler import DataHandler
 from data.local_db import LocalDatabase
 from data.mqtt_client import MQTTClient
-from sensors.read_sensors import ReadSensors
 from logger_config import logging
-from scripts.time_updater import update_time
 from scripts.change_permissions import chmod_tty
+from scripts.time_updater import update_time
+from sensors.read_sensors import ReadSensors
 
 
 def main():
     """Main function for collecting and storing sensor data."""
     sensor_reader = ReadSensors()
     local_database = LocalDatabase(deviceID=config.DEVICE_ID,
-                                   host=config.LOCAL_DB_HOST,
-                                   username=config.LOCAL_DB_USERNAME,
-                                   password=config.LOCAL_DB_PASSWORD,
                                    db_name=config.LOCAL_DB_DB_NAME)
     mqtt_client = MQTTClient(deviceID=config.DEVICE_ID)
 

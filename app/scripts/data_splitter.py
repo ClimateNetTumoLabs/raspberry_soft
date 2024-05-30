@@ -1,5 +1,5 @@
-import sys
 import math
+import sys
 
 
 def get_quantity(data_lst: list) -> int:
