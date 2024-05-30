@@ -1,11 +1,12 @@
 import json
-import time
 import math
 import os
+import time
 from time import sleep
+
+from config import SENSORS
 from gpiozero import MCP3008
 from logger_config import logging
-from config import SENSORS
 
 
 class WindDirection:

@@ -14,11 +14,13 @@ Global Variables:
 """
 
 import time
-from .PMS5003_lib import PMS5003, SerialTimeoutError, ReadTimeoutError, ChecksumMismatchError
-from logger_config import logging
+
 from config import SENSORS
+from logger_config import logging
 from scripts.kalman_data_collector import KalmanDataCollector
 from serial.serialutil import SerialException
+
+from .PMS5003_lib import PMS5003, SerialTimeoutError, ReadTimeoutError, ChecksumMismatchError
 
 
 class AirQualitySensor:

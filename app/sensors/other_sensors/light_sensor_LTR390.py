@@ -16,12 +16,13 @@ Global Variables:
 """
 
 import time
+
+import adafruit_ltr390
 import board
 import busio
-from scripts.kalman_data_collector import KalmanDataCollector
-from logger_config import logging
 from config import SENSORS
-import adafruit_ltr390
+from logger_config import logging
+from scripts.kalman_data_collector import KalmanDataCollector
 
 
 class LightSensor:

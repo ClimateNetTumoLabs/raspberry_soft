@@ -34,10 +34,10 @@ import config
 from data.data_handler import DataHandler
 from data.local_db import LocalDatabase
 from data.mqtt_client import MQTTClient
-from sensors.read_sensors import ReadSensors
 from logger_config import logging
-from scripts.time_updater import update_time
 from scripts.change_permissions import chmod_tty
+from scripts.time_updater import update_time
+from sensors.read_sensors import ReadSensors
 
 
 def main():

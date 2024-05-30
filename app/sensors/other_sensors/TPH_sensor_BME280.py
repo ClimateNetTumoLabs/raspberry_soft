@@ -15,11 +15,12 @@ Global Variables:
 """
 
 import time
-import smbus2
+
 import bme280
-from scripts.kalman_data_collector import KalmanDataCollector
-from logger_config import logging
+import smbus2
 from config import SENSORS
+from logger_config import logging
+from scripts.kalman_data_collector import KalmanDataCollector
 
 
 class TPHSensor:

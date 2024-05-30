@@ -1,11 +1,12 @@
 import json
-import ssl
 import os
-import time
 import socket
+import ssl
+import time
+
 import paho.mqtt.client as mqtt
-from logger_config import logging
 from config import MQTT_BROKER_ENDPOINT, MQTT_TOPIC
+from logger_config import logging
 
 
 class MQTTClient:

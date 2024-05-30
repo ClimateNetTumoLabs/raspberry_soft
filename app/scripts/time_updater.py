@@ -1,12 +1,12 @@
-import pytz
-import ntplib
-
-import subprocess
 import socket
+import subprocess
 import time
 from datetime import datetime
 
+import ntplib
+import pytz
 from logger_config import logging
+
 from .network_checker import check_network
 from .rtc import RTCControl
 

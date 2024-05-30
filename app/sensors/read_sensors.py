@@ -1,16 +1,14 @@
 import time
 
 import config
+from logger_config import logging
 
+from .other_sensors.TPH_sensor_BME280 import TPHSensor
+from .other_sensors.air_quality_sensor_PMS5003 import AirQualitySensor
+from .other_sensors.light_sensor_LTR390 import LightSensor
 from .weather_meter_sensors.rain_sensor import Rain
 from .weather_meter_sensors.wind_direction_sensor import WindDirection
 from .weather_meter_sensors.wind_speed_sensor import WindSpeed
-
-from .other_sensors.air_quality_sensor_PMS5003 import AirQualitySensor
-from .other_sensors.light_sensor_LTR390 import LightSensor
-from .other_sensors.TPH_sensor_BME280 import TPHSensor
-
-from logger_config import logging
 
 
 class ReadSensors:
