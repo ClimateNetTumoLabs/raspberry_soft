@@ -14,11 +14,13 @@ Global Variables:
 """
 
 import time
-import serial
-from .PMS5003_lib import PMS5003
-from logger_config import logging
+
 from config import SENSORS
+from logger_config import logging
 from scripts.kalman_data_collector import KalmanDataCollector
+from serial.serialutil import SerialException
+
+from .PMS5003_lib import PMS5003, SerialTimeoutError, ReadTimeoutError, ChecksumMismatchError
 
 
 class AirQualitySensor:
@@ -56,10 +58,10 @@ class AirQualitySensor:
                     )
                     break
                 except Exception as e:
-                    if i == 2:
-                        self.working = False
-                    logging.error(f"Error occurred during creating object for AirQuality sensor: {str(e)}",
-                                  exc_info=True)
+                    logging.error(f"Error occurred during creating object for PMS5003 sensor: {e}")
+
+                if i == 2:
+                    self.working = False
 
     def __get_data(self) -> dict:
         """
@@ -70,11 +72,23 @@ class AirQualitySensor:
         """
         self.pms5003.setup()
         data = {}
-        all_data = self.pms5003.read()
 
-        data["pm1"] = all_data.pm_ug_per_m3(size=1.0)
-        data["pm2_5"] = all_data.pm_ug_per_m3(size=2.5)
-        data["pm10"] = all_data.pm_ug_per_m3(size=10)
+        try:
+            all_data = self.pms5003.read()
+        except SerialTimeoutError as e:
+            logging.error(f"SerialTimeout error while reading PMS5003: {e}")
+        except ReadTimeoutError as e:
+            logging.error(f"ReadTimeout error while reading PMS5003: {e}")
+        except SerialException as e:
+            logging.error(f"SerialException error while reading PMS5003: {e}")
+        except ChecksumMismatchError as e:
+            logging.error(f"ChecksumMismatch error while reading PMS5003: {e}")
+        except Exception as e:
+            logging.error(f"Unhandled exception while reading PMS5003: {e}", exc_info=True)
+        else:
+            data["pm1"] = all_data.pm_ug_per_m3(size=1.0)
+            data["pm2_5"] = all_data.pm_ug_per_m3(size=2.5)
+            data["pm10"] = all_data.pm_ug_per_m3(size=10)
 
         return data
 
@@ -99,23 +113,12 @@ class AirQualitySensor:
             start_time = time.time()
 
             while time.time() - start_time < self.reading_time:
-                try:
-                    data = self.__get_data()
+                data = self.__get_data()
+                if data:
                     kalman_data_collector.add_data(data)
-
-                    time.sleep(3)
-                except serial.serialutil.SerialException:
-                    logging.error("serial.serialutil.SerialException: device reports readiness to read but returned "
-                                  "no data (device disconnected or multiple access on port?)")
-                except Exception as er:
-                    logging.error(f"Error occurred during reading data from AirQuality sensor: {str(er)}",
-                                  exc_info=True)
+                    time.sleep(2)
+                time.sleep(1)
 
             return kalman_data_collector.get_result()
 
-        else:
-            return {
-                "pm1": None,
-                "pm2_5": None,
-                "pm10": None
-            }
+        return {"pm1": None, "pm2_5": None, "pm10": None}

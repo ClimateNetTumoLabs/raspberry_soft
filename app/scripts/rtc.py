@@ -1,7 +1,8 @@
-import time
-import board
-import adafruit_ds3231
 import datetime
+import time
+
+import adafruit_ds3231
+import board
 
 
 class RTCControl:

@@ -1,19 +1,19 @@
+import os
+import time
+
 from prettytable import PrettyTable
 
-import time
-import os
-
 import config
+from scripts.change_permissions import chmod_tty
+from scripts.network_checker import check_network
+from scripts.rtc import RTCControl
+from scripts.time_updater import update_rtc_time
+from sensors.other_sensors.TPH_sensor_BME280 import TPHSensor
+from sensors.other_sensors.air_quality_sensor_PMS5003 import AirQualitySensor
+from sensors.other_sensors.light_sensor_LTR390 import LightSensor
 from sensors.weather_meter_sensors.rain_sensor import Rain
 from sensors.weather_meter_sensors.wind_direction_sensor import WindDirection
 from sensors.weather_meter_sensors.wind_speed_sensor import WindSpeed
-from sensors.other_sensors.air_quality_sensor_PMS5003 import AirQualitySensor
-from sensors.other_sensors.light_sensor_LTR390 import LightSensor
-from sensors.other_sensors.TPH_sensor_BME280 import TPHSensor
-from scripts.rtc import RTCControl
-from scripts.network_checker import check_network
-from scripts.time_updater import update_rtc_time
-from scripts.change_permissions import chmod_tty
 
 
 class TestSensors:
@@ -91,8 +91,9 @@ class TestSensors:
         """
         os.system("clear")
 
-        if isinstance(result, list):
-            is_success, formatted_data = result
+        if isinstance(result, list) and len(result) > 1:
+            is_success = result[0]
+            formatted_data = result[1]
 
             if isinstance(formatted_data, dict):
                 d = []
@@ -101,8 +102,8 @@ class TestSensors:
                 formatted_data = '\n'.join(d)
 
             return f"{is_success}\n\n{formatted_data}"
-        else:
-            return result
+
+        return result
 
     def print_results(self):
         """
@@ -141,27 +142,36 @@ class TestSensors:
 
         Updates test results dictionary with the status of each sensor and network connectivity.
         """
-        res_light = self.light.read_data()
-        self.results["LightSensor"].append(res_light)
 
-        for elem in res_light.values():
-            if elem is None:
-                self.results["LightSensor"][0] = False
-                break
+        res_light = self.light.read_data()
+        if res_light:
+            self.results["LightSensor"].append(res_light)
+            for elem in res_light.values():
+                if elem is None:
+                    self.results["LightSensor"][0] = False
+                    break
+        else:
+            self.results["LightSensor"] = False
 
         res_tph = self.tph.read_data()
-        self.results["TPHSensor"].append(res_tph)
-        for elem in res_tph.values():
-            if elem is None:
-                self.results["TPHSensor"][0] = False
-                break
+        if res_tph:
+            self.results["TPHSensor"].append(res_tph)
+            for elem in res_tph.values():
+                if elem is None:
+                    self.results["TPHSensor"][0] = False
+                    break
+        else:
+            self.results["TPHSensor"] = False
 
         res_air_quality = self.air_quality.read_data()
-        self.results["AirQualitySensor"].append(res_air_quality)
-        for elem in res_air_quality.values():
-            if elem is None:
-                self.results["AirQualitySensor"][0] = False
-                break
+        if res_air_quality:
+            self.results["AirQualitySensor"].append(res_air_quality)
+            for elem in res_air_quality.values():
+                if elem is None:
+                    self.results["AirQualitySensor"][0] = False
+                    break
+        else:
+            self.results["AirQualitySensor"] = False
 
         res_wind_direction = self.wind_direction_sensor.read_data()
         self.results["WindDirection"].append(res_wind_direction)

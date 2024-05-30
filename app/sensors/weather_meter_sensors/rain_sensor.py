@@ -1,5 +1,5 @@
-from gpiozero import Button
 from config import SENSORS
+from gpiozero import Button
 
 
 class Rain:

@@ -1,16 +1,14 @@
 import time
 
 import config
+from logger_config import logging
 
+from .other_sensors.TPH_sensor_BME280 import TPHSensor
+from .other_sensors.air_quality_sensor_PMS5003 import AirQualitySensor
+from .other_sensors.light_sensor_LTR390 import LightSensor
 from .weather_meter_sensors.rain_sensor import Rain
 from .weather_meter_sensors.wind_direction_sensor import WindDirection
 from .weather_meter_sensors.wind_speed_sensor import WindSpeed
-
-from .other_sensors.air_quality_sensor_PMS5003 import AirQualitySensor
-from .other_sensors.light_sensor_LTR390 import LightSensor
-from .other_sensors.TPH_sensor_BME280 import TPHSensor
-
-from logger_config import logging
 
 
 class ReadSensors:
@@ -66,18 +64,15 @@ class ReadSensors:
         Returns:
             dict: A dictionary containing the collected sensor data.
         """
-        data = {}
-
-        if config.SENSORS["wind_direction"]["working"] and self.wind_speed_sensor.get_data() != 0:
-            data["direction"] = self.wind_direction_sensor.read_data()
-        else:
-            data["direction"] = None
-            time.sleep(self.wind_direction_sensor.wind_interval)
+        data = {"speed": None, "direction": None}
 
         if config.SENSORS["wind_speed"]["working"]:
             data["speed"] = self.wind_speed_sensor.read_data(time.time() - start_time)
+
+        if config.SENSORS["wind_direction"]["working"] and data["speed"]:
+            data["direction"] = self.wind_direction_sensor.read_data()
         else:
-            data["speed"] = None
+            time.sleep(self.wind_direction_sensor.wind_interval)
 
         for sensor in self.sensors:
             res = sensor.read_data()
