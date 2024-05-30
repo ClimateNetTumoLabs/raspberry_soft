@@ -14,10 +14,11 @@ Global Variables:
 """
 
 import time
-from .PMS5003_lib import PMS5003, SerialTimeoutError
+from .PMS5003_lib import PMS5003, SerialTimeoutError, ReadTimeoutError, ChecksumMismatchError
 from logger_config import logging
 from config import SENSORS
 from scripts.kalman_data_collector import KalmanDataCollector
+from serial.serialutil import SerialException
 
 
 class AirQualitySensor:
@@ -74,6 +75,12 @@ class AirQualitySensor:
             all_data = self.pms5003.read()
         except SerialTimeoutError as e:
             logging.error(f"SerialTimeout error while reading PMS5003: {e}")
+        except ReadTimeoutError as e:
+            logging.error(f"ReadTimeout error while reading PMS5003: {e}")
+        except SerialException as e:
+            logging.error(f"SerialException error while reading PMS5003: {e}")
+        except ChecksumMismatchError as e:
+            logging.error(f"ChecksumMismatch error while reading PMS5003: {e}")
         except Exception as e:
             logging.error(f"Unhandled exception while reading PMS5003: {e}", exc_info=True)
         else:
