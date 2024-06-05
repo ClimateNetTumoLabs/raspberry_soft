@@ -31,7 +31,7 @@ SENSORS = {
     },
     "air_quality_sensor": {
         "working": True,
-        "address": "/dev/ttyS0",
+        "address": "/dev/ttyAMA0",
         "baudrate": 9600,
         "pin_enable": 22,
         "pin_enable_working": False,
