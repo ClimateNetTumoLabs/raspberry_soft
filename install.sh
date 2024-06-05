@@ -4,12 +4,6 @@
 sudo raspi-config nonint do_ssh 0
 sudo raspi-config nonint do_i2c 0
 sudo raspi-config nonint do_spi 0
-sudo raspi-config nonint do_serial 0
-echo dtoverlay=disable-bt
-
-# Install vim
-sudo apt update
-sudo apt install -y vim
 
 # Configure git editor
 git config --global core.editor "vim"
@@ -40,7 +34,6 @@ sudo systemctl enable NetworkManager
 sudo systemctl start NetworkManager
 
 sudo systemctl enable InetCheckConnect
-sudo systemctl enable ProgramAutoRun
 sudo systemctl start InetCheckConnect
 
 echo "Installation completed successfully."
