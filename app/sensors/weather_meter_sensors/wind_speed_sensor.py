@@ -1,3 +1,5 @@
+import math
+
 from config import SENSORS
 from gpiozero import Button
 
@@ -61,6 +63,21 @@ class WindSpeed:
         """
         return self.count
 
+    def convert_speed_to_kmh(self, speed_cm_s: float) -> float:
+        """
+        Converts speed from centimeters per second to kilometers per hour.
+
+        Args:
+            speed_cm_s (float): Speed in centimeters per second.
+
+        Returns:
+            float: Speed in kilometers per hour.
+        """
+        speed_m_per_sec = speed / 100
+        speed_km_per_hour = speed_m_per_sec * 3.6
+
+        return speed_km_per_hour
+
     def read_data(self, interval: float) -> float:
         """
         Calculates and returns the wind speed based on the rotation count and the specified time interval.
@@ -69,8 +86,19 @@ class WindSpeed:
             interval (float): Time interval in seconds.
 
         Returns:
-            float: Calculated wind speed in meters per second.
+            float: Calculated wind speed in kilometer per hour.
         """
-        result = round((self.count / interval) * self.turn_distance, 2)
+        # Constants
+        radius_cm = 7
+        circumference_cm = 2 * math.pi * radius_cm
+
+        # Calculate rotations and distance
+        rotations = self.count / 2
+        dist_cm = circumference_cm * rotations
+
+        # Convert to km and calculate speed
+        speed_cms = dist_cm / interval
+        speed_kmph = self.convert_speed_to_kmh(speed_cms)
+
         self.count = 0
-        return result
+        return speed_kmph
