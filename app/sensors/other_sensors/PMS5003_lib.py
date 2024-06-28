@@ -100,7 +100,7 @@ class PMS5003:
                  baudrate=9600,
                  pin_enable=22,
                  pin_reset=27,
-                 pin_enable_working=False,
+                 pin_enable_working=True,
                  pin_reset_working=False):
         """
         Initialize PMS5003 sensor.
@@ -139,6 +139,9 @@ class PMS5003:
 
         if self._pin_reset_working:
             self.reset()
+
+    def stop(self):
+        GPIO.output(self._pin_enable, GPIO.LOW)
 
     def reset(self):
         """

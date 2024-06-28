@@ -35,6 +35,7 @@ class Rain:
             bucket_size (float, optional): The size of the rain bucket in millimeters. Defaults to 0.2794.
         """
         sensor_info = SENSORS["rain"]
+        self.working = sensor_info['working']
         self.sensor = Button(sensor_info["pin"])
         self.count = 0
         self.bucket_size = bucket_size
@@ -55,7 +56,7 @@ class Rain:
         """
         self.count = 0
 
-    def read_data(self) -> float:
+    def read_data(self):
         """
         Reads the accumulated rainfall data.
 
@@ -65,6 +66,9 @@ class Rain:
         Returns:
             float: The accumulated rainfall in millimeters.
         """
-        result = self.count * self.bucket_size
-        self.count = 0
-        return result
+        if self.working:
+            result = self.count * self.bucket_size
+            self.count = 0
+            return result
+        else:
+            return None

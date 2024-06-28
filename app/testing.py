@@ -17,47 +17,17 @@ from sensors.weather_meter_sensors.wind_speed_sensor import WindSpeed
 
 
 class TestSensors:
-    """
-    TestSensors class is responsible for testing various sensors and network connectivity.
-
-    It initializes sensor objects and checks their functionality, updating the results in a dictionary.
-
-    Attributes:
-        light (LightSensor): Instance of the LightSensor class for testing light sensor.
-        tph (TPHSensor): Instance of the TPHSensor class for testing temperature, pressure, and humidity sensor.
-        air_quality (AirQualitySensor): Instance of the AirQualitySensor class for testing air quality sensor.
-        rtc (RTCControl): Instance of the RTCControl class for handling real-time clock functionality.
-        wind_direction_sensor (WindDirection): Instance of the WindDirection class for testing wind direction sensor.
-        wind_speed_sensor (WindSpeed): Instance of the WindSpeed class for testing wind speed sensor.
-        rain_sensor (Rain): Instance of the Rain class for testing rain sensor.
-        results (dict): Dictionary to store test results of sensors and network connectivity.
-
-    Methods:
-        format_result(result): Formats the test result for better readability.
-        print_results(): Prints the test results in a formatted table.
-        speed_ok(): Callback function to handle successful wind speed sensor test.
-        rain_ok(): Callback function to handle successful rain sensor test.
-        check_devices(): Checks the functionality of all sensors and updates test results.
-
-    """
-
     def __init__(self) -> None:
-        """
-        Initializes TestSensors class.
-
-        Initializes sensor objects for testing various environmental sensors.
-        Checks network connectivity.
-        """
         chmod_tty()
-        self.light = LightSensor(testing=True)
-        self.tph = TPHSensor(testing=True)
-        self.air_quality = AirQualitySensor(testing=True)
+        self.light = LightSensor()
+        self.tph = TPHSensor()
+        self.air_quality = AirQualitySensor()
         try:
             self.rtc = RTCControl()
         except Exception:
             self.rtc = None
 
-        self.wind_direction_sensor = WindDirection(testing=True)
+        self.wind_direction_sensor = WindDirection()
         self.wind_speed_sensor = WindSpeed()
         self.rain_sensor = Rain()
         os.system("clear")
@@ -80,15 +50,6 @@ class TestSensors:
         }
 
     def format_result(self, result):
-        """
-        Formats the test result for better readability.
-
-        Args:
-            result: Test result to be formatted.
-
-        Returns:
-            str: Formatted test result.
-        """
         os.system("clear")
 
         if isinstance(result, list) and len(result) > 1:
@@ -106,9 +67,6 @@ class TestSensors:
         return result
 
     def print_results(self):
-        """
-        Prints the test results in a formatted table.
-        """
         table = PrettyTable()
         table.field_names = ["Key", "Value"]
 
@@ -121,28 +79,16 @@ class TestSensors:
         print(table)
 
     def speed_ok(self):
-        """
-        Callback function to handle successful wind speed sensor test.
-        """
         if not self.results["WindSpeed"]:
             self.results["WindSpeed"] = True
             self.print_results()
 
     def rain_ok(self):
-        """
-        Callback function to handle successful rain sensor test.
-        """
         if not self.results["Rain"]:
             self.results["Rain"] = True
             self.print_results()
 
     def check_devices(self):
-        """
-        Checks the functionality of all sensors and updates test results.
-
-        Updates test results dictionary with the status of each sensor and network connectivity.
-        """
-
         res_light = self.light.read_data()
         if res_light:
             self.results["LightSensor"].append(res_light)

@@ -38,6 +38,7 @@ class WindSpeed:
                 Defaults to 2.4 meters.
         """
         sensor_info = SENSORS["wind_speed"]
+        self.working = sensor_info["working"]
         self.sensor = Button(sensor_info["pin"])
         self.count = 0
         self.turn_distance = turn_distance
@@ -73,12 +74,12 @@ class WindSpeed:
         Returns:
             float: Speed in kilometers per hour.
         """
-        speed_m_per_sec = speed / 100
-        speed_km_per_hour = speed_m_per_sec * 3.6
 
-        return speed_km_per_hour
+        # 1 cm/sec is equal to 0.036 km/hour
+        speed_km_hour = speed_cm_s * 0.036
+        return speed_km_hour
 
-    def read_data(self, interval: float) -> float:
+    def read_data(self, interval: float):
         """
         Calculates and returns the wind speed based on the rotation count and the specified time interval.
 
@@ -88,17 +89,20 @@ class WindSpeed:
         Returns:
             float: Calculated wind speed in kilometer per hour.
         """
-        # Constants
-        radius_cm = 7
-        circumference_cm = 2 * math.pi * radius_cm
+        if self.working:
+            # Constants
+            radius_cm = 7
+            circumference_cm = 2 * math.pi * radius_cm
 
-        # Calculate rotations and distance
-        rotations = self.count / 2
-        dist_cm = circumference_cm * rotations
+            # Calculate rotations and distance
+            rotations = self.count / 2
+            dist_cm = circumference_cm * rotations
 
-        # Convert to km and calculate speed
-        speed_cms = dist_cm / interval
-        speed_kmph = self.convert_speed_to_kmh(speed_cms)
+            # Convert to km and calculate speed
+            speed_cms = dist_cm / interval
+            speed_kmph = self.convert_speed_to_kmh(speed_cms)
 
-        self.count = 0
-        return speed_kmph
+            self.count = 0
+            return speed_kmph
+        else:
+            return None

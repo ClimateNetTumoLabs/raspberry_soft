@@ -28,7 +28,7 @@ class KalmanFilter:
 
     """
 
-    def __init__(self, process_covariance=0.000001, measurement_covariance=0.01, prediction_covariance=0.1):
+    def __init__(self, x_prev=0, process_covariance=0.000001, measurement_covariance=0.01, prediction_covariance=0.1):
         """
         Initializes the KalmanFilter object with specified covariance parameters.
 
@@ -41,7 +41,7 @@ class KalmanFilter:
         self.R = measurement_covariance
         self.P = prediction_covariance
         self.K = 0
-        self.x_prev = 0
+        self.x_prev = x_prev
         self.P_prev = self.P
 
     def update(self, measurement):
