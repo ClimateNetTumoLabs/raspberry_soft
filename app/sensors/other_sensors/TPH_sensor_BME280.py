@@ -5,7 +5,26 @@ from logger_config import logging
 
 
 class TPHSensor:
+    """
+    Class for interacting with the BME280 Temperature, Pressure, and Humidity Sensor.
+
+    Attributes:
+        bus (smbus2.SMBus or None): SMBus object for I2C communication.
+        calibration_params (bme280.CalibrationParams or None): Calibration parameters for sensor.
+        sensor (bool or None): Indicates if sensor setup was successful.
+        sensor_info (dict): Configuration information for the sensor.
+        working (bool): Indicates if the sensor is operational.
+        port (int): Port number for the sensor's I2C communication.
+
+    Methods:
+        setup_sensor: Initializes the sensor setup.
+        read_data: Reads temperature, pressure, and humidity data from the sensor.
+    """
+
     def __init__(self):
+        """
+        Initializes the TPHSensor instance.
+        """
         self.bus = None
         self.calibration_params = None
         self.sensor = None
@@ -16,7 +35,13 @@ class TPHSensor:
         if self.working:
             self.setup_sensor()
 
-    def setup_sensor(self):
+    def setup_sensor(self) -> bool:
+        """
+        Sets up the sensor by initializing the SMBus and loading calibration parameters.
+
+        Returns:
+            bool: True if sensor setup was successful, False otherwise.
+        """
         for i in range(3):
             try:
                 self.bus = smbus2.SMBus(self.port)
@@ -29,6 +54,12 @@ class TPHSensor:
         return self.sensor is not None
 
     def read_data(self) -> dict:
+        """
+        Reads temperature, pressure, and humidity data from the sensor.
+
+        Returns:
+            dict: Dictionary containing temperature, pressure, and humidity data.
+        """
         data = {"temperature": None, "pressure": None, "humidity": None}
 
         if self.working:

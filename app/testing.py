@@ -17,7 +17,24 @@ from sensors.weather_meter_sensors.wind_speed_sensor import WindSpeed
 
 
 class TestSensors:
+    """
+    Class to test various sensors and display their status using PrettyTable.
+
+    Attributes:
+        light (LightSensor): Instance of LightSensor.
+        tph (TPHSensor): Instance of TPHSensor.
+        air_quality (AirQualitySensor): Instance of AirQualitySensor.
+        rtc (RTCControl or None): Instance of RTCControl if available, otherwise None.
+        wind_direction_sensor (WindDirection): Instance of WindDirection sensor.
+        wind_speed_sensor (WindSpeed): Instance of WindSpeed sensor.
+        rain_sensor (Rain): Instance of Rain sensor.
+        results (dict): Dictionary to store test results.
+    """
+
     def __init__(self) -> None:
+        """
+        Initializes sensor instances, sets up RTC if available, and initializes result tracking.
+        """
         chmod_tty()
         self.light = LightSensor()
         self.tph = TPHSensor()
@@ -49,7 +66,16 @@ class TestSensors:
             "RTC": False
         }
 
-    def format_result(self, result):
+    def format_result(self, result) -> str:
+        """
+        Formats the result for display in PrettyTable.
+
+        Args:
+            result (any): Result to format.
+
+        Returns:
+            str: Formatted result.
+        """
         os.system("clear")
 
         if isinstance(result, list) and len(result) > 1:
@@ -57,16 +83,19 @@ class TestSensors:
             formatted_data = result[1]
 
             if isinstance(formatted_data, dict):
-                d = []
+                formatted_lines = []
                 for key, value in formatted_data.items():
-                    d.append(f"{key}: {value}")
-                formatted_data = '\n'.join(d)
+                    formatted_lines.append(f"{key}: {value}")
+                formatted_data = '\n'.join(formatted_lines)
 
             return f"{is_success}\n\n{formatted_data}"
 
         return result
 
-    def print_results(self):
+    def print_results(self) -> None:
+        """
+        Prints the current results using PrettyTable.
+        """
         table = PrettyTable()
         table.field_names = ["Key", "Value"]
 
@@ -75,20 +104,28 @@ class TestSensors:
             table.add_row([key, formatted_value], divider=True)
 
         table.align = "l"
-
         print(table)
 
-    def speed_ok(self):
+    def speed_ok(self) -> None:
+        """
+        Handles the event when wind speed sensor is OK.
+        """
         if not self.results["WindSpeed"]:
             self.results["WindSpeed"] = True
             self.print_results()
 
-    def rain_ok(self):
+    def rain_ok(self) -> None:
+        """
+        Handles the event when rain sensor is OK.
+        """
         if not self.results["Rain"]:
             self.results["Rain"] = True
             self.print_results()
 
-    def check_devices(self):
+    def check_devices(self) -> None:
+        """
+        Checks the status of all sensors and network connectivity.
+        """
         res_light = self.light.read_data()
         if res_light:
             self.results["LightSensor"].append(res_light)
@@ -141,9 +178,8 @@ class TestSensors:
         self.print_results()
 
 
-a = TestSensors()
-
-a.check_devices()
+test_sensors: TestSensors = TestSensors()
+test_sensors.check_devices()
 
 while True:
     time.sleep(1000)

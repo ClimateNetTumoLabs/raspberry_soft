@@ -7,34 +7,26 @@ import board
 
 class RTCControl:
     """
-    Provides control and interaction with a real-time clock (RTC) module.
-
-    This class enables communication with a DS3231 RTC module via I2C interface to set and retrieve time.
+    Controls a DS3231 Real-Time Clock (RTC) module.
 
     Attributes:
-        i2c: Instance of the I2C interface for communication with the RTC module.
-        rtc: Instance of the DS3231 RTC module.
-
-    Methods:
-        change_time(new_time): Changes the current time of the RTC module.
-        get_time() -> datetime.datetime: Retrieves the current time from the RTC module.
-
+        i2c (board.I2C): The I2C bus used to communicate with the RTC.
+        rtc (adafruit_ds3231.DS3231): The DS3231 RTC object.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
-        Initializes the RTCControl object and establishes connection with the RTC module.
+        Initializes the RTCControl instance.
         """
         self.i2c = board.I2C()
         self.rtc = adafruit_ds3231.DS3231(self.i2c)
 
-    def change_time(self, new_time: datetime.datetime):
+    def change_time(self, new_time: datetime.datetime) -> None:
         """
-        Changes the current time of the RTC module.
+        Sets the RTC to a new date and time.
 
         Args:
-            new_time (datetime.datetime): New datetime object representing the desired time.
-
+            new_time (datetime.datetime): The new date and time to set.
         Raises:
             RuntimeError: If an error occurs while changing the time.
         """
@@ -45,11 +37,10 @@ class RTCControl:
 
     def get_time(self) -> datetime.datetime:
         """
-        Retrieves the current time from the RTC module.
+        Retrieves the current date and time from the RTC.
 
         Returns:
-            datetime.datetime: Current datetime object representing the time.
-
+            datetime.datetime: The current date and time.
         Raises:
             RuntimeError: If an error occurs while getting the time.
         """

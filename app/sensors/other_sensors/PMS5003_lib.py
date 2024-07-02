@@ -10,106 +10,126 @@ PMS5003_SOF = bytearray(b'\x42\x4d')
 
 
 class ChecksumMismatchError(RuntimeError):
+    """Exception raised for checksum mismatch errors in PMS5003 communication."""
     pass
 
 
 class ReadTimeoutError(RuntimeError):
+    """Exception raised for read timeout errors in PMS5003 communication."""
     pass
 
 
 class SerialTimeoutError(RuntimeError):
+    """Exception raised for serial timeout errors in PMS5003 communication."""
     pass
 
 
 class PMS5003Data:
     """
-    Represents data received from the PMS5003 sensor.
+    Class representing parsed data from PMS5003 sensor.
+
+    Attributes:
+        raw_data (bytes): Raw data received from the sensor.
+        data (tuple): Parsed data as unpacked from raw_data.
+        checksum (int): Calculated checksum value.
     """
 
-    def __init__(self, raw_data):
+    def __init__(self, raw_data: bytes):
         """
-        Initialize PMS5003Data with raw data.
+        Initializes PMS5003Data with raw data and unpacks it.
 
         Args:
-            raw_data (bytes): Raw data received from the PMS5003 sensor.
+            raw_data (bytes): Raw data received from PMS5003 sensor.
         """
         self.raw_data = raw_data
         self.data = struct.unpack(">HHHHHHHHHHHHHH", raw_data)
         self.checksum = self.data[13]
 
-    def pm_ug_per_m3(self, size, atmospheric_environment=False):
+    def pm_ug_per_m3(self, size: float, atmospheric_environment: bool = False) -> int:
         """
-        Get particulate matter (PM) concentration in ug/m3.
+        Retrieves particulate matter concentration in µg/m³.
 
         Args:
-            size (float): The size of PM (1.0, 2.5, or 10).
-            atmospheric_environment (bool): True for atmospheric environment mode.
+            size (float): Size of particulate matter (1.0, 2.5, 10).
+            atmospheric_environment (bool, optional): Whether to get atmospheric environment data.
 
         Returns:
-            int: PM concentration in ug/m3.
+            int: Concentration of particulate matter in µg/m³.
         """
         if atmospheric_environment:
             if size == 1.0:
                 return self.data[3]
-            if size == 2.5:
+            elif size == 2.5:
                 return self.data[4]
-            if size == 10:
+            elif size == 10:
                 return self.data[5]
-
         else:
             if size == 1.0:
                 return self.data[0]
-            if size == 2.5:
+            elif size == 2.5:
                 return self.data[1]
-            if size == 10:
+            elif size == 10:
                 return self.data[2]
 
-    def pm_per_1l_air(self, size):
+        raise ValueError(f"Particle size {size} measurement not available.")
+
+    def pm_per_1l_air(self, size: float) -> int:
         """
-        Get particulate matter (PM) concentration per 1L of air.
+        Retrieves particulate matter concentration per liter of air.
 
         Args:
-            size (float): The size of PM (0.3, 0.5, 1.0, 2.5, 5, or 10).
+            size (float): Size of particulate matter (0.3, 0.5, 1.0, 2.5, 5, 10).
 
         Returns:
-            int: PM concentration per 1L of air.
+            int: Concentration of particulate matter per liter of air.
         """
         if size == 0.3:
             return self.data[6]
-        if size == 0.5:
+        elif size == 0.5:
             return self.data[7]
-        if size == 1.0:
+        elif size == 1.0:
             return self.data[8]
-        if size == 2.5:
+        elif size == 2.5:
             return self.data[9]
-        if size == 5:
+        elif size == 5:
             return self.data[10]
-        if size == 10:
+        elif size == 10:
             return self.data[11]
 
-        raise ValueError("Particle size {} measurement not available.".format(size))
+        raise ValueError(f"Particle size {size} measurement not available.")
 
 
 class PMS5003:
     """
-    PMS5003 Sensor interface class.
+    Class for interacting with the Plantower PMS5003 particulate matter sensor.
+
+    Attributes:
+        _serial (serial.Serial or None): Serial connection to the sensor.
+        _device (str): Device path for the serial interface.
+        _baudrate (int): Baud rate for serial communication.
+        _pin_enable (int): GPIO pin number for enabling the sensor.
+        _pin_enable_working (bool): Indicates if GPIO pin for enabling is active.
+        _pin_reset (int): GPIO pin number for resetting the sensor.
+        _pin_reset_working (bool): Indicates if GPIO pin for resetting is active.
     """
 
     def __init__(self,
-                 device='/dev/ttyAMA0',
-                 baudrate=9600,
-                 pin_enable=22,
-                 pin_reset=27,
-                 pin_enable_working=True,
-                 pin_reset_working=False):
+                 device: str = '/dev/ttyAMA0',
+                 baudrate: int = 9600,
+                 pin_enable: int = 22,
+                 pin_reset: int = 27,
+                 pin_enable_working: bool = True,
+                 pin_reset_working: bool = False):
         """
-        Initialize PMS5003 sensor.
+        Initializes the PMS5003 sensor instance.
 
         Args:
-            device (str): The serial device path (default is '/dev/ttyAMA0').
-            baudrate (int): The baud rate for communication (default is 9600).
-            pin_enable (int): The GPIO pin number for enabling the sensor (default is 22).
-            pin_reset (int): The GPIO pin number for resetting the sensor (default is 27).
+            device (str, optional): Device path for the serial interface.
+            baudrate (int, optional): Baud rate for serial communication.
+            pin_enable (int, optional): GPIO pin number for enabling the sensor.
+            pin_reset (int, optional): GPIO pin number for resetting the sensor.
+            pin_enable_working (bool, optional): Indicates if GPIO pin for enabling is active.
+            pin_reset_working (bool, optional): Indicates if GPIO pin for resetting is active.
         """
         self._serial = None
         self._device = device
@@ -121,12 +141,13 @@ class PMS5003:
 
         self.setup()
 
-    def setup(self):
+    def setup(self) -> None:
         """
-        Setup the PMS5003 sensor.
+        Sets up the serial connection and GPIO pins for the sensor.
         """
         GPIO.setwarnings(False)
         GPIO.setmode(GPIO.BCM)
+
         if self._pin_enable_working:
             GPIO.setup(self._pin_enable, GPIO.OUT, initial=GPIO.HIGH)
         if self._pin_reset_working:
@@ -140,16 +161,25 @@ class PMS5003:
         if self._pin_reset_working:
             self.reset()
 
-    def stop(self):
+    def stop(self) -> None:
+        """
+        Stops the sensor by setting the enable pin low.
+        """
         GPIO.output(self._pin_enable, GPIO.LOW)
 
-    def get_pin_state(self):
+    def get_pin_state(self) -> str:
+        """
+        Retrieves the state of the enable pin.
+
+        Returns:
+            str: State of the enable pin ('HIGH' or 'LOW').
+        """
         state = GPIO.input(self._pin_enable)
         return 'HIGH' if state == GPIO.HIGH else 'LOW'
 
-    def reset(self):
+    def reset(self) -> None:
         """
-        Reset the PMS5003 sensor.
+        Resets the sensor by toggling the reset pin.
         """
         time.sleep(0.1)
         GPIO.output(self._pin_reset, GPIO.LOW)
@@ -157,15 +187,19 @@ class PMS5003:
         time.sleep(0.1)
         GPIO.output(self._pin_reset, GPIO.HIGH)
 
-    def read(self):
+    def read(self) -> PMS5003Data:
         """
-        Read data from the PMS5003 sensor.
+        Reads data from the PMS5003 sensor.
 
         Returns:
-            PMS5003Data: Object containing data read from the sensor.
+            PMS5003Data: Parsed data object containing sensor readings.
+
+        Raises:
+            ReadTimeoutError: If reading times out.
+            SerialTimeoutError: If serial communication times out.
+            ChecksumMismatchError: If checksum verification fails.
         """
         start = time.time()
-
         sof_index = 0
 
         while True:
@@ -176,7 +210,7 @@ class PMS5003:
             sof = self._serial.read(1)
             if len(sof) == 0:
                 raise SerialTimeoutError("PMS5003 Read Timeout: Failed to read start of frame byte")
-            sof = ord(sof) if type(sof) is bytes else sof
+            sof = ord(sof) if isinstance(sof, bytes) else sof
 
             if sof == PMS5003_SOF[sof_index]:
                 if sof_index == 0:
@@ -188,11 +222,11 @@ class PMS5003:
 
         checksum = sum(PMS5003_SOF)
 
-        data = bytearray(self._serial.read(2))
-        if len(data) != 2:
+        data_length_bytes = bytearray(self._serial.read(2))
+        if len(data_length_bytes) != 2:
             raise SerialTimeoutError("PMS5003 Read Timeout: Could not find length packet")
-        checksum += sum(data)
-        frame_length = struct.unpack(">H", data)[0]
+        checksum += sum(data_length_bytes)
+        frame_length = struct.unpack(">H", data_length_bytes)[0]
 
         raw_data = bytearray(self._serial.read(frame_length))
         if len(raw_data) != frame_length:
