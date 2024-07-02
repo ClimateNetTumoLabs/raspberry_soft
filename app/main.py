@@ -65,7 +65,7 @@ def main():
             logging.info(f"Collected data -> {data}")
 
             # Add timestamp to collected data
-            data['time'] = datetime.now().isoformat()
+            data['time'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
             # Save collected data
             dataHandler.save(data)

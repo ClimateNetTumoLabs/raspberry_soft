@@ -51,6 +51,7 @@ SENSORS = {
     },
     "rain": {
         "working": True,
-        "pin": 6
+        "pin": 6,
+        "bucket_size": 0.2794
     }
 }

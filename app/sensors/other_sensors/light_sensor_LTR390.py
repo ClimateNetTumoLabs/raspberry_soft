@@ -1,15 +1,11 @@
-import time
-
 import adafruit_ltr390
 import board
 import busio
 from config import SENSORS
 from logger_config import logging
-from scripts.kalman_data_collector import KalmanDataCollector
 
 
 class LightSensor:
-
     def __init__(self) -> None:
         self.sensor = None
         self.i2c = None

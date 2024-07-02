@@ -1,8 +1,5 @@
-import time
-
 from config import SENSORS
 from logger_config import logging
-from scripts.kalman_data_collector import KalmanDataCollector
 from serial.serialutil import SerialException
 
 from .PMS5003_lib import PMS5003, SerialTimeoutError, ReadTimeoutError, ChecksumMismatchError
@@ -16,6 +13,8 @@ class AirQualitySensor:
 
         if self.working:
             self.setup_sensor()
+            if self.sensor is not None:
+                self.stop()
 
     def setup_sensor(self):
         for i in range(3):
@@ -26,7 +25,6 @@ class AirQualitySensor:
                     pin_enable=self.sensor_info["pin_enable"],
                     pin_reset=self.sensor_info["pin_reset"]
                 )
-                self.stop()
                 break
             except Exception as e:
                 logging.error(f"Error occurred during creating object for PMS5003 sensor: {e}")
@@ -34,13 +32,16 @@ class AirQualitySensor:
         return self.sensor is not None
 
     def stop(self):
-        self.sensor.stop()
+        try:
+            self.sensor.stop()
+        except Exception as e:
+            logging.error(f"Error occurred during stopping PMS5003 sensor: {e}")
 
     def read_data(self) -> dict:
         data = {"pm1": None, "pm2_5": None, "pm10": None}
 
         if self.working:
-            if self.sensor is None:
+            if self.sensor is None or self.sensor.get_pin_state() == "LOW":
                 if not self.setup_sensor():
                     return data
 
@@ -62,4 +63,3 @@ class AirQualitySensor:
                 data["pm10"] = all_data.pm_ug_per_m3(size=10)
 
         return data
-

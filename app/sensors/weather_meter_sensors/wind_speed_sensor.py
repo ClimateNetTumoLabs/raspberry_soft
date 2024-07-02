@@ -1,3 +1,4 @@
+import logging
 import math
 
 from config import SENSORS
@@ -89,20 +90,28 @@ class WindSpeed:
         Returns:
             float: Calculated wind speed in kilometer per hour.
         """
+        data = None
+
         if self.working:
-            # Constants
-            radius_cm = 7
-            circumference_cm = 2 * math.pi * radius_cm
+            try:
+                # Constants
+                radius_cm = 7
+                circumference_cm = 2 * math.pi * radius_cm
 
-            # Calculate rotations and distance
-            rotations = self.count / 2
-            dist_cm = circumference_cm * rotations
+                # Calculate rotations and distance
+                rotations = self.count / 2
+                dist_cm = circumference_cm * rotations
 
-            # Convert to km and calculate speed
-            speed_cms = dist_cm / interval
-            speed_kmph = self.convert_speed_to_kmh(speed_cms)
+                # Convert to km and calculate speed
+                speed_cms = dist_cm / interval
+                speed_kmph = self.convert_speed_to_kmh(speed_cms)
 
-            self.count = 0
-            return speed_kmph
-        else:
-            return None
+                self.count = 0
+
+                data = round(speed_kmph, 2)
+
+            except Exception as e:
+                logging.error(f"Error occurred during reading WindSpeed: {e}",
+                              exc_info=True)
+
+        return data

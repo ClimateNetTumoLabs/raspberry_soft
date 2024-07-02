@@ -24,7 +24,7 @@ class Rain:
 
     """
 
-    def __init__(self, bucket_size=0.2794) -> None:
+    def __init__(self) -> None:
         """
         Initializes the Rain object.
 
@@ -36,9 +36,9 @@ class Rain:
         """
         sensor_info = SENSORS["rain"]
         self.working = sensor_info['working']
+        self.bucket_size = sensor_info['bucket_size']
         self.sensor = Button(sensor_info["pin"])
         self.count = 0
-        self.bucket_size = bucket_size
 
     def press(self) -> None:
         """
@@ -69,6 +69,7 @@ class Rain:
         if self.working:
             result = self.count * self.bucket_size
             self.count = 0
-            return result
+
+            return round(result, 2)
         else:
             return None

@@ -117,7 +117,10 @@ class WindDirection:
                     sleep(1)
 
                 data = self.get_direction_label(self.get_average(data))
+            except ZeroDivisionError as e:
+                logging.error(f"ZeroDivision error occurred during reading WindDirection: {e}")
             except Exception as e:
-                logging.error(f"Error occurred during reading data from WeatherDirection sensor: {str(e)}", exc_info=True)
+                logging.error(f"Error occurred during reading data from WindDirection: {e}",
+                              exc_info=True)
 
         return data

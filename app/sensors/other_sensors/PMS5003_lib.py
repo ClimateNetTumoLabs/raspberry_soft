@@ -143,6 +143,10 @@ class PMS5003:
     def stop(self):
         GPIO.output(self._pin_enable, GPIO.LOW)
 
+    def get_pin_state(self):
+        state = GPIO.input(self._pin_enable)
+        return 'HIGH' if state == GPIO.HIGH else 'LOW'
+
     def reset(self):
         """
         Reset the PMS5003 sensor.

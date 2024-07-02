@@ -1,20 +1,17 @@
-import time
-
 import bme280
 import smbus2
 from config import SENSORS
 from logger_config import logging
-from scripts.kalman_data_collector import KalmanDataCollector
 
 
 class TPHSensor:
     def __init__(self):
+        self.bus = None
         self.calibration_params = None
+        self.sensor = None
         self.sensor_info = SENSORS["tph_sensor"]
         self.working = self.sensor_info["working"]
         self.port = self.sensor_info["port"]
-        self.bus = smbus2.SMBus(self.port)
-        self.sensor = None
 
         if self.working:
             self.setup_sensor()
@@ -22,6 +19,7 @@ class TPHSensor:
     def setup_sensor(self):
         for i in range(3):
             try:
+                self.bus = smbus2.SMBus(self.port)
                 self.calibration_params = bme280.load_calibration_params(self.bus)
                 self.sensor = True
                 break
