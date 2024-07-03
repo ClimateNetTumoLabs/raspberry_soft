@@ -4,67 +4,53 @@ from gpiozero import Button
 
 class Rain:
     """
-    Represents a rain sensor for measuring rainfall.
-
-    This class utilizes a GPIO button input to detect rain events. Each rain event increments a count, and the total
-    rainfall is calculated based on the count and the size of the rain bucket.
-
-    Args:
-        bucket_size (float, optional): The size of the rain bucket in millimeters. Defaults to 0.2794.
+    Class to handle rain sensor data collection.
 
     Attributes:
-        sensor (Button): GPIO button input connected to the rain sensor.
-        count (int): The count of rain events.
-        bucket_size (float): The size of the rain bucket in millimeters.
+        working (bool): Indicates if the rain sensor is operational.
+        bucket_size (float): Size of the rain bucket (amount of rain per sensor count).
+        sensor (gpiozero.Button): Button instance for interfacing with the rain sensor GPIO pin.
+        count (int): Counter for the number of times the rain sensor has been triggered.
 
     Methods:
-        press() -> None: Increments the rain count when a rain event is detected.
-        clear_data() -> None: Resets the rain count to zero.
-        read_data() -> float: Reads the accumulated rainfall data and resets the count to zero.
-
+        press: Increments the count attribute when the rain sensor is triggered.
+        clear_data: Resets the count attribute to zero.
+        read_data: Reads and returns the calculated amount of rain collected.
     """
 
-    def __init__(self, bucket_size=0.2794) -> None:
+    def __init__(self) -> None:
         """
-        Initializes the Rain object.
-
-        Creates a GPIO button input instance connected to the rain sensor and initializes the rain count and bucket
-        size.
-
-        Args:
-            bucket_size (float, optional): The size of the rain bucket in millimeters. Defaults to 0.2794.
+        Initializes the Rain sensor instance.
         """
         sensor_info = SENSORS["rain"]
+        self.working = sensor_info['working']
+        self.bucket_size = sensor_info['bucket_size']
         self.sensor = Button(sensor_info["pin"])
         self.count = 0
-        self.bucket_size = bucket_size
 
     def press(self) -> None:
         """
-        Registers a rain event.
-
-        Increments the rain count when a rain event is detected by the sensor.
+        Increment the count attribute when the rain sensor is triggered.
         """
         self.count += 1
 
     def clear_data(self) -> None:
         """
-        Clears accumulated rainfall data.
-
-        Resets the rain count to zero.
+        Reset the count attribute to zero.
         """
         self.count = 0
 
     def read_data(self) -> float:
         """
-        Reads the accumulated rainfall data.
-
-        Calculates and returns the total rainfall based on the count of rain events and the size of the rain bucket.
-        Resets the rain count to zero after reading.
+        Read and return the calculated amount of rain collected.
 
         Returns:
-            float: The accumulated rainfall in millimeters.
+            float: Amount of rain collected based on the count multiplied by the bucket size.
+                   Returns None if the sensor is not working.
         """
-        result = self.count * self.bucket_size
-        self.count = 0
-        return result
+        if self.working:
+            result = self.count * self.bucket_size
+            self.clear_data()  # Clear count after reading
+            return round(result, 2)
+        else:
+            return None

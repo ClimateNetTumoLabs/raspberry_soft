@@ -4,41 +4,29 @@ import sys
 
 def get_quantity(data_lst: list) -> int:
     """
-    Calculates the number of sublists needed to split a given list into chunks that fit within a specified size limit.
+    Calculates the number of chunks required to split the data list based on size limit.
 
     Args:
         data_lst (list): The list of data to be split.
 
     Returns:
-        int: The number of sublists needed to split the data list.
-
-    Note:
-        The size limit for each sublist is set to 256 MB.
-
-    Raises:
-        None
+        int: The number of chunks needed.
     """
     size_in_bytes = sys.getsizeof(data_lst)
-    size_limit_bytes = 256 * 1024 * 1024
+    size_limit_bytes = 256 * 1024 * 1024  # 256 MB
 
     return math.ceil(size_in_bytes / size_limit_bytes)
 
 
 def split_data(data_lst: list) -> list:
     """
-    Splits a given list of data into smaller sublists to fit within a specified size limit.
+    Splits the data list into chunks based on a size limit.
 
     Args:
         data_lst (list): The list of data to be split.
 
     Returns:
-        list: A list of sublists containing the split data.
-
-    Note:
-        The size limit for each sublist is set to 256 MB.
-
-    Raises:
-        None
+        list: A list of lists, each containing a chunk of the original data.
     """
     quantity = get_quantity(data_lst)
     avg = len(data_lst) // quantity

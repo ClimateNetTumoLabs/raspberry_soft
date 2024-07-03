@@ -11,13 +11,9 @@ from .network_checker import check_network
 from .rtc import RTCControl
 
 
-def update_rtc_time():
+def update_rtc_time() -> bool:
     """
-    Updates the system's real-time clock (RTC) time using Network Time Protocol (NTP) time.
-
-    Attempts to synchronize the RTC time with the NTP server time. Tries up to three times to establish a network
-    connection and retrieve the NTP time. If successful, updates the RTC time and returns True. If unsuccessful,
-    logs the error and returns False.
+    Updates the RTC (Real-Time Clock) time using NTP server synchronization.
 
     Returns:
         bool: True if RTC time was successfully updated, False otherwise.
@@ -46,13 +42,9 @@ def update_rtc_time():
     return False
 
 
-def update_time():
+def update_time() -> bool:
     """
-    Updates the system's time using Network Time Protocol (NTP) time or RTC time if NTP is unavailable.
-
-    Attempts to synchronize the system time with the NTP server time. If successful, updates the system time
-    and the RTC time. If NTP synchronization fails, attempts to update the system time using the RTC time.
-    Logs any errors encountered during the process.
+    Updates the system time using NTP server synchronization.
 
     Returns:
         bool: True if system time was successfully updated, False otherwise.
@@ -85,6 +77,7 @@ def update_time():
 
         time.sleep(5)
 
+    # If unable to sync time from NTP, fallback to RTC time
     rtc = RTCControl()
     rtc_time = rtc.get_time()
 

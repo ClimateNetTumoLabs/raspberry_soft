@@ -11,74 +11,47 @@ from logger_config import logging
 
 class WindDirection:
     """
-    Represents a wind direction sensor.
-
-    This class reads wind direction data from an analog sensor connected to the MCP3008 ADC (Analog to Digital
-    Converter). It calculates the average wind direction over a specified time interval and returns a direction label
-    corresponding to the average angle.
-
-    Args:
-        adc_channel (int, optional): The ADC channel connected to the wind direction sensor. Defaults to 0.
-        config_file (str, optional): Path to the JSON configuration file containing sensor calibration data.
-            Defaults to "directions_config.json".
-        adc_max (int, optional): Maximum ADC value. Defaults to 1024.
-        adc_vref (float, optional): ADC reference voltage. Defaults to 5.12.
-        testing (bool, optional): Flag indicating whether the sensor is in testing mode. Defaults to False.
+    Class to handle wind direction sensing using an MCP3008 ADC.
 
     Attributes:
-        adc_channel (int): The ADC channel connected to the wind direction sensor.
-        config_file (str): Path to the JSON configuration file containing sensor calibration data.
+        adc_channel (int): ADC channel number.
+        config_file (str): File path to JSON configuration file.
         adc_max (int): Maximum ADC value.
-        adc_vref (float): ADC reference voltage.
-        wind_interval (float): Time interval for wind direction readings.
-        adc (MCP3008): An instance of the MCP3008 class for ADC interfacing.
-        config (dict): Configuration parameters loaded from the JSON config file.
-        testing (bool): Flag indicating whether the sensor is in testing mode.
+        adc_vref (float): Reference voltage for ADC.
+        wind_interval (int): Time interval for reading wind direction.
+        adc (gpiozero.MCP3008): MCP3008 ADC instance.
+        working (bool): Flag indicating if the sensor is operational.
+        config (dict): Configuration data loaded from JSON file.
 
     Methods:
-        calculate_vout_adc() -> None: Calculates voltage output and ADC values for each direction
-        based on calibration data.
-        calculate_max_min_adc() -> None: Calculates the minimum and maximum ADC values for each direction.
-        calculate_vout(ra, rb, vin) -> float: Calculates voltage output based on voltage divider parameters.
-        get_dir(adc_value) -> int: Determines the wind direction angle based on ADC value.
-        get_direction_label(angle) -> str: Determines the wind direction label based on angle.
-        get_average(angles) -> float: Calculates the average wind direction from a list of angles.
-        read_data() -> str: Reads wind direction data from the sensor and returns the average direction label.
+        calculate_vout_adc: Calculates voltage output and ADC values for each direction based on calibration data.
+        calculate_max_min_adc: Determines minimum and maximum ADC values for each direction.
+        calculate_vout: Calculates voltage output based on resistor values and input voltage.
+        get_dir: Determines wind direction based on ADC value.
+        get_direction_label: Returns direction label based on angle.
+        get_average: Computes average wind direction angle from a list of angles.
+        read_data: Reads and returns the wind direction based on ADC readings within a specified interval.
     """
 
-    def __init__(self,
-                 adc_channel=0,
-                 config_file="directions_config.json",
-                 adc_max=1024,
-                 adc_vref=5.12,
-                 testing=False) -> None:
+    def __init__(self) -> None:
         """
-        Initializes the WindDirection object.
-
-        Args:
-            adc_channel (int, optional): The ADC channel connected to the wind direction sensor. Defaults to 0.
-            config_file (str, optional): Path to the JSON configuration file containing sensor calibration data.
-                Defaults to "directions_config.json".
-            adc_max (int, optional): Maximum ADC value. Defaults to 1024.
-            adc_vref (float, optional): ADC reference voltage. Defaults to 5.12.
-            testing (bool, optional): Flag indicating whether the sensor is in testing mode. Defaults to False.
+        Initializes the WindDirection sensor instance.
         """
         sensor_info = SENSORS["wind_direction"]
-        self.adc_channel = adc_channel
-        self.config_file = config_file
-        self.adc_max = adc_max
-        self.adc_vref = adc_vref
+        self.adc_channel = sensor_info["adc_channel"]
+        self.config_file = sensor_info["config_file"]
+        self.adc_max = sensor_info["adc_max"]
+        self.adc_vref = sensor_info["adc_vref"]
         self.wind_interval = sensor_info["reading_time"]
-        self.adc = MCP3008(adc_channel)
+        self.adc = MCP3008(self.adc_channel)
+        self.working = sensor_info["working"]
 
-        config_file_path = os.path.join(os.path.dirname(__file__), config_file)
+        config_file_path = os.path.join(os.path.dirname(__file__), self.config_file)
         with open(config_file_path, "r") as f:
             self.config = json.load(f)
 
         self.calculate_vout_adc()
         self.calculate_max_min_adc()
-
-        self.testing = testing
 
     def calculate_vout_adc(self) -> None:
         """
@@ -93,7 +66,7 @@ class WindDirection:
 
     def calculate_max_min_adc(self) -> None:
         """
-        Calculates the minimum and maximum ADC values for each direction.
+        Determines minimum and maximum ADC values for each direction.
         """
         sorted_by_adc = sorted(self.config["directions"], key=lambda x: x["adc"])
 
@@ -114,12 +87,12 @@ class WindDirection:
 
     def calculate_vout(self, ra, rb, vin) -> float:
         """
-        Calculates voltage output based on voltage divider parameters.
+        Calculates voltage output based on resistor values and input voltage.
 
         Args:
-            ra (float): Resistance value of resistor A in the voltage divider circuit.
-            rb (float): Resistance value of resistor B in the voltage divider circuit.
-            vin (float): Input voltage to the voltage divider circuit.
+            ra (float): Resistor value Ra.
+            rb (float): Resistor value Rb.
+            vin (float): Input voltage.
 
         Returns:
             float: Calculated voltage output.
@@ -128,13 +101,13 @@ class WindDirection:
 
     def get_dir(self, adc_value) -> int:
         """
-        Determines the wind direction angle based on ADC value.
+        Determines wind direction based on ADC value.
 
         Args:
-            adc_value (float): ADC value read from the sensor.
+            adc_value (int): ADC value from the sensor.
 
         Returns:
-            int: Wind direction angle.
+            int: Wind direction angle if found, None otherwise.
         """
         angle = None
 
@@ -148,15 +121,15 @@ class WindDirection:
 
         return angle
 
-    def get_direction_label(self, angle) -> str:
+    def get_direction_label(self, angle: float) -> str:
         """
-        Determines the wind direction label based on angle.
+        Returns direction label based on angle.
 
         Args:
-            angle (int): Wind direction angle.
+            angle (float): Wind direction angle.
 
         Returns:
-            str: Wind direction label.
+            str: Direction label (e.g., "N", "NE", etc.).
         """
         for dir in self.config["directions_labels"]:
             if dir["angle_min"] <= angle < dir["angle_max"]:
@@ -164,13 +137,13 @@ class WindDirection:
 
     def get_average(self, angles) -> float:
         """
-        Calculates the average wind direction from a list of angles.
+        Computes average wind direction angle from a list of angles.
 
         Args:
             angles (list): List of wind direction angles.
 
         Returns:
-            float: Average wind direction.
+            float: Average wind direction angle.
         """
         sin_sum = 0.0
         cos_sum = 0.0
@@ -197,23 +170,31 @@ class WindDirection:
 
     def read_data(self):
         """
-        Reads wind direction data from the sensor and returns the average direction label.
+        Reads and returns the wind direction based on ADC readings within a specified interval.
 
         Returns:
-            str: Average wind direction label.
+            str: Wind direction label (e.g., "N", "NE", etc.).
         """
-        try:
-            start_time = time.time()
-            data = []
+        data = None
 
-            while time.time() - start_time <= (self.wind_interval if not self.testing else 3):
-                adc_value = self.adc.value * 1000
-                direction = self.get_dir(adc_value)
-                if direction is not None:
-                    data.append(direction)
-                sleep(1)
+        if self.working:
+            try:
+                start_time = time.time()
+                direction_data = []
 
-            return self.get_direction_label(self.get_average(data))
-        except Exception as e:
-            logging.error(f"Error occurred during reading data from WeatherDirection sensor: {str(e)}", exc_info=True)
-            return None
+                while time.time() - start_time <= self.wind_interval:
+                    adc_value = self.adc.value * 1000
+                    direction = self.get_dir(adc_value)
+                    if direction is not None:
+                        direction_data.append(direction)
+                    sleep(1)
+
+                average_direction = self.get_average(direction_data)
+                data = self.get_direction_label(average_direction)
+            except ZeroDivisionError as e:
+                logging.error(f"ZeroDivision error occurred during reading WindDirection: {e}")
+            except Exception as e:
+                logging.error(f"Error occurred during reading data from WindDirection: {e}",
+                              exc_info=True)
+
+        return data

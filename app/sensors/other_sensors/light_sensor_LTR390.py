@@ -1,109 +1,73 @@
-"""
-Description:
-This module provides functionality for interfacing with the light sensor (LTR390).
-
-Dependencies:
-    - time: Time-related functions.
-    - board: CircuitPython board module.
-    - busio: CircuitPython module for bus communication.
-    - scripts.kalman_data_collector: Custom KalmanDataCollector class for filtering data.
-    - logger_config: Logging configuration.
-    - config: Configuration file containing sensors information.
-    - adafruit_ltr390: Adafruit library for the LTR390 light sensor.
-
-Global Variables:
-    - None
-"""
-
-import time
-
 import adafruit_ltr390
 import board
 import busio
 from config import SENSORS
 from logger_config import logging
-from scripts.kalman_data_collector import KalmanDataCollector
 
 
 class LightSensor:
     """
-    A class to represent a Light Sensor.
+    Interface for interacting with the LTR390 light sensor.
 
     Attributes:
-        working (bool): Indicates whether the sensor should be operational or not.
-        reading_time (int): The duration for reading sensor data.
-        testing (bool): Flag indicating if the sensor is in testing mode.
-        i2c: Instance of the I2C bus for communication.
-        sensor: Instance of the LTR390 light sensor.
+        sensor (adafruit_ltr390.LTR390 or None): Instance of the LTR390 sensor.
+        i2c (busio.I2C or None): Instance of the I2C bus.
+        sensor_info (dict): Configuration information for the sensor.
+        working (bool): Indicates if the sensor is working.
     """
 
-    def __init__(self, testing=False) -> None:
+    def __init__(self) -> None:
         """
-        Initializes the LightSensor object.
-
-        Args:
-            testing (bool, optional): Flag to indicate testing mode. Defaults to False.
+        Initializes the LightSensor instance.
         """
-        sensor_info = SENSORS["light_sensor"]
-        self.working = sensor_info["working"]
-        self.reading_time = sensor_info["reading_time"]
-        self.testing = testing
+        self.sensor = None
+        self.i2c = None
+        self.sensor_info = SENSORS["light_sensor"]
+        self.working = self.sensor_info["working"]
 
-        if self.working or self.testing:
-            for i in range(3):
-                try:
-                    self.i2c = busio.I2C(board.SCL, board.SDA)
-                    self.sensor = adafruit_ltr390.LTR390(self.i2c)
-                    break
-                except Exception as e:
-                    logging.error(f"Error occurred during creating object for LTR390 sensor: {e}")
+        if self.working:
+            self.setup_sensor()
 
-                if i == 2:
-                    self.working = False
-
-    def __get_data(self):
+    def setup_sensor(self) -> bool:
         """
-        Private method to retrieve data from the light sensor.
+        Sets up the LTR390 sensor instance.
 
         Returns:
-            dict: A dictionary containing UV index and Lux values.
+            bool: True if sensor setup was successful, False otherwise.
         """
-        try:
-            uvi = self.sensor.uvi
-            lux = self.sensor.lux
-        except AttributeError as e:
-            logging.error(f"Attribute error while reading LTR390: {e}")
-        except Exception as e:
-            logging.error(f"Unhandled exception while reading LTR390: {e}", exc_info=True)
-        else:
-            return {"uv": round(uvi, 2), "lux": round(lux, 2)}
-        return {}
+        for i in range(3):
+            try:
+                self.i2c = busio.I2C(board.SCL, board.SDA)
+                self.sensor = adafruit_ltr390.LTR390(self.i2c)
+                break
+            except Exception as e:
+                logging.error(f"Error occurred during creating object for LTR390 sensor: {e}")
+
+        return self.sensor is not None
 
     def read_data(self) -> dict:
         """
-        Reads and optionally filters data from the light sensor.
+        Reads light data from the LTR390 sensor.
 
         Returns:
-            dict: A dictionary containing UV index and Lux values. If the sensor is in testing mode,
-            returns unfiltered data. If operational, applies Kalman filtering to the data before returning.
-
-        Raises:
-            Exception: If any error occurs during the process, it's logged and None values are returned for UV and Lux.
+            dict: Dictionary containing light data (uv and lux).
         """
-        if self.testing:
-            return self.__get_data()
-        elif self.working:
-            kalman_data_collector = KalmanDataCollector('uv', 'lux')
+        data = {"uv": None, "lux": None}
 
-            start_time = time.time()
+        if self.working:
+            if self.sensor is None:
+                if not self.setup_sensor():
+                    return data
 
-            while time.time() - start_time <= self.reading_time:
-                data = self.__get_data()
-                if data:
-                    kalman_data_collector.add_data(data)
-                    time.sleep(2)
-                time.sleep(1)
+            try:
+                uvi = self.sensor.uvi
+                lux = self.sensor.lux
+            except AttributeError as e:
+                logging.error(f"Attribute error while reading LTR390: {e}")
+            except Exception as e:
+                logging.error(f"Unhandled exception while reading LTR390: {e}", exc_info=True)
+            else:
+                data["uv"] = round(uvi, 2)
+                data["lux"] = round(lux)
 
-            return kalman_data_collector.get_result()
-
-        return {"uv": None, "lux": None}
+        return data

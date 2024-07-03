@@ -10,21 +10,28 @@ from logger_config import logging
 
 
 class MQTTClient:
+    """
+    Handles interactions with an MQTT broker.
+
+    Attributes:
+        client (mqtt.Client): The MQTT client instance.
+        deviceID (str): Identifier for the device.
+    """
+
     def __init__(self, deviceID: str) -> None:
         """
-        Initializes an MQTTClient instance.
+        Initializes the MQTTClient instance and connects to the MQTT broker.
 
         Args:
-            deviceID (str): The unique identifier for the device associated with the MQTT client.
-
-        Returns:
-            None
+            deviceID (str): Identifier for the device.
         """
         self.client = mqtt.Client()
-        self.client.tls_set(ca_certs=os.path.join(os.path.dirname(__file__), 'certificates/rootCA.pem'),
-                            certfile=os.path.join(os.path.dirname(__file__), 'certificates/certificate.pem.crt'),
-                            keyfile=os.path.join(os.path.dirname(__file__), 'certificates/private.pem.key'),
-                            tls_version=ssl.PROTOCOL_SSLv23)
+        self.client.tls_set(
+            ca_certs=os.path.join(os.path.dirname(__file__), 'certificates/rootCA.pem'),
+            certfile=os.path.join(os.path.dirname(__file__), 'certificates/certificate.pem.crt'),
+            keyfile=os.path.join(os.path.dirname(__file__), 'certificates/private.pem.key'),
+            tls_version=ssl.PROTOCOL_SSLv23
+        )
         self.client.tls_insecure_set(True)
         self.client.connect(MQTT_BROKER_ENDPOINT, 8883, 60)
         self.client.loop_start()
@@ -35,10 +42,10 @@ class MQTTClient:
         Sends data to the MQTT broker.
 
         Args:
-            data (list): The data to be sent.
+            data (list): A list of dictionaries containing the data to be sent.
 
         Returns:
-            bool: True if the data is successfully sent, False otherwise.
+            bool: True if the data was successfully sent, False otherwise.
         """
         if not self.client.is_connected():
             logging.info("Reconnecting to MQTT Broker...")
@@ -73,7 +80,7 @@ class MQTTClient:
         }
 
         message_json = json.dumps(message)
-        logging.info(f"MQTT Data: {str(message_json)}")
+        logging.info(f"MQTT Data: {message_json}")
 
         self.client.publish(MQTT_TOPIC, message_json)
 

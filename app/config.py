@@ -22,12 +22,11 @@ MAX_READING_TIME = 300
 
 SENSORS = {
     "light_sensor": {
-        "working": True,
-        "reading_time": 60
+        "working": True
     },
     "tph_sensor": {
         "working": True,
-        "reading_time": 60
+        "port": 1
     },
     "air_quality_sensor": {
         "working": True,
@@ -36,8 +35,7 @@ SENSORS = {
         "pin_enable": 22,
         "pin_enable_working": False,
         "pin_reset": 27,
-        "pin_reset_working": False,
-        "reading_time": 60
+        "pin_reset_working": False
     },
     "wind_speed": {
         "working": True,
@@ -45,10 +43,15 @@ SENSORS = {
     },
     "wind_direction": {
         "working": True,
-        "reading_time": 10
+        "reading_time": 10,
+        "adc_channel": 0,
+        "config_file": "directions_config.json",
+        "adc_max": 1024,
+        "adc_vref": 5.12
     },
     "rain": {
         "working": True,
-        "pin": 6
+        "pin": 6,
+        "bucket_size": 0.2794
     }
 }
