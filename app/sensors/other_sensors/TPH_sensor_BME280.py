@@ -70,6 +70,8 @@ class TPHSensor:
                 result = bme280.sample(bus=self.bus, compensation_params=self.calibration_params)
             except AttributeError as e:
                 logging.error(f"Attribute error while reading BME280: {e}")
+            except OSError as e:
+                logging.error(f"OS error while reading BME280: {e}")
             except Exception as e:
                 logging.error(f"Unhandled exception while reading BME280: {e}", exc_info=True)
             else:

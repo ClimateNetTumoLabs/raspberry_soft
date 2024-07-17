@@ -129,7 +129,7 @@ class ReadSensors:
             for data_type, measurements in result.items():
                 if not measurements:
                     result[data_type] = None
-                elif data_type == 'lux':
+                elif data_type == 'lux' or data_type == 'uv':
                     result[data_type] = round(sum(measurements) / len(measurements))
                 else:
                     result[data_type] = round(sum(measurements) / len(measurements), 2)
