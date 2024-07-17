@@ -64,6 +64,8 @@ class LightSensor:
                 lux = self.sensor.lux
             except AttributeError as e:
                 logging.error(f"Attribute error while reading LTR390: {e}")
+            except OSError as e:
+                logging.error(f"OS error while reading LTR390: {e}")
             except Exception as e:
                 logging.error(f"Unhandled exception while reading LTR390: {e}", exc_info=True)
             else:
