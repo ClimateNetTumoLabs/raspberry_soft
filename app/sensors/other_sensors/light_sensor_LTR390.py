@@ -39,6 +39,8 @@ class LightSensor:
             try:
                 self.i2c = busio.I2C(board.SCL, board.SDA)
                 self.sensor = adafruit_ltr390.LTR390(self.i2c)
+                self.sensor.resolution = adafruit_ltr390.LTR390.RESOLUTION_20BIT
+                self.sensor.gain = adafruit_ltr390.LTR390.GAIN_18X
                 break
             except Exception as e:
                 logging.error(f"Error occurred during creating object for LTR390 sensor: {e}")
