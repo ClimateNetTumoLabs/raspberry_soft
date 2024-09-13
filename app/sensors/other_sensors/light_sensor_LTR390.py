@@ -70,8 +70,7 @@ class LightSensor:
             except Exception as e:
                 print(f"Unhandled exception while reading LTR390: {e}", exc_info=True)
             else:
-                # data["uv"] = round(uvi)
-                data["uv"] = uvi
+                data["uv"] = round(uvi)
                 data["lux"] = lux
 
         return data
