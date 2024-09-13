@@ -13,7 +13,6 @@ class LightSensor:
         """
         Initializes the LightSensor instance.
         """
-        print('hello')
         self.sensor = None
         self.i2c = None
         self.sensor_info = SENSORS["light_sensor"]
