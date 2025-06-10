@@ -33,8 +33,14 @@ class MQTTClient:
             tls_version=ssl.PROTOCOL_SSLv23
         )
         self.client.tls_insecure_set(True)
-        self.client.connect(MQTT_BROKER_ENDPOINT, 8883, 60)
-        self.client.loop_start()
+
+        # Try to connect, but don't block if it fails
+        try:
+            self.client.connect_async(MQTT_BROKER_ENDPOINT, 8883, 60)
+            self.client.loop_start()
+        except Exception as e:
+            logging.error(f"Failed to connect to MQTT broker: {str(e)}")
+
         self.deviceID = f"device{deviceID}"
 
     def send_data(self, data: list) -> bool:
@@ -48,31 +54,31 @@ class MQTTClient:
             bool: True if the data was successfully sent, False otherwise.
         """
         if not self.client.is_connected():
-            logging.info("Reconnecting to MQTT Broker...")
+            logging.info("MQTT client not connected, attempting to reconnect...")
             try:
+                # Quick connect attempt with short timeout
                 self.client.reconnect()
 
+                # Wait up to 5 seconds for connection (reduced from 15)
                 is_connected = False
-
                 t = time.time()
-                while time.time() - t <= 15:
+                while time.time() - t <= 5:
                     if self.client.is_connected():
                         is_connected = True
                         logging.info("Connected to MQTT Broker")
                         break
-                    time.sleep(1)
+                    time.sleep(0.5)
 
                 if not is_connected:
                     logging.error("Failed to connect to MQTT Broker")
                     return False
-            except socket.timeout:
-                logging.error("Error occurred during reconnecting to MQTT: socket.gaierror: [Errno -3] Temporary "
-                              "failure in name resolution")
+            except (socket.timeout, socket.gaierror, Exception) as e:
+                logging.error(f"Error reconnecting to MQTT: {str(e)}")
                 return False
-            except socket.gaierror:
-                logging.error("Error occurred during reconnecting to MQTT: socket.timeout: _ssl.c:1106: The handshake "
-                              "operation timed out")
-                return False
+
+        # If we reached here and still not connected, return False
+        if not self.client.is_connected():
+            return False
 
         message = {
             "device": self.deviceID,
@@ -82,6 +88,7 @@ class MQTTClient:
         message_json = json.dumps(message)
         logging.info(f"MQTT Data: {message_json}")
 
-        self.client.publish(MQTT_TOPIC, message_json)
+        # Publish with QoS 0 (fire and forget)
+        self.client.publish(MQTT_TOPIC, message_json, qos=0)
 
         return True
