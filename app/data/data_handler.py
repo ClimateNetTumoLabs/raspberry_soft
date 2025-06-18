@@ -1,6 +1,8 @@
 from logger_config import logging
 from scripts.data_splitter import split_data
-from scripts.network_checker import check_network
+
+
+# Don't import network_checker since we're bypassing it
 
 
 class DataHandler:
@@ -32,8 +34,12 @@ class DataHandler:
         Args:
             data (dict): The data to be saved.
         """
-        logging.info('Send current data to local DB')
-        self.local_db.insert_data(data)
+        try:
+            logging.info('SAVING DATA TO LOCAL DATABASE')
+            self.local_db.insert_data(data)
+            logging.info('DATA SUCCESSFULLY SAVED TO LOCAL DATABASE')
+        except Exception as e:
+            logging.error(f"Error saving data to local DB: {str(e)}", exc_info=True)
 
     def __get_local(self) -> list:
         """
@@ -47,7 +53,7 @@ class DataHandler:
 
     def __send_mqtt(self, data: dict) -> bool:
         """
-        Sends data via MQTT.
+        Attempts to send data via MQTT. Will fail fast if not connected.
 
         Args:
             data (dict): The data to be sent.
@@ -55,6 +61,11 @@ class DataHandler:
         Returns:
             bool: True if data was sent successfully, False otherwise.
         """
+        # Check if MQTT client is connected before trying to send
+        if not self.mqtt_client.client.is_connected():
+            logging.info("MQTT client not connected - skipping send attempt")
+            return False
+
         if self.local_db.get_count():
             logging.info('Send local & current data to RDS')
 
@@ -68,6 +79,7 @@ class DataHandler:
             for elem in splitted_data:
                 mqtt_res = self.mqtt_client.send_data(elem)
                 if not mqtt_res:
+                    logging.error("MQTT send failed")
                     break
 
             if mqtt_res:
@@ -80,6 +92,9 @@ class DataHandler:
             logging.info('Send current data to RDS')
             mqtt_res = self.mqtt_client.send_data([data])
 
+            if not mqtt_res:
+                logging.error("MQTT send failed")
+
             return mqtt_res
 
     def send_only_local(self) -> bool:
@@ -89,6 +104,12 @@ class DataHandler:
         Returns:
             bool: True if data was sent successfully, False otherwise.
         """
+        # Quick check if MQTT client is connected
+        if not self.mqtt_client.client.is_connected():
+            logging.info("MQTT client not connected - not sending local data")
+            self.local = True
+            return False
+
         logging.info('Send local data to RDS')
         mqtt_res = True
 
@@ -98,6 +119,7 @@ class DataHandler:
         for elem in splitted_data:
             mqtt_res = self.mqtt_client.send_data(elem)
             if not mqtt_res:
+                logging.error("MQTT send failed")
                 break
 
         if mqtt_res:
@@ -109,14 +131,20 @@ class DataHandler:
 
     def save(self, data: dict) -> None:
         """
-        Saves data, either locally or via MQTT, depending on network status.
+        Saves data, trying MQTT first and falling back to local storage if MQTT fails.
+        Does not use network_checker at all.
 
         Args:
             data (dict): The data to be saved.
         """
-        if not check_network():
-            self.__save_local(data)
-        else:
+        # Try to send via MQTT first
+        try:
+            logging.info("Attempting to send data via MQTT")
             res = self.__send_mqtt(data)
             if not res:
+                logging.info("MQTT send failed - saving to local database")
                 self.__save_local(data)
+        except Exception as e:
+            logging.error(f"Exception during MQTT send: {str(e)}")
+            logging.info("Exception during MQTT - saving to local database")
+            self.__save_local(data)
