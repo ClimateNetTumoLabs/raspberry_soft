@@ -156,9 +156,22 @@ class WindDirection:
         flen = float(len(angles))
         s = sin_sum / flen
         c = cos_sum / flen
-        arc = math.degrees(math.atan(s / c))
-        average = 0.0
 
+        # Initialize average as zero
+        arc = 0.0
+
+        # Avoid division by zero for cos_sum (c)
+        if c != 0:
+            arc = math.degrees(math.atan(s / c))
+        else:
+            # Handle the special case where cos_sum is zero (wind from N/S direction)
+            if s > 0:
+                arc = 90  # North or similar angle
+            elif s < 0:
+                arc = 270  # South or similar angle
+
+        # Calculate the average based on quadrant
+        average = 0.0
         if s > 0 and c > 0:
             average = arc
         elif c < 0:
@@ -166,6 +179,7 @@ class WindDirection:
         elif s < 0 < c:
             average = arc + 360
 
+        # Return the final average, ensuring it's in the [0, 360) range
         return 0.0 if average == 360 else average
 
     def read_data(self):
