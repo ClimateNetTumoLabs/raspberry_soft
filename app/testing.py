@@ -55,6 +55,12 @@ class TestSensors:
         if config.SENSORS["rain"]["working"]:
             self.rain_sensor.sensor.when_pressed = self.rain_ok
 
+        self.reset_results()
+
+    def reset_results(self) -> None:
+        """
+        Resets the results dictionary to its default state.
+        """
         self.results = {
             "LightSensor": [True],
             "TPHSensor": [True],
@@ -105,6 +111,7 @@ class TestSensors:
 
         table.align = "l"
         print(table)
+        print("\nPress any key to start testing again or 'q' to quit: ")
 
     def speed_ok(self) -> None:
         """
@@ -178,8 +185,20 @@ class TestSensors:
         self.print_results()
 
 
-test_sensors: TestSensors = TestSensors()
-test_sensors.check_devices()
+def main():
+    test_sensors = TestSensors()
+    while True:
+        test_sensors.check_devices()
+        try:
+            user_input = input()
+            if user_input.lower() == 'q':
+                print("Exiting program.")
+                break
+            print("Loading...")
+            test_sensors.reset_results()
+        except KeyboardInterrupt:
+            print("\nExiting program.")
+            break
 
-while True:
-    time.sleep(1000)
+if __name__ == "__main__":
+    main()
