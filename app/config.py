@@ -30,12 +30,9 @@ SENSORS = {
     },
     "air_quality_sensor": {
         "working": True,
-        "address": "/dev/ttyAMA0",
-        "baudrate": 9600,
-        "pin_enable": 22,
-        "pin_enable_working": False,
-        "pin_reset": 27,
-        "pin_reset_working": False
+        "port": "/dev/ttyAMA0",
+        "baudrate": 115200,
+        "timeout": 1,
     },
     "wind_speed": {
         "working": True,
