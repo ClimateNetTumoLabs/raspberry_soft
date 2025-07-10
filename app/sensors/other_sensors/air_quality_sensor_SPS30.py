@@ -26,8 +26,6 @@ class AirQualitySensor:
 
         if self.working:
             self.setup_sensor()
-            if self.sensor is not None:
-                self.stop()
 
     def setup_sensor(self) -> bool:
         """
