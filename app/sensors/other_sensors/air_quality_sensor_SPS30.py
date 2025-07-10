@@ -47,8 +47,11 @@ class AirQualitySensor:
 
         if self.sensor:
             try:
-                self.sensor.getVersion()
+                version = self.sensor.getVersion()
+                logging.info(version)
                 self.sensor.startFanCleaning()
+                self.sensor.startMeasurement()
+                time.sleep(5)
                 return True
             except Exception as e:
                 logging.error(f"Error occurred during setup SPS30 sensor: {e}")
@@ -60,11 +63,11 @@ class AirQualitySensor:
         """
         Stops the SPS30 sensor.
         """
-        try:
-            self.sensor.stopMeasurement()
-            self.sensor.stop()
-        except Exception as e:
-            logging.error(f"Error occurred during stopping SPS30 sensor: {e}")
+        if self.sensor:
+            try:
+                self.sensor.stopMeasurement()
+            except Exception as e:
+                logging.error(f"Error occurred during stopping SPS30 sensor: {e}")
 
     def read_data(self) -> dict:
         """
@@ -75,19 +78,15 @@ class AirQualitySensor:
         """
         data = {"pm1": None, "pm2_5": None, "pm10": None}
 
-        if self.working:
-            if self.sensor is None:
-                if not self.setup_sensor():
-                    return data
+        if not self.working or self.sensor is None:
+            return data
 
-            try:
-                self.sensor.startMeasurement()
-                time.sleep(5)
-                sensor_data = self.sensor.readMeasurement()
-                data["pm1"] = sensor_data['Mass PM1.0']
-                data["pm2_5"] = sensor_data['Mass PM2.5']
-                data["pm10"] = sensor_data['Mass PM10']
-            except Exception as e:
-                logging.error(f"Unhandled exception while reading PMS5003: {e}", exc_info=True)
+        try:
+            readings = self.sensor.readMeasurement()
+            data["pm1"] = round(readings.get("Mass PM1.0", 0), 2)
+            data["pm2_5"] = round(readings.get("Mass PM2.5", 0), 2)
+            data["pm10"] = round(readings.get("Mass PM10", 0), 2)
+        except Exception as e:
+            logging.error(f"Unhandled exception while reading SPS30: {e}", exc_info=True)
 
         return data
