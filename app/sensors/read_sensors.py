@@ -112,6 +112,7 @@ class ReadSensors:
             }
 
             # Collect sensor data over 15 iterations
+            self.sensors[2].start()
             for _ in range(15):
                 current_sensor_readings = self.__get_data()
 
