@@ -88,7 +88,7 @@ class ReadSensors:
             logging.info(f"{'+' * 15} Starting data collection.")
 
             # Calculate next transmission time
-            next_transmission_time =next_quarter_hour()
+            next_transmission_time = self.next_quarter_hour()
             time_until_transmission = (next_transmission_time - datetime.now()).total_seconds()
 
             # Adjust next transmission time if it's too close
