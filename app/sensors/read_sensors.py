@@ -106,7 +106,7 @@ class ReadSensors:
 
             # Adjust next transmission time if it's too close
             if time_until_transmission < (config.MAX_READING_TIME + 10):
-                next_transmission_time += timedelta(minutes=15)
+                next_transmission_time += timedelta(minutes=config.DATA_SEND_INTERVAL_MINUTES)
                 time_until_transmission = (next_transmission_time - datetime.now()).total_seconds()
 
             # Wait until it's time to collect data

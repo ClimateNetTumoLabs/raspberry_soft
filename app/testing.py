@@ -145,7 +145,7 @@ class TestSensors:
                     break
         else:
             self.results["TPHSensor"] = False
-
+        self.air_quality.start()
         res_air_quality = self.air_quality.read_data()
         if res_air_quality:
             self.results["AirQualitySensor"].append(res_air_quality)
@@ -155,6 +155,7 @@ class TestSensors:
                     break
         else:
             self.results["AirQualitySensor"] = False
+        self.air_quality.stop()
 
         res_wind_direction = self.wind_direction_sensor.read_data()
         self.results["WindDirection"].append(res_wind_direction)

@@ -59,7 +59,7 @@ class AirQualitySensor:
 
     def start(self) -> None:
         try:
-            statusRegister = self.sensor.getStatusRegister()
+            statusRegister = self.sensor.readStatusRegister()
             speed_bit = statusRegister.get("Speed")
             laser_bit = statusRegister.get("Laser")
             fan_bit = statusRegister.get("Fan")
