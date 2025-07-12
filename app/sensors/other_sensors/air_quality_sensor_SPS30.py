@@ -41,6 +41,7 @@ class AirQualitySensor:
                     baudrate=self.sensor_info["baudrate"],
                     timeout=self.sensor_info["timeout"],
                 )
+                self.sensor.resetDevice()
                 break
             except Exception as e:
                 logging.error(f"Error occurred during creating object for SPS30 sensor: {e}")
@@ -56,18 +57,20 @@ class AirQualitySensor:
 
             return False
 
-
     def start(self) -> None:
         try:
-            if self.working:
-                self.sensor.startMeasurement()
-                time.sleep(1)
-                self.sensor.startFanCleaning()
-                time.sleep(5)
-        except Exception as e:
-            logging.error(e)
-            print("Error occurred during sensor start")
+            statusRegister = self.sensor.getStatusRegister()
+            speed_bit = statusRegister.get("Speed")
+            laser_bit = statusRegister.get("Laser")
+            fan_bit = statusRegister.get("Fan")
 
+            if not all([speed_bit, laser_bit, fan_bit]):
+                raise Exception('Sensor status register not valid.')
+            self.sensor.startMeasurement()
+            self.sensor.startFanCleaning()
+            time.sleep(5)
+        except Exception as e:
+            logging.error(f"Error occurred during starting SPS30 sensor: {e}")
 
     def stop(self) -> None:
         """
@@ -81,7 +84,7 @@ class AirQualitySensor:
 
     def read_data(self) -> dict:
         """
-        Reads air quality data from the PMS5003 sensor.
+        Reads air quality data from the SPS30 sensor.
 
         Returns:
             dict: Dictionary containing air quality data (pm1, pm2_5, pm10).
