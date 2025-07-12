@@ -74,6 +74,19 @@ class ReadSensors:
         next_time = next_time.replace(second=0, microsecond=0)
         return next_time
 
+    def next_send_time(self) -> datetime:
+        """
+        Calculates the next send time based on configured interval.
+        """
+        now = datetime.now()
+        interval = config.DATA_SEND_INTERVAL_MINUTES
+        minutes = now.minute
+        minutes_to_next = (interval - minutes % interval) % interval
+        if minutes_to_next == 0:
+            minutes_to_next = interval
+        next_time = now + timedelta(minutes=minutes_to_next)
+        return next_time.replace(second=0, microsecond=0)
+
     def collect_data(self) -> dict:
         """
         Collects sensor data over a period and returns aggregated results.
@@ -88,7 +101,7 @@ class ReadSensors:
             logging.info(f"{'+' * 15} Starting data collection.")
 
             # Calculate next transmission time
-            next_transmission_time = self.next_quarter_hour()
+            next_transmission_time = self.next_send_time()
             time_until_transmission = (next_transmission_time - datetime.now()).total_seconds()
 
             # Adjust next transmission time if it's too close
@@ -110,7 +123,7 @@ class ReadSensors:
                 "pm2_5": [],
                 "pm10": []
             }
-
+            self.sensors[2].start()
             # Collect sensor data over 15 iterations
             for _ in range(15):
                 current_sensor_readings = self.__get_data()

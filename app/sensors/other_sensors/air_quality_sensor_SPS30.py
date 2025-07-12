@@ -49,14 +49,24 @@ class AirQualitySensor:
             try:
                 version = self.sensor.getVersion()
                 logging.info(version)
-                self.sensor.startFanCleaning()
-                self.sensor.startMeasurement()
-                time.sleep(5)
+                print(version)
                 return True
             except Exception as e:
                 logging.error(f"Error occurred during setup SPS30 sensor: {e}")
 
             return False
+
+
+    def start(self) -> None:
+        try:
+            if self.working:
+                self.sensor.startMeasurement()
+                time.sleep(1)
+                self.sensor.startFanCleaning()
+                time.sleep(5)
+        except Exception as e:
+            logging.error(e)
+            print("Error occurred during sensor start")
 
 
     def stop(self) -> None:
