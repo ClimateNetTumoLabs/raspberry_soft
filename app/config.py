@@ -19,8 +19,6 @@ MEASURING_TIME = 900
 # It is recommended to set the value >= than
 # sum of sensors reading_times
 MAX_READING_TIME = 300
-DATA_SEND_INTERVAL_MINUTES = 5
-
 
 SENSORS = {
     "light_sensor": {

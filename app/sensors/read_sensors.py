@@ -74,19 +74,6 @@ class ReadSensors:
         next_time = next_time.replace(second=0, microsecond=0)
         return next_time
 
-    def next_send_time(self) -> datetime:
-        """
-        Calculates the next send time based on configured interval.
-        """
-        now = datetime.now()
-        interval = config.DATA_SEND_INTERVAL_MINUTES
-        minutes = now.minute
-        minutes_to_next = (interval - minutes % interval) % interval
-        if minutes_to_next == 0:
-            minutes_to_next = interval
-        next_time = now + timedelta(minutes=minutes_to_next)
-        return next_time.replace(second=0, microsecond=0)
-
     def collect_data(self) -> dict:
         """
         Collects sensor data over a period and returns aggregated results.
@@ -101,12 +88,12 @@ class ReadSensors:
             logging.info(f"{'+' * 15} Starting data collection.")
 
             # Calculate next transmission time
-            next_transmission_time = self.next_send_time()
+            next_transmission_time =next_quarter_hour()
             time_until_transmission = (next_transmission_time - datetime.now()).total_seconds()
 
             # Adjust next transmission time if it's too close
             if time_until_transmission < (config.MAX_READING_TIME + 10):
-                next_transmission_time += timedelta(minutes=config.DATA_SEND_INTERVAL_MINUTES)
+                next_transmission_time += timedelta(minutes=15)
                 time_until_transmission = (next_transmission_time - datetime.now()).total_seconds()
 
             # Wait until it's time to collect data
