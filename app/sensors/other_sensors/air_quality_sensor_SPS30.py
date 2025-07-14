@@ -59,14 +59,13 @@ class AirQualitySensor:
 
     def start(self) -> None:
         try:
-            # check and fix it
-            # statusRegister = self.sensor.readStatusRegister()
-            # speed_bit = statusRegister.get("Speed")
-            # laser_bit = statusRegister.get("Laser")
-            # fan_bit = statusRegister.get("Fan")
-            #
-            # if not all([speed_bit, laser_bit, fan_bit]):
-            #     raise Exception('Sensor status register not valid.')
+            statusRegister = self.sensor.readStatusRegister()
+            speed_bit = statusRegister.get("Speed")
+            laser_bit = statusRegister.get("Laser")
+            fan_bit = statusRegister.get("Fan")
+
+            if any(bit == 1 for bit in [speed_bit, laser_bit, fan_bit]):
+                raise Exception("Invalid status register of SPS30")
             self.sensor.startMeasurement()
             time.sleep(1)
             self.sensor.startFanCleaning()
