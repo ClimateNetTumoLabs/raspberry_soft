@@ -9,7 +9,7 @@ from scripts.network_checker import check_network
 from scripts.rtc import RTCControl
 from scripts.time_updater import update_rtc_time
 from sensors.other_sensors.TPH_sensor_BME280 import TPHSensor
-from sensors.other_sensors.air_quality_sensor_PMS5003 import AirQualitySensor
+from sensors.other_sensors.air_quality_sensor_SPS30_i2c import AirQualitySensor
 from sensors.other_sensors.light_sensor_LTR390 import LightSensor
 from sensors.weather_meter_sensors.rain_sensor import Rain
 from sensors.weather_meter_sensors.wind_direction_sensor import WindDirection
@@ -145,7 +145,7 @@ class TestSensors:
                     break
         else:
             self.results["TPHSensor"] = False
-
+        self.air_quality.start()
         res_air_quality = self.air_quality.read_data()
         if res_air_quality:
             self.results["AirQualitySensor"].append(res_air_quality)
@@ -155,6 +155,7 @@ class TestSensors:
                     break
         else:
             self.results["AirQualitySensor"] = False
+        self.air_quality.stop()
 
         res_wind_direction = self.wind_direction_sensor.read_data()
         self.results["WindDirection"].append(res_wind_direction)

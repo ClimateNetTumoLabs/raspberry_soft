@@ -5,7 +5,7 @@ import config
 from logger_config import logging
 
 from .other_sensors.TPH_sensor_BME280 import TPHSensor
-from .other_sensors.air_quality_sensor_PMS5003 import AirQualitySensor
+from .other_sensors.air_quality_sensor_SPS30_i2c import AirQualitySensor
 from .other_sensors.light_sensor_LTR390 import LightSensor
 from .weather_meter_sensors.rain_sensor import Rain
 from .weather_meter_sensors.wind_direction_sensor import WindDirection
@@ -110,7 +110,7 @@ class ReadSensors:
                 "pm2_5": [],
                 "pm10": []
             }
-
+            self.sensors[2].start()
             # Collect sensor data over 15 iterations
             for _ in range(15):
                 current_sensor_readings = self.__get_data()
