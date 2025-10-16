@@ -8,7 +8,15 @@ class BaseSensor:
     def __init__(self, config_manager, sensor_name):
         self.config = config_manager
         self.name = sensor_name
-        self.measurements = self.config.get_sensor_config(sensor_name)["measurements"]
+
+        sensor_config = self.config.get_sensor_config(sensor_name)
+        self.enabled = sensor_config.get("enabled", True)
+
+        if not self.enabled:
+            print(f"[INFO] Sensor '{self.name}' is disabled in config.")
+            return  # skip initialization
+
+        self.measurements = sensor_config.get("measurements", [])
 
         # Config values
         self.sampling_interval = self.config.get_sampling_interval()
