@@ -1,32 +1,50 @@
-from ..base_sensor import BaseSensor
+import time
 from gpiozero import Button
+from raspberry_soft.app import config
 
 
-class RainGauge(BaseSensor):
-    """Rain gauge sensor measuring rainfall from tipping bucket."""
+class RainSensor:
+    """Counts rain bucket tips over a fixed period and calculates rainfall."""
 
-    def __init__(self, config_manager):
-        super().__init__(config_manager, "rain_sensor")
-        if not self.enabled:
+    def __init__(self):
+        rain_conf = config.SENSORS.get("rain_sensor", {})
+        if not rain_conf.get("working", False):
+            print("[sensor_name_here] Skipped (working=False)")
             return
 
-        cfg = self.config.get_sensor_config(self.name)
-        bucket_pin_number = cfg.get("pin", 27)
-        self.mm_per_tip = cfg.get("mm_per_tip", 0.2794)
+        self.pin = rain_conf.get["pin"]
+        self.bucket_size = rain_conf["bucket_size"]     # mm per tip
+        self.total_time = config.MEASURING_TIME         # e.g. 300s (5 min)
 
-        self.bucket_pin = Button(bucket_pin_number)
-        self.bucket_pin.when_pressed = self._bucket_tipped
-        self.rainfall_mm = 0.0
+        self.sensor = Button(self.pin)
+        self.count = 0
+        self.sensor.when_pressed = self._on_click
 
-    def _bucket_tipped(self):
-        """Increment rainfall by one bucket tip."""
-        self.rainfall_mm += self.mm_per_tip
+        print(f"[RainSensor] Initialized on GPIO {self.pin}, bucket_size={self.bucket_size}mm/tip, total_time={self.total_time}s")
 
-    def _read_sensor(self):
-        """Return rainfall since last measurement."""
-        if not self.enabled:
-            return None
+    def _on_click(self):
+        """Increment counter when the rain gauge tips."""
+        self.count += 1
 
-        rainfall = self.rainfall_mm
-        self.rainfall_mm = 0.0  # reset for next interval
-        return {"rain": rainfall}
+    def measure_interval(self):
+        """Count rain tips during total_time seconds."""
+        self.count = 0
+        start_time = time.monotonic()
+        while time.monotonic() - start_time < self.total_time:
+            time.sleep(0.1)
+        total_tips = self.count
+        return total_tips
+
+    def total_rainfall(self):
+        """Calculate total rainfall in mm and mm/h equivalent."""
+        total_tips = self.measure_interval()
+        rainfall_mm = total_tips * self.bucket_size
+
+        print(f"[RainSensor] Tips={total_tips}, Rain={rainfall_mm:.3f}mm")
+        return rainfall_mm
+
+
+if __name__ == "__main__":
+    sensor = RainSensor()
+    result = sensor.total_rainfall()
+    print(result)

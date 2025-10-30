@@ -1,49 +1,70 @@
-from ..base_sensor import BaseSensor
-from sps30 import SPS30
 import time
+import math
+import statistics
+from sps30 import SPS30
+from raspberry_soft.app import config
 
-class SPS30Sensor(BaseSensor):
-    def __init__(self, config_manager):
-        super().__init__(config_manager, "air_pollution_sps30")
-        if not self.enabled:
+
+class SPS30Sensor:
+    """SPS30 particulate matter sensor with interval measurements and averaging."""
+
+    def __init__(self):
+        sps_conf = config.SENSORS.get("air_pollution_PMS5003", {})
+        if not sps_conf.get("working", False):
+            print("[sensor_name_here] Skipped (working=False)")
             return
 
-        self.sensor = self._init_sensor()
+        self.i2c_bus = sps_conf["i2c_bus"]
+        self.interval_sec = config.READING_TIME      # e.g. 30s
+        self.total_time = config.MEASURING_TIME      # 5 min average
 
-    def _init_sensor(self):
-        cfg = self.config.get_sensor_config(self.name)
-        port = cfg.get("port", 1)
-        warmup_time = cfg.get("warmup_time", 5)
+        self.sps = SPS30(self.i2c_bus)
+        print(f"[SPS30] Initialized on I2C bus {self.i2c_bus}")
 
-        sensor = SPS30(port)
-        article_code = sensor.read_article_code()
-        if article_code == sensor.ARTICLE_CODE_ERROR:
-            raise RuntimeError("SPS30: ARTICLE CODE CRC ERROR (check wiring/I2C)")
+    def _safe_mean(self, values):
+        clean = [v for v in values if v is not None and not math.isnan(v)]
+        return statistics.mean(clean) if clean else 0.0
 
-        sensor.start_measurement()
-        time.sleep(warmup_time)
-        return sensor
+    def measure_interval(self):
+        """Read particulate matter values once."""
+        flag = self.sps.read_data_ready_flag()
+        if flag and self.sps.read_measured_values() != self.sps.MEASURED_VALUES_ERROR:
+            vals = self.sps.dict_values
+            return vals["pm1p0"], vals["pm2p5"], vals["pm10p0"]
+        return None, None, None
 
-    def _read_sensor(self):
-        if not self.enabled:
-            return None
+    def average_values(self):
+        """Warm up, measure for total_time, and return averaged particulate values."""
+        if self.sps.read_article_code() == self.sps.ARTICLE_CODE_ERROR:
+            raise RuntimeError("ARTICLE CODE CRC ERROR")
 
-        if not self.sensor.read_data_ready_flag():
-            return None
-        if self.sensor.read_measured_values() == self.sensor.MEASURED_VALUES_ERROR:
-            return None
+        self.sps.start_fan_cleaning()
+        self.sps.start_measurement()
+        time.sleep(30)  # warm-up
 
-        values = self.sensor.dict_values
-        return {
-            "pm1": values.get("pm1p0"),
-            "pm2_5": values.get("pm2p5"),
-            "pm10": values.get("pm10p0"),
-        }
+        pm1_vals, pm25_vals, pm10_vals = [], [], []
+        start_time = time.time()
 
-    def stop(self):
-        if not self.enabled:
-            return
-        try:
-            self.sensor.stop_measurement()
-        except Exception:
-            pass
+        while time.time() - start_time < self.total_time:
+            pm1, pm25, pm10 = self.measure_interval()
+            if pm1 is not None:
+                pm1_vals.append(pm1)
+                pm25_vals.append(pm25)
+                pm10_vals.append(pm10)
+            time.sleep(self.interval_sec)
+
+        avg_pm1 = self._safe_mean(pm1_vals)
+        avg_pm25 = self._safe_mean(pm25_vals)
+        avg_pm10 = self._safe_mean(pm10_vals)
+
+        print(f"[SPS30] Avg PM1.0={avg_pm1:.2f} µg/m³, PM2.5={avg_pm25:.2f} µg/m³, PM10={avg_pm10:.2f} µg/m³")
+        self.sps.stop_measurement()
+
+        return {"pm1p0": avg_pm1, "pm2p5": avg_pm25, "pm10p0": avg_pm10}
+
+
+# === Example usage ===
+if __name__ == "__main__":
+    sensor = SPS30Sensor()
+    result = sensor.average_values()
+    print(result)

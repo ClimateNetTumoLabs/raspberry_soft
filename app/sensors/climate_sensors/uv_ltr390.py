@@ -1,32 +1,68 @@
-from ..base_sensor import BaseSensor
-from adafruit_ltr390 import LTR390
+import time
+import math
+import statistics
 import board
 import busio
+from adafruit_ltr390 import LTR390
+from raspberry_soft.app import config
 
-class LTR390Sensor(BaseSensor):
-    def __init__(self, config_manager):
-        super().__init__(config_manager, "uv_ltr390")
-        if not self.enabled:
+
+class LTR390Sensor:
+    """LTR390 UV and ambient light sensor with averaging and config integration."""
+
+    def __init__(self):
+        uv_conf = config.SENSORS.get("uv_sensor", {})
+        if not uv_conf.get("working", False):
+            print("[sensor_name_here] Skipped (working=False)")
             return
 
-        self.sensor = self._init_sensor()
+        scl_pin = uv_conf["scl"]
+        sda_pin = uv_conf["sda"]
+        address = uv_conf["address"]
 
-    def _init_sensor(self):
-        cfg = self.config.get_sensor_config(self.name)
-        scl_pin_name = cfg.get("scl", "SCL")
-        sda_pin_name = cfg.get("sda", "SDA")
-        address = cfg.get("address", 0x53)
-
-        scl_pin = getattr(board, scl_pin_name)
-        sda_pin = getattr(board, sda_pin_name)
+        self.interval_sec = config.READING_TIME  # e.g., 30s
+        self.total_time = config.MEASURING_TIME  # 5 min
         i2c = busio.I2C(scl_pin, sda_pin)
-        return LTR390(i2c, address=address)
+        self.sensor = LTR390(i2c, address=address)
 
-    def _read_sensor(self):
-        if not self.enabled:
-            return None
+        print(f"[LTR390] Initialized on I2C {hex(address)} (SCL={uv_conf['scl']}, SDA={uv_conf['sda']})")
 
-        return {
-            "uv_index": self.sensor.uvi,
-            "light_intensity": self.sensor.light,
-        }
+    def _safe_mean(self, values):
+        clean = [v for v in values if v is not None and not math.isnan(v)]
+        return statistics.mean(clean) if clean else 0.0
+
+    def measure_interval(self):
+        """Take a single UV and light measurement."""
+        try:
+            uv = self.sensor.uvi
+            light = self.sensor.light
+            return uv, light
+        except Exception as e:
+            print(f"[LTR390] Read error: {e}")
+            return None, None
+
+    def average_values(self):
+        """Measure UV and light over total_time and return averaged results."""
+        uv_values = []
+        light_values = []
+        start_time = time.time()
+
+        while time.time() - start_time < self.total_time:
+            uv, light = self.measure_interval()
+            if uv is not None and light is not None:
+                uv_values.append(uv)
+                light_values.append(light)
+            time.sleep(self.interval_sec)
+
+        avg_uv = self._safe_mean(uv_values)
+        avg_light = self._safe_mean(light_values)
+
+        print(f"Average UV index: {avg_uv:.2f}, Light intensity: {avg_light:.2f}")
+        return {"uv_index": avg_uv, "light_intensity": avg_light}
+
+
+# === Example usage ===
+if __name__ == "__main__":
+    sensor = LTR390Sensor()
+    results = sensor.average_values()
+    print(results)
