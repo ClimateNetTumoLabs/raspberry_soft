@@ -1,14 +1,14 @@
 import time
 from gpiozero import Button
-from raspberry_soft.app import config
+from config import SENSORS, READING_TIME, MEASURING_TIME
 
 class WindSpeedSensor:
     """Wind speed sensor with averaging over configured interval."""
 
     def __init__(self):
-        wind_conf = config.SENSORS.get("wind_speed", {})
+        wind_conf = SENSORS.get("wind_speed", {})
         if not wind_conf.get("working", False):
-            print("[sensor_name_here] Skipped (working=False)")
+            print("[Wind speed] Skipped (working=False)")
             return
 
         pin = wind_conf.get["gpio_pin"]
@@ -18,8 +18,8 @@ class WindSpeedSensor:
         self.sensor.when_pressed = self._on_pulse
 
         self.coefficient = wind_conf["speed_coefficient"]
-        self.interval_sec = config.READING_TIME     # measuring interval
-        self.total_time = config.MEASURING_TIME     # total averaging time (5 min)
+        self.interval_sec = READING_TIME     # measuring interval
+        self.total_time = MEASURING_TIME     # total averaging time (5 min)
         self.pulse_count = 0
 
     def _on_pulse(self):

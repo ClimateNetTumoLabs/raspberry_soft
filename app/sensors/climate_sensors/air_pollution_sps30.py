@@ -2,21 +2,21 @@ import time
 import math
 import statistics
 from sps30 import SPS30
-from raspberry_soft.app import config
+from config import SENSORS, READING_TIME, MEASURING_TIME
 
 
 class SPS30Sensor:
     """SPS30 particulate matter sensor with interval measurements and averaging."""
 
     def __init__(self):
-        sps_conf = config.SENSORS.get("air_pollution_PMS5003", {})
+        sps_conf = SENSORS.get("air_pollution_PMS5003", {})
         if not sps_conf.get("working", False):
-            print("[sensor_name_here] Skipped (working=False)")
+            print("[SPS30] Skipped (working=False)")
             return
 
         self.i2c_bus = sps_conf["i2c_bus"]
-        self.interval_sec = config.READING_TIME      # e.g. 30s
-        self.total_time = config.MEASURING_TIME      # 5 min average
+        self.interval_sec = READING_TIME      # e.g. 30s
+        self.total_time = MEASURING_TIME      # 5 min average
 
         self.sps = SPS30(self.i2c_bus)
         print(f"[SPS30] Initialized on I2C bus {self.i2c_bus}")

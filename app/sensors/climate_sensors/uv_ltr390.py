@@ -4,24 +4,24 @@ import statistics
 import board
 import busio
 from adafruit_ltr390 import LTR390
-from raspberry_soft.app import config
+from config import SENSORS, READING_TIME, MEASURING_TIME
 
 
 class LTR390Sensor:
     """LTR390 UV and ambient light sensor with averaging and config integration."""
 
     def __init__(self):
-        uv_conf = config.SENSORS.get("uv_sensor", {})
+        uv_conf = SENSORS.get("uv_sensor", {})
         if not uv_conf.get("working", False):
-            print("[sensor_name_here] Skipped (working=False)")
+            print("[LTR390] Skipped (working=False)")
             return
 
         scl_pin = uv_conf["scl"]
         sda_pin = uv_conf["sda"]
         address = uv_conf["address"]
 
-        self.interval_sec = config.READING_TIME  # e.g., 30s
-        self.total_time = config.MEASURING_TIME  # 5 min
+        self.interval_sec = READING_TIME  # e.g., 30s
+        self.total_time = MEASURING_TIME  # 5 min
         i2c = busio.I2C(scl_pin, sda_pin)
         self.sensor = LTR390(i2c, address=address)
 

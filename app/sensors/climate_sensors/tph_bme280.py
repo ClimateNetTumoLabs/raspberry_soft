@@ -3,22 +3,22 @@ import math
 import statistics
 from smbus2 import SMBus
 import bme280
-from raspberry_soft.app import config
+from config import SENSORS, READING_TIME, MEASURING_TIME
 
 
 class BME280Sensor:
     """BME280 sensor for temperature, humidity, and pressure with averaging and config support."""
 
     def __init__(self):
-        bme_conf = config.SENSORS.get("tph_sensor", {})
+        bme_conf = SENSORS.get("tph_sensor", {})
         if not bme_conf.get("working", False):
-            print("[sensor_name_here] Skipped (working=False)")
+            print("[BME280] Skipped (working=False)")
             return
 
         self.port = bme_conf["port"]
         self.address = bme_conf["address"]
-        self.interval_sec = config.READING_TIME     # e.g. 30s
-        self.total_time = config.MEASURING_TIME     # 5 min average
+        self.interval_sec = READING_TIME     # e.g. 30s
+        self.total_time = MEASURING_TIME     # 5 min average
 
         self.bus = SMBus(self.port)
         self.calibration = bme280.load_calibration_params(self.bus, self.address)

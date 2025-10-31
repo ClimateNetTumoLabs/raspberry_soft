@@ -1,23 +1,23 @@
 import time
 import math
 from gpiozero import MCP3008
-from raspberry_soft.app import config
+from config import SENSORS, READING_TIME, MEASURING_TIME
 
 
 class WindDirectionSensor:
     """Wind vane sensor using MCP3008 ADC, averaging over multiple intervals."""
 
     def __init__(self):
-        wind_conf = config.SENSORS.get("wind_direction", {})
+        wind_conf = SENSORS.get("wind_direction", {})
         if not wind_conf.get("working", False):
-            print("[sensor_name_here] Skipped (working=False)")
+            print("[Wind direction] Skipped (working=False)")
             return
 
         self.adc = MCP3008(channel=wind_conf["adc_channel"])
         self.vref = wind_conf["adc_vref"]
         self.tolerance = wind_conf.get("tolerance", 0.1)
-        self.interval_sec = config.READING_TIME  # e.g., 30s
-        self.total_time = config.MEASURING_TIME # 5 min for final average
+        self.interval_sec = READING_TIME  # e.g., 30s
+        self.total_time = MEASURING_TIME # 5 min for final average
 
         # calibration table: angle → voltage
         self.volts = {

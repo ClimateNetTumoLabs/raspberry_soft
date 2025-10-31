@@ -1,20 +1,20 @@
 import time
 from gpiozero import Button
-from raspberry_soft.app import config
+from config import SENSORS, MEASURING_TIME, TRANSMISSION_INTERVAL
 
 
 class RainSensor:
     """Counts rain bucket tips over a fixed period and calculates rainfall."""
 
     def __init__(self):
-        rain_conf = config.SENSORS.get("rain_sensor", {})
+        rain_conf = SENSORS.get("rain_sensor", {})
         if not rain_conf.get("working", False):
-            print("[sensor_name_here] Skipped (working=False)")
+            print("[Rain sensor] Skipped (working=False)")
             return
 
         self.pin = rain_conf.get["pin"]
         self.bucket_size = rain_conf["bucket_size"]     # mm per tip
-        self.total_time = config.MEASURING_TIME         # e.g. 300s (5 min)
+        self.total_time = MEASURING_TIME                # e.g. 300s (5 min)
 
         self.sensor = Button(self.pin)
         self.count = 0
