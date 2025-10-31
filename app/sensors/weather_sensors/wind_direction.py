@@ -71,5 +71,5 @@ class WindDirectionSensor:
         avg_angle = self._get_average(readings)
         direction = self._angle_to_direction(avg_angle)
 
-        print(f"Direction = {direction}")
+        print(f"[Wind direction] Direction = {direction}")
         return direction

@@ -6,6 +6,7 @@ class WindSpeedSensor:
     def __init__(self):
         wind_conf = SENSORS.get("wind_speed", {})
         if not wind_conf.get("working", False):
+            print("[Wind speed] Skipped")
             self.sensor = None
             return
 
@@ -16,6 +17,7 @@ class WindSpeedSensor:
         self.total_time = MEASURING_TIME
         self.pulse_count = 0
 
+        print("[Wind speed] Initialized")
     def _on_pulse(self):
         self.pulse_count += 1
 
@@ -35,5 +37,5 @@ class WindSpeedSensor:
             readings.append(val)
         avg_speed = round(sum(readings)/len(readings), 1) if readings else 0
 
-        print(f'Avg wind speed = {avg_speed}')
+        print(f'[Wind Speed] Avg wind speed = {avg_speed}')
         return avg_speed

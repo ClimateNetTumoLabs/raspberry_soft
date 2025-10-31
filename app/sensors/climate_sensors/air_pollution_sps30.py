@@ -62,7 +62,6 @@ class SPS30Sensor:
         avg_pm10 = round(self._safe_mean(pm10_vals))
 
         self.sps.stop_measurement()
-        self.sps.reset()
 
         print(f"[SPS30] Avg PM1={avg_pm1}, PM2.5={avg_pm25}, PM10={avg_pm10}")
         return {"pm1": avg_pm1, "pm2_5": avg_pm25, "pm10": avg_pm10}
