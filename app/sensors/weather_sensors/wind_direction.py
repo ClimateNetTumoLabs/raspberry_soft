@@ -16,7 +16,7 @@ class WindDirectionSensor:
 
         self.adc = MCP3008(channel=wind_conf["adc_channel"])
         self.vref = wind_conf["adc_vref"]
-        self.tolerance = wind_conf.get("tolerance", 0.1)
+        self.tolerance = wind_conf["tolerance"]
         self.interval_sec = READING_TIME  # e.g., 30s
         self.total_time = MEASURING_TIME # 5 min for final average
 

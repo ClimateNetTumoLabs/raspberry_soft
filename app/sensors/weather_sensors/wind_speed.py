@@ -12,7 +12,7 @@ class WindSpeedSensor:
             self.sensor = None
             return
 
-        pin = wind_conf.get["gpio_pin"]
+        pin = wind_conf["pin"]
         if pin is None:
             raise ValueError("Wind speed sensor GPIO pin not defined in config.")
         self.sensor = Button(pin)
@@ -22,6 +22,8 @@ class WindSpeedSensor:
         self.interval_sec = READING_TIME     # measuring interval
         self.total_time = MEASURING_TIME     # total averaging time (5 min)
         self.pulse_count = 0
+
+        print(f"[Wind speed] Initialized on GPIO {pin}")
 
     def _on_pulse(self):
         self.pulse_count += 1

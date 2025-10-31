@@ -13,7 +13,7 @@ class RainSensor:
             self.sensor = None
             return
 
-        self.pin = rain_conf.get["pin"]
+        self.pin = rain_conf["pin"]
         self.bucket_size = rain_conf["bucket_size"]     # mm per tip
         self.total_time = MEASURING_TIME                # e.g. 300s (5 min)
 
@@ -21,7 +21,7 @@ class RainSensor:
         self.count = 0
         self.sensor.when_pressed = self._on_click
 
-        print(f"[RainSensor] Initialized on GPIO {self.pin}, bucket_size={self.bucket_size}mm/tip, total_time={self.total_time}s")
+        print(f"[RainSensor] Initialized on GPIO {self.pin}")
 
     def _on_click(self):
         """Increment counter when the rain gauge tips."""

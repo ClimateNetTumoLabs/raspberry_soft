@@ -56,6 +56,7 @@ SENSORS = {
         "adc_channel": 0,
         "adc_max": 1024,
         "adc_vref": 5.12,
+        "tolerance": 0.1
     },
     "rain": {
         "working": True,
