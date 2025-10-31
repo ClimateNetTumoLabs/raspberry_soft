@@ -1,10 +1,10 @@
-import time
+import asyncio
 from gpiozero import Button
-from config import SENSORS, MEASURING_TIME, TRANSMISSION_INTERVAL
+from config import SENSORS, MEASURING_TIME
 
 
 class RainSensor:
-    """Counts rain bucket tips over a fixed period and calculates rainfall."""
+    """Counts rain bucket tips asynchronously."""
 
     def __init__(self):
         rain_conf = SENSORS.get("rain", {})
@@ -14,38 +14,30 @@ class RainSensor:
             return
 
         self.pin = rain_conf["pin"]
-        self.bucket_size = rain_conf["bucket_size"]     # mm per tip
-        self.total_time = MEASURING_TIME                # e.g. 300s (5 min)
+        self.bucket_size = rain_conf["bucket_size"]
+        self.total_time = MEASURING_TIME
 
         self.sensor = Button(self.pin)
         self.count = 0
         self.sensor.when_pressed = self._on_click
 
-        print(f"[RainSensor] Initialized on GPIO {self.pin}")
+        print("[RainSensor] Initialized")
 
     def _on_click(self):
-        """Increment counter when the rain gauge tips."""
         self.count += 1
 
-    def measure_interval(self):
-        """Count rain tips during total_time seconds."""
+    async def measure_interval(self):
+        """Non-blocking measurement for total_time."""
         self.count = 0
-        start_time = time.monotonic()
-        while time.monotonic() - start_time < self.total_time:
-            time.sleep(0.1)
-        total_tips = self.count
-        return total_tips
+        start = asyncio.get_event_loop().time()
+        while asyncio.get_event_loop().time() - start < self.total_time:
+            await asyncio.sleep(0.1)  # yield control
+        return self.count
 
-    def total_rainfall(self):
-        """Calculate total rainfall in mm and mm/h equivalent."""
-        total_tips = self.measure_interval()
-        rainfall_mm = total_tips * self.bucket_size
-
+    async def total_rainfall(self):
+        """Return total rainfall in mm asynchronously."""
+        total_tips = await self.measure_interval()
+        rainfall_mm = round(total_tips * self.bucket_size, 2)
         print(f"[RainSensor] Tips={total_tips}, Rain={rainfall_mm:.3f}mm")
+
         return rainfall_mm
-
-
-if __name__ == "__main__":
-    sensor = RainSensor()
-    result = sensor.total_rainfall()
-    print(result)

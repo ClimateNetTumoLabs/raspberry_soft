@@ -5,6 +5,7 @@ from sensors.weather_sensors.rain_sensor import RainSensor
 from sensors.weather_sensors.wind_direction import WindDirectionSensor
 from sensors.weather_sensors.wind_speed import WindSpeedSensor
 import sys
+import threading
 
 def main():
     """Main entry point for reading all sensors and printing averaged results."""
@@ -25,33 +26,32 @@ def main():
 
     print("\nCollecting data...\n")
 
-    # Measure all sensors
-    try:
-        ltr_data = light_sensor.average_values()
-        bme_data = tph_sensor.average_values()
-        sps_data = air_pollution_sensor.average_values()
-        wind_data = wind_speed.average_speed()
-        direction_data = wind_direction.average_direction()
-        rain_data = rain_sensor.total_rainfall()
-    except Exception as e:
-        print(f"[Measurement Error] {e}")
-        sys.exit(1)
+    threads = []
+    results = {}
 
-    # Combine results
-    all_data = {
-        **bme_data,
-        **ltr_data,
-        **sps_data,
-        **wind_data,
-        **rain_data,
-        **direction_data
-    }
+    def run_sensor(name, func):
+        results[name] = func()
 
-    print("\n=== Averaged Sensor Results ===")
-    for key, value in all_data.items():
-        print(f"{key}: {value}")
+    # Create threads
+    threads.append(threading.Thread(target=run_sensor, args=("bme", tph_sensor.average_values)))
+    threads.append(threading.Thread(target=run_sensor, args=("ltr", light_sensor.average_values)))
+    threads.append(threading.Thread(target=run_sensor, args=("sps", air_pollution_sensor.average_values)))
+    threads.append(threading.Thread(target=run_sensor, args=("wind", wind_speed.average_speed)))
+    threads.append(threading.Thread(target=run_sensor, args=("direction", wind_direction.average_direction)))
+    threads.append(threading.Thread(target=run_sensor, args=("rain", rain_sensor.total_rainfall)))
 
-    print("\nData collection complete.")
+    # Start all
+    for t in threads:
+        t.start()
+
+    # Wait for all to finish
+    for t in threads:
+        t.join()
+
+    # Merge results
+    all_data = {}
+    for data in results.values():
+        all_data.update(data)
 
 
 if __name__ == "__main__":

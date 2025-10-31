@@ -47,7 +47,7 @@ SENSORS = {
     },
     "wind_speed": {
         "working": True,
-        "gpio_pin": 5,
+        "pin": 5,
         "speed_coefficient": 2.4,
         "interval_sec": 30,
     },
