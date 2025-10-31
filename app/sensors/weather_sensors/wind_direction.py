@@ -9,8 +9,9 @@ class WindDirectionSensor:
 
     def __init__(self):
         wind_conf = SENSORS.get("wind_direction", {})
-        if not wind_conf.get("working", False):
+        if wind_conf.get("working", False):
             print("[Wind direction] Skipped (working=False)")
+            self.sensor = None
             return
 
         self.adc = MCP3008(channel=wind_conf["adc_channel"])

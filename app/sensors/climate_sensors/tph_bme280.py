@@ -11,8 +11,9 @@ class BME280Sensor:
 
     def __init__(self):
         bme_conf = SENSORS.get("tph_sensor", {})
-        if not bme_conf.get("working", False):
+        if bme_conf.get("working", False):
             print("[BME280] Skipped (working=False)")
+            self.sensor = None
             return
 
         self.port = bme_conf["port"]

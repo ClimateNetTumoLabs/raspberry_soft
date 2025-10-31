@@ -7,9 +7,10 @@ class RainSensor:
     """Counts rain bucket tips over a fixed period and calculates rainfall."""
 
     def __init__(self):
-        rain_conf = SENSORS.get("rain_sensor", {})
-        if not rain_conf.get("working", False):
+        rain_conf = SENSORS.get("rain", {})
+        if rain_conf.get("working", False):
             print("[Rain sensor] Skipped (working=False)")
+            self.sensor = None
             return
 
         self.pin = rain_conf.get["pin"]

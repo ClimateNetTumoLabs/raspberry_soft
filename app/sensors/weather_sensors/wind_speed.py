@@ -7,8 +7,9 @@ class WindSpeedSensor:
 
     def __init__(self):
         wind_conf = SENSORS.get("wind_speed", {})
-        if not wind_conf.get("working", False):
+        if wind_conf.get("working", False):
             print("[Wind speed] Skipped (working=False)")
+            self.sensor = None
             return
 
         pin = wind_conf.get["gpio_pin"]

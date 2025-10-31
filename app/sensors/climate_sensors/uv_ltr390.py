@@ -11,21 +11,19 @@ class LTR390Sensor:
     """LTR390 UV and ambient light sensor with averaging and config integration."""
 
     def __init__(self):
-        uv_conf = SENSORS.get("uv_sensor", {})
-        if not uv_conf.get("working", False):
+        uv_conf = SENSORS.get("light_sensor", {})
+        if uv_conf.get("working", False):
             print("[LTR390] Skipped (working=False)")
+            self.sensor = None
             return
 
-        scl_pin = uv_conf["scl"]
-        sda_pin = uv_conf["sda"]
-        address = uv_conf["address"]
+        self.interval_sec = READING_TIME
+        self.total_time = MEASURING_TIME
 
-        self.interval_sec = READING_TIME  # e.g., 30s
-        self.total_time = MEASURING_TIME  # 5 min
-        i2c = busio.I2C(scl_pin, sda_pin)
-        self.sensor = LTR390(i2c, address=address)
-
-        print(f"[LTR390] Initialized on I2C {hex(address)} (SCL={uv_conf['scl']}, SDA={uv_conf['sda']})")
+        # Use default I2C pins
+        i2c = busio.I2C(board.SCL, board.SDA)
+        self.sensor = LTR390(i2c)
+        print("[LTR390] Initialized successfully on default I2C bus")
 
     def _safe_mean(self, values):
         clean = [v for v in values if v is not None and not math.isnan(v)]

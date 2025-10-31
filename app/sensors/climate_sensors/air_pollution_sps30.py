@@ -9,17 +9,18 @@ class SPS30Sensor:
     """SPS30 particulate matter sensor with interval measurements and averaging."""
 
     def __init__(self):
-        sps_conf = SENSORS.get("air_pollution_PMS5003", {})
-        if not sps_conf.get("working", False):
+        sps_conf = SENSORS.get("air_pollution_sps30", {})
+        if sps_conf.get("working", False):
             print("[SPS30] Skipped (working=False)")
+            self.sensor = None
             return
 
-        self.i2c_bus = sps_conf["i2c_bus"]
+        self.port = sps_conf["port"]
         self.interval_sec = READING_TIME      # e.g. 30s
         self.total_time = MEASURING_TIME      # 5 min average
 
-        self.sps = SPS30(self.i2c_bus)
-        print(f"[SPS30] Initialized on I2C bus {self.i2c_bus}")
+        self.sps = SPS30(self.port)
+        print(f"[SPS30] Initialized on I2C bus {self.port}")
 
     def _safe_mean(self, values):
         clean = [v for v in values if v is not None and not math.isnan(v)]
