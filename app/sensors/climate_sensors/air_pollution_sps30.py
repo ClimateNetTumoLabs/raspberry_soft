@@ -4,8 +4,9 @@ import statistics
 from sps30 import SPS30
 from config import SENSORS, READING_TIME, MEASURING_TIME
 
+
 class SPS30Sensor:
-    """SPS30 sensor with async warmup and averaging."""
+    """SPS30 sensor with async warmup and precise interval-based averaging."""
 
     def __init__(self):
         sps_conf = SENSORS.get("air_pollution_sps30", {})
@@ -44,24 +45,26 @@ class SPS30Sensor:
 
         self.sps.start_measurement()
         print(f"[SPS30] Warming up for {self.warmup_time}s")
-        await asyncio.sleep(self.warmup_time)  # non-blocking warmup
+        await asyncio.sleep(self.warmup_time)
 
         pm1_vals, pm25_vals, pm10_vals = [], [], []
         start_time = asyncio.get_event_loop().time()
+        end_time = start_time + self.total_time
 
-        while asyncio.get_event_loop().time() - start_time < self.total_time:
+        # Wait first interval before the first measurement
+        while asyncio.get_event_loop().time() < end_time:
+            await asyncio.sleep(self.interval_sec)
             pm1, pm25, pm10 = await self.measure_interval()
             if pm1 is not None:
                 pm1_vals.append(pm1)
                 pm25_vals.append(pm25)
                 pm10_vals.append(pm10)
-            await asyncio.sleep(self.interval_sec)
 
         avg_pm1 = round(self._safe_mean(pm1_vals))
         avg_pm25 = round(self._safe_mean(pm25_vals))
         avg_pm10 = round(self._safe_mean(pm10_vals))
 
         self.sps.stop_measurement()
-
         print(f"[SPS30] Avg PM1={avg_pm1}, PM2.5={avg_pm25}, PM10={avg_pm10}")
+
         return {"pm1": avg_pm1, "pm2_5": avg_pm25, "pm10": avg_pm10}
