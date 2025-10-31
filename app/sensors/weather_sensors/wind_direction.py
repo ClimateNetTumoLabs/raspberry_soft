@@ -9,7 +9,7 @@ class WindDirectionSensor:
 
     def __init__(self):
         wind_conf = SENSORS.get("wind_direction", {})
-        if wind_conf.get("working", False):
+        if not wind_conf.get("working", False):
             print("[Wind direction] Skipped (working=False)")
             self.sensor = None
             return

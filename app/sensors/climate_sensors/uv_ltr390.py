@@ -12,7 +12,7 @@ class LTR390Sensor:
 
     def __init__(self):
         uv_conf = SENSORS.get("light_sensor", {})
-        if uv_conf.get("working", False):
+        if not uv_conf.get("working", False):
             print("[LTR390] Skipped (working=False)")
             self.sensor = None
             return

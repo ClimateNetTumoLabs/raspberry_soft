@@ -10,7 +10,7 @@ class SPS30Sensor:
 
     def __init__(self):
         sps_conf = SENSORS.get("air_pollution_sps30", {})
-        if sps_conf.get("working", False):
+        if not sps_conf.get("working", False):
             print("[SPS30] Skipped (working=False)")
             self.sensor = None
             return

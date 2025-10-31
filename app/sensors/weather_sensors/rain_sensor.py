@@ -8,7 +8,7 @@ class RainSensor:
 
     def __init__(self):
         rain_conf = SENSORS.get("rain", {})
-        if rain_conf.get("working", False):
+        if not rain_conf.get("working", False):
             print("[Rain sensor] Skipped (working=False)")
             self.sensor = None
             return
