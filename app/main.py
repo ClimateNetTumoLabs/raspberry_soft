@@ -35,12 +35,12 @@ async def main():
 
     # Merge results
     all_data = {
-        "tph": results[0],
-        "light": results[1],
-        "air_pollution": results[2],
-        "wind_speed": results[3],
-        "wind_direction": results[4],  # only compass direction string
-        "rain_mm": results[5]
+        "[BME280]": results[0],
+        "[LTR390]": results[1],
+        "[SPS30]": results[2],
+        "[Wind Speed]": results[3],
+        "[Wind Direction]": results[4],  # only compass direction string
+        "[Rain]": results[5]
     }
 
     end_time = time.strftime("%Y-%m-%d %H:%M:%S")

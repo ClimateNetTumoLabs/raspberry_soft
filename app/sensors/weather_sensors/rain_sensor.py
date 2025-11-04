@@ -38,6 +38,6 @@ class RainSensor:
         """Return total rainfall in mm asynchronously."""
         total_tips = await self.measure_interval()
         rainfall_mm = round(total_tips * self.bucket_size, 2)
-        print(f"[RainSensor] Tips={total_tips}, Rain={rainfall_mm:.3f}mm")
+        #print(f"[RainSensor] Tips={total_tips}, Rain={rainfall_mm:.3f}mm")
 
         return rainfall_mm

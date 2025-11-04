@@ -50,6 +50,6 @@ class BME280Sensor:
         avg_press = round(self._safe_mean(presses), 2)
         self.bus.close()
 
-        print(f"[BME280] Avg temp={avg_temp}, hum={avg_hum}, pres={avg_press}")
+        #print(f"[BME280] Avg temp={avg_temp}, hum={avg_hum}, pres={avg_press}")
 
         return {"temperature": avg_temp, "humidity": avg_hum, "pressure": avg_press}

@@ -45,5 +45,5 @@ class LTR390Sensor:
         uv = round(self._safe_mean(uv_vals))
         lux = round(self._safe_mean(light_vals))
 
-        print(f'[LTR390] uv = {uv}, lux = {lux}')
+        #print(f'[LTR390] uv = {uv}, lux = {lux}')
         return {"uv": uv, "lux": lux}

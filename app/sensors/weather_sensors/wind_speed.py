@@ -37,5 +37,5 @@ class WindSpeedSensor:
             readings.append(val)
         avg_speed = round(sum(readings)/len(readings), 1) if readings else 0
 
-        print(f'[Wind Speed] Avg wind speed = {avg_speed}')
+        #print(f'[Wind Speed] Avg wind speed = {avg_speed}')
         return avg_speed

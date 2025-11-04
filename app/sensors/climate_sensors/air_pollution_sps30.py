@@ -3,6 +3,11 @@ import math
 import statistics
 from sps30 import SPS30
 from config import SENSORS, READING_TIME, MEASURING_TIME
+import warnings
+import gpiozero.devices
+
+# Monkey-patch the warn function before gpiozero prints anything
+warnings.filterwarnings("ignore", message="Falling back from lgpio", module="gpiozero.devices")
 
 
 class SPS30Sensor:
@@ -36,7 +41,7 @@ class SPS30Sensor:
         return None, None, None
 
     async def average_values(self):
-        """Measure for total_time with async warmup and averaging."""
+        """Measure for total_time with async warmup counted inside measuring time."""
         if self.sps.read_article_code() == self.sps.ARTICLE_CODE_ERROR:
             raise RuntimeError("ARTICLE CODE CRC ERROR")
 
@@ -45,26 +50,30 @@ class SPS30Sensor:
 
         self.sps.start_measurement()
         print(f"[SPS30] Warming up for {self.warmup_time}s")
-        await asyncio.sleep(self.warmup_time)
 
         pm1_vals, pm25_vals, pm10_vals = [], [], []
         start_time = asyncio.get_event_loop().time()
         end_time = start_time + self.total_time
 
-        # Wait first interval before the first measurement
+        # Warmup phase (still within total measuring window)
+        warmup_end = start_time + self.warmup_time
+        while asyncio.get_event_loop().time() < warmup_end:
+            await asyncio.sleep(0.5)  # small non-blocking pause
+
+        # Measure for the remaining time
         while asyncio.get_event_loop().time() < end_time:
-            await asyncio.sleep(self.interval_sec)
             pm1, pm25, pm10 = await self.measure_interval()
             if pm1 is not None:
                 pm1_vals.append(pm1)
                 pm25_vals.append(pm25)
                 pm10_vals.append(pm10)
+            await asyncio.sleep(self.interval_sec)
 
         avg_pm1 = round(self._safe_mean(pm1_vals))
         avg_pm25 = round(self._safe_mean(pm25_vals))
         avg_pm10 = round(self._safe_mean(pm10_vals))
 
         self.sps.stop_measurement()
-        print(f"[SPS30] Avg PM1={avg_pm1}, PM2.5={avg_pm25}, PM10={avg_pm10}")
+        #print(f"[SPS30] Avg PM1={avg_pm1}, PM2.5={avg_pm25}, PM10={avg_pm10}")
 
         return {"pm1": avg_pm1, "pm2_5": avg_pm25, "pm10": avg_pm10}
