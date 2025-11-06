@@ -1,7 +1,9 @@
 adafruit-blinka==8.64.0
 adafruit-circuitpython-busdevice==5.2.13
 adafruit-circuitpython-connectionmanager==3.1.5
+adafruit-circuitpython-ds3231==2.4.26
 adafruit-circuitpython-ltr390==1.1.16
+adafruit-circuitpython-mcp3xxx==1.4.22
 adafruit-circuitpython-register==1.11.0
 adafruit-circuitpython-requests==4.1.13
 adafruit-circuitpython-typing==1.12.2
@@ -13,7 +15,9 @@ dotenv==0.9.9
 gpiozero==2.0.1
 importlib-metadata==4.13.0
 importlib-resources==5.13.0
+intelhex==2.3.0
 lgpio==0.2.2.0
+logger-config==0.3
 paho-mqtt==2.1.0
 pyftdi==0.57.1
 pyserial==3.5

@@ -39,7 +39,7 @@ class BME280Sensor:
 
         while asyncio.get_event_loop().time() - start_time < self.total_time:
             t, h, p = await self.measure_interval()
-            if t is not None:
+            if t or h or p is not None:
                 temps.append(t)
                 hums.append(h)
                 presses.append(p)
@@ -48,8 +48,8 @@ class BME280Sensor:
         avg_temp = round(self._safe_mean(temps), 2)
         avg_hum = round(self._safe_mean(hums), 2)
         avg_press = round(self._safe_mean(presses), 2)
-        self.bus.close()
 
         #print(f"[BME280] Avg temp={avg_temp}, hum={avg_hum}, pres={avg_press}")
 
         return {"temperature": avg_temp, "humidity": avg_hum, "pressure": avg_press}
+
