@@ -25,6 +25,9 @@ async def measure_and_send(edge_manager, sensors):
 
     measurement_time = edge_manager.get_rtc_time()
 
+    speed = results[3]
+    direction = results[4] if speed > 0 else None
+
     payload = {
         "time": measurement_time.strftime("%Y-%m-%d %H:%M:%S"),
         "uv": results[1]["uv"],
@@ -35,9 +38,9 @@ async def measure_and_send(edge_manager, sensors):
         "pm1": results[2]["pm1"],
         "pm2_5": results[2]["pm2_5"],
         "pm10": results[2]["pm10"],
-        "speed": results[3],
+        "speed": speed,
         "rain": results[5],
-        "direction": results[4]
+        "direction": direction
     }
 
     data_to_send = {
@@ -51,7 +54,6 @@ async def measure_and_send(edge_manager, sensors):
 
 
 async def main_loop():
-    """Main loop: handle checks, measure, and transmit at aligned intervals."""
     edge_manager = EdgeDataManager()
 
     # Initialize sensors once
