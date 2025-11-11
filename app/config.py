@@ -19,18 +19,18 @@ MEASURING_TIME = 300
 READING_TIME = 30
 
 SENSORS = {
-    "light_sensor": {
+    "ltr390": {
         "working": True,
         "scl": "SCL",
         "sda": "SDA",
         "address": 0x53
     },
-    "tph_sensor": {
+    "bme280": {
         "working": True,
         "port": 1,
         "address": 0x76
     },
-    "air_pollution_PMS5003": {
+    "pms5003": {
         "working": True,
         "address": "/dev/ttyAMA0",
         "baudrate": 9600,
@@ -39,19 +39,23 @@ SENSORS = {
         "pin_reset": 27,
         "pin_reset_working": False
     },
-    "air_pollution_sps30": {
+    "sps30_i2c": {
         "working": True,
         "port": 1,
         "warmup": 30,
         "autoclean": True
     },
-    "wind_speed": {
+    "sps_uart": {
+        "working": False,
+        "address": "/dev/ttyAMA0",
+    },
+    "speed": {
         "working": True,
         "pin": 5,
         "speed_coefficient": 2.4,
         "interval_sec": 30,
     },
-    "wind_direction": {
+    "direction": {
         "working": True,
         "adc_channel": 0,
         "adc_max": 1024,
