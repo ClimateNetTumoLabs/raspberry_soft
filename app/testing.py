@@ -1,67 +1,55 @@
+import os
 from sensors.bme280 import BME280Sensor
 from sensors.ltr390 import LTR390Sensor
 from sensors.sps30 import SPS30Sensor
 from sensors.rain import RainSensor
 from sensors.wind import WindSpeedSensor, WindDirectionSensor
-from prettytable import PrettyTable
 from rtc import RTCControl
+import gpiozero.devices
 import warnings
-import os
+from prettytable import PrettyTable
 
-# Suppress gpiozero fallback warnings
+# Ignore gpiozero warnings
 warnings.filterwarnings("ignore", message="Falling back from lgpio", module="gpiozero.devices")
 
+def get_status(sensor):
+    """Return 'Connected' if sensor is connected, else 'Disconnected'."""
+    return "Connected" if getattr(sensor, "connected", True) or getattr(sensor, "enabled", True) else "Disconnected"
 
-def clear_screen():
-    os.system("cls" if os.name == "nt" else "clear")
-
-
-def read_all_sensors(sensors):
-    table = PrettyTable()
-    table.field_names = ["Time", "Sensor", "Connected", "Data"]
-
-    now = RTCControl.get_time()
-
-    for name, sensor_class in sensors.items():
-        connected = False
-        data = None
-
-        try:
-            sensor = sensor_class()
-            # Check connection flag
-            if hasattr(sensor, "connected"):
-                connected = bool(sensor.connected)
-            else:
-                connected = True  # assume True if not defined
-
-            data = sensor.read_data()
-        except Exception as e:
-            data = f"Error: {e}"
-            connected = False
-
-        table.add_row([now, name, connected, data])
-
-    return table
-
+def get_data(name, sensor):
+    """Safely read sensor data, return 'Error' if something goes wrong."""
+    try:
+        if isinstance(sensor, RTCControl) or name == "RTC":
+            return sensor.get_time()
+        else:
+            return sensor.read_data()
+    except Exception as e:
+        return f"Error: {e}"
 
 if __name__ == "__main__":
+    # Initialize sensors
+    os.system("clear")
     sensors = {
-        "BME280 (Temp/Pressure/Humidity)": BME280Sensor,
-        "LTR390 (UV/Lux)": LTR390Sensor,
-        "SPS30 (Air Quality)": SPS30Sensor,
-        "Rain Sensor": RainSensor,
-        "Wind Speed": WindSpeedSensor,
-        "Wind Direction": WindDirectionSensor,
+        "RTC": RTCControl(),
+        "BME280": BME280Sensor(),
+        "LTR390": LTR390Sensor(),
+        "Rain": RainSensor(),
+        "Wind Speed": WindSpeedSensor(),
+        "Wind Direction": WindDirectionSensor(),
+        "SPS30": SPS30Sensor()
     }
 
-    while True:
-        clear_screen()
-        print("=== Sensor Testing Dashboard ===\n")
-        table = read_all_sensors(sensors)
-        print(table)
-        print("\nPress [Enter] to refresh or type 'q' to quit.")
-        user_input = input("> ").strip().lower()
-        if user_input == "q":
-            sensors["SPS30 (Air Quality)"].stop()
-            print("Exiting...")
-            break
+    # Create table
+    table = PrettyTable()
+    table.field_names = ["Sensor", "Status", "Data"]
+
+    for name, sensor in sensors.items():
+        status = get_status(sensor)
+        data = get_data(name, sensor)
+        table.add_row([name, status, data])
+
+    print(table)
+
+    # Stop SPS30 if needed
+    if hasattr(sensors["SPS30"], "stop"):
+        sensors["SPS30"].stop()

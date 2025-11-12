@@ -1,6 +1,6 @@
-import time
 from gpiozero import Button, MCP3008
 from config import SENSORS
+import time
 
 class WindSpeedSensor:
     """Wind Speed Sensor — counts pulses from an anemometer and converts to speed."""
@@ -10,7 +10,7 @@ class WindSpeedSensor:
         self.enabled = conf["working"]
         try:
             if self.enabled:
-                self.sensor = Button(conf.get("pin", 5))
+                self.sensor = Button(conf["pin"])
                 self.sensor.when_pressed = self._increment
                 self.count = 0
                 self.last_time = time.time()
@@ -19,7 +19,6 @@ class WindSpeedSensor:
                 print("[Wind speed] Disabled in config")
         except Exception as e:
             print(f"[Wind speed] Initialization failed: {e}")
-            self.connected = False
 
     def _increment(self):
         self.count += 1
@@ -31,10 +30,17 @@ class WindSpeedSensor:
         try:
             now = time.time()
             elapsed = now - self.last_time
-            speed = (self.count / elapsed) * 2.4  # example calibration factor
+            if elapsed == 0:
+                return 0.0
+
+            # Capture count atomically
+            current_count = self.count
             self.count = 0
-            speed_m_s = speed / 3.6 # km/h to m/s
             self.last_time = now
+
+            # Calculate speed (example calibration factor)
+            speed_kmh = (current_count / elapsed) * 2.4  # km/h
+            speed_m_s = speed_kmh / 3.6  # convert to m/s
             return round(speed_m_s, 2)
         except Exception as e:
             print(f"[Wind speed] Read failed: {e}")

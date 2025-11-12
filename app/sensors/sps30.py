@@ -15,12 +15,11 @@ class SPS30Sensor:
                 self.pm10 = None
                 self.port = conf["port"]
                 self.warmup_time = conf["warmup"]
-                print("[SPS30] Initialized successfully")
+                print("[SPS30] Initialized")
             else:
                 print("[SPS30] Skipped (disabled in config)")
         except Exception as e:
             print(f"[SPS30] Initialization failed: {e}")
-            self.connected = False
 
         try:
             self.sps = SPS30(self.port)

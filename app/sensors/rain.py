@@ -36,7 +36,3 @@ class RainSensor:
         except Exception as e:
             print(f"[Rain] Get/reset failed: {e}")
             return None
-
-if __name__=="__main__":
-    rain = RainSensor()
-    print(rain.read_data())

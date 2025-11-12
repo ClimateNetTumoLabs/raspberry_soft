@@ -13,12 +13,11 @@ class BME280Sensor:
                 self.address = conf["address"]
                 self.calibration = bme280.load_calibration_params(self.bus, self.address)
                 self.calibration_loaded = True
-                print("[BME280] Initialized successfully")
+                print("[BME280] Initialized")
             else:
                 print("[BME280] Disabled in config")
         except Exception as e:
             print(f"[BME280] Initialization failed: {e}")
-            self.connected = False
 
     def read_data(self):
         if not self.enabled or not self.calibration_loaded:

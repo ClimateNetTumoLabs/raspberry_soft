@@ -10,7 +10,7 @@ class LTR390Sensor:
             if self.enabled:
                 i2c = busio.I2C(board.SCL, board.SDA)
                 self.sensor = LTR390(i2c)
-                print("[LTR390] Initialized successfully")
+                print("[LTR390] Initialized")
             else:
                 print("[LTR390] Disabled in config")
         except Exception as e:
