@@ -16,7 +16,7 @@ class RainSensor:
                 print("[Rain] Disabled in config")
         except Exception as e:
             print(f"[Rain] Initialization failed: {e}")
-            self.enabled = False
+            self.connected = False
 
         self.count = 0
         self.last_time = time.time()

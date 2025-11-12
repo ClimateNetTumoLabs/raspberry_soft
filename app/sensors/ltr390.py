@@ -15,13 +15,13 @@ class LTR390Sensor:
                 print("[LTR390] Disabled in config")
         except Exception as e:
             print(f"[LTR390] Initialization failed: {e}")
-            self.enabled = False
+            self.connected = False
 
     def read_data(self):
         if not self.enabled:
             return {"uv": None, "lux": None}
         try:
-            uv = self.sensor.uv
+            uv = self.sensor.uvi
             lux = self.sensor.lux
             return {"uv": round(uv), "lux": round(lux, 2)}
         except Exception as e:

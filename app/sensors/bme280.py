@@ -18,7 +18,7 @@ class BME280Sensor:
                 print("[BME280] Disabled in config")
         except Exception as e:
             print(f"[BME280] Initialization failed: {e}")
-            self.enabled = False
+            self.connected = False
 
     def read_data(self):
         if not self.enabled or not self.calibration_loaded:

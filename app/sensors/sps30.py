@@ -20,7 +20,7 @@ class SPS30Sensor:
                 print("[SPS30] Skipped (disabled in config)")
         except Exception as e:
             print(f"[SPS30] Initialization failed: {e}")
-            self.enabled = False
+            self.connected = False
 
         try:
             self.sps = SPS30(self.port)
@@ -28,7 +28,7 @@ class SPS30Sensor:
                 raise RuntimeError("ARTICLE CODE CRC ERROR")
 
             self.sps.start_measurement()
-            print(f"[SPS30] Initialized — warming up for {self.warmup_time}s")
+            print(f"[SPS30] Warming up for {self.warmup_time}s")
 
             # Warm-up using non-blocking time tracking
             start = time.time()

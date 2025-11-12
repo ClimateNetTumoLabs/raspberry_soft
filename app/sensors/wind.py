@@ -19,7 +19,7 @@ class WindSpeedSensor:
                 print("[Wind speed] Disabled in config")
         except Exception as e:
             print(f"[Wind speed] Initialization failed: {e}")
-            self.enabled = False
+            self.connected = False
 
     def _increment(self):
         self.count += 1
@@ -33,8 +33,9 @@ class WindSpeedSensor:
             elapsed = now - self.last_time
             speed = (self.count / elapsed) * 2.4  # example calibration factor
             self.count = 0
+            speed_m_s = speed / 3.6 # km/h to m/s
             self.last_time = now
-            return round(speed, 2)
+            return round(speed_m_s, 2)
         except Exception as e:
             print(f"[Wind speed] Read failed: {e}")
             return None
