@@ -10,8 +10,8 @@ class WindSpeedSensor:
         self.enabled = conf["working"]
         try:
             if self.enabled:
-                self.sensor = Button(conf["pin"])
-                self.sensor.when_pressed = self._increment
+                self.speed = Button(conf["pin"])
+                self.speed.when_pressed = self._increment
                 self.count = 0
                 self.last_time = time.time()
                 print("[Wind speed] Initialized")
@@ -25,14 +25,11 @@ class WindSpeedSensor:
 
     def read_data(self):
         """Return wind speed in m/s (None if disabled or error)."""
-        if not self.sensor:
-            return None
+        if not self.speed or not self.enabled:
+            return {"speed": None}
         try:
             now = time.time()
             elapsed = now - self.last_time
-            if elapsed == 0:
-                return 0.0
-
             # Capture count atomically
             current_count = self.count
             self.count = 0
@@ -44,7 +41,7 @@ class WindSpeedSensor:
             return round(speed_m_s, 2)
         except Exception as e:
             print(f"[Wind speed] Read failed: {e}")
-            return None
+            return {"speed": None}
 
 
 # ------------------------------
@@ -84,10 +81,10 @@ class WindDirectionSensor:
         ix = int((angle + 11.25) // 22.5) % 16
         return directions[ix]
 
-    def read_data(self) -> str:
+    def read_data(self):
         """Take one wind direction reading and return compass direction."""
         if not self.adc:
-            return None
+            return {"direction": None}
 
         try:
             voltage = round(self.adc.value * self.vref, 2)
