@@ -57,7 +57,7 @@ class AirQualitySensor:
 
         try:
             self.sensor.start_measurement()
-            sleep(5)  # warm-up time
+            sleep(30)  # warm-up time
         except Exception as e:
             logging.error(f"Error occurred during starting SPS30: {e}", exc_info=True)
 
@@ -70,6 +70,7 @@ class AirQualitySensor:
 
         try:
             self.sensor.stop_measurement()
+            self.sensor.start_fan_cleaning()
         except Exception as e:
             logging.error(f"Error occurred during stopping SPS30: {e}", exc_info=True)
 
@@ -104,4 +105,3 @@ class AirQualitySensor:
             logging.error(f"Unhandled exception while reading SPS30: {e}", exc_info=True)
 
         return data
-
