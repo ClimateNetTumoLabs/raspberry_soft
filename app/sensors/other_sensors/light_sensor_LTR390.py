@@ -64,13 +64,22 @@ class LightSensor:
                 return round(uvs[idx], 2)
             else:
                 logging.warning("Current hour not found in UV API response.")
+
+        except requests.exceptions.ConnectionError:
+            logging.warning("No internet or DNS failure while fetching UV index — using sensor fallback.")
+        except requests.exceptions.Timeout:
+            logging.warning("Open-Meteo API request timed out — using sensor fallback.")
+        except requests.exceptions.RequestException as e:
+            logging.error(f"Request error while fetching UV index from Open-Meteo: {e}")
         except Exception as e:
-            logging.error(f"Error fetching UV index from Open-Meteo: {e}", exc_info=True)
+            logging.error(f"Unexpected error fetching UV index: {e}", exc_info=True)
+
         return None
+
 
     def read_data(self) -> dict:
         """
-        Reads lux from the LTR390 sensor and UV index from Open-Meteo.
+        Reads lux and UV index (from API or sensor) from the LTR390.
 
         Returns:
             dict: Dictionary containing light data (uv and lux).
@@ -83,6 +92,7 @@ class LightSensor:
                     return data
 
             try:
+                # Read lux
                 lux = self.sensor.lux
                 data["lux"] = round(lux)
             except AttributeError as e:
@@ -92,8 +102,15 @@ class LightSensor:
             except Exception as e:
                 logging.error(f"Unhandled exception while reading LTR390: {e}", exc_info=True)
 
-        # Always try to fetch UV index from API
-        data["uv"] = self.fetch_uv_from_api()
+        # Try to fetch UV from API
+        uv_from_api = self.fetch_uv_from_api()
 
-        return data
-
+        if uv_from_api is not None:
+            data["uv"] = uv_from_api
+        elif self.sensor is not None:
+            # Fallback: read UV directly from sensor if available
+            try:
+                data["uv"] = round(self.sensor.uvi)
+                logging.info("Fetched UV from LTR390 sensor as fallback.")
+            except Exception as e:
+                logging.error(f"Failed to read UV from LTR390 sensor: {e}", exc_info=True)

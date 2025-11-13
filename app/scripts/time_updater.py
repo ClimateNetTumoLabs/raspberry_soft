@@ -2,7 +2,6 @@ import socket
 import subprocess
 import time
 from datetime import datetime
-
 import ntplib
 import pytz
 from logger_config import logging
