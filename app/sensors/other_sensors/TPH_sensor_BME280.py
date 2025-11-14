@@ -76,7 +76,7 @@ class TPHSensor:
                 logging.error(f"Unhandled exception while reading BME280: {e}", exc_info=True)
             else:
                 data["temperature"] = round(result.temperature, 2)
-                data["pressure"] = round(result.pressure * 0.750061, 2)
+                data["pressure"] = round(result.pressure, 2)
                 data["humidity"] = round(result.humidity, 2)
 
         return data
