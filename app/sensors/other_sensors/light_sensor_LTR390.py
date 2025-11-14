@@ -28,15 +28,16 @@ class LightSensor:
             self.setup_sensor()
 
     def setup_sensor(self) -> bool:
+        """Initialize the LTR390 light sensor."""
         for i in range(3):
             try:
                 self.i2c = busio.I2C(board.SCL, board.SDA)
                 self.sensor = adafruit_ltr390.LTR390(self.i2c)
-                self.sensor.resolution = adafruit_ltr390.LTR390.RESOLUTION_20BIT
-                self.sensor.gain = adafruit_ltr390.LTR390.GAIN_18X
+                #self.sensor.resolution = adafruit_ltr390.LTR390.RESOLUTION_20BIT
+                #self.sensor.gain = adafruit_ltr390.LTR390.GAIN_18X
                 break
             except Exception as e:
-                logging.error(f"Error occurred during creating object for LTR390 sensor: {e}")
+                logging.error(f"Error occurred while creating LTR390 object: {e}")
 
         return self.sensor is not None
 
@@ -61,14 +62,14 @@ class LightSensor:
 
             if now in times:
                 idx = times.index(now)
-                return round(uvs[idx], 2)
+                return round(uvs[idx])
             else:
                 logging.warning("Current hour not found in UV API response.")
 
         except requests.exceptions.ConnectionError:
-            logging.warning("No internet or DNS failure while fetching UV index — using sensor fallback.")
+            logging.warning("No internet or DNS failure while fetching UV index — using fallback.")
         except requests.exceptions.Timeout:
-            logging.warning("Open-Meteo API request timed out — using sensor fallback.")
+            logging.warning("Open-Meteo API request timed out — using fallback.")
         except requests.exceptions.RequestException as e:
             logging.error(f"Request error while fetching UV index from Open-Meteo: {e}")
         except Exception as e:
@@ -76,10 +77,9 @@ class LightSensor:
 
         return None
 
-
     def read_data(self) -> dict:
         """
-        Reads lux and UV index (from API or sensor) from the LTR390.
+        Reads lux from the LTR390 sensor and UV index from the Open-Meteo API.
 
         Returns:
             dict: Dictionary containing light data (uv and lux).
@@ -91,26 +91,19 @@ class LightSensor:
                 if not self.setup_sensor():
                     return data
 
+            # Only read LUX (no UV reading from sensor)
             try:
-                # Read lux
                 lux = self.sensor.lux
                 data["lux"] = round(lux)
-            except AttributeError as e:
-                logging.error(f"Attribute error while reading LTR390: {e}")
-            except OSError as e:
-                logging.error(f"OS error while reading LTR390: {e}")
+            except (AttributeError, OSError) as e:
+                logging.error(f"Error while reading LTR390 lux: {e}")
             except Exception as e:
-                logging.error(f"Unhandled exception while reading LTR390: {e}", exc_info=True)
+                logging.error(f"Unhandled exception while reading LTR390 lux: {e}", exc_info=True)
 
-        # Try to fetch UV from API
+        # Fetch UV only from the API (sensor does not provide UV)
         uv_from_api = self.fetch_uv_from_api()
-
         if uv_from_api is not None:
             data["uv"] = uv_from_api
-        elif self.sensor is not None:
-            # Fallback: read UV directly from sensor if available
-            try:
-                data["uv"] = round(self.sensor.uvi)
-                logging.info("Fetched UV from LTR390 sensor as fallback.")
-            except Exception as e:
-                logging.error(f"Failed to read UV from LTR390 sensor: {e}", exc_info=True)
+        else:
+            data["uv"] = None
+        return data
