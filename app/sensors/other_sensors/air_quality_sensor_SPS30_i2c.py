@@ -7,17 +7,9 @@ from logger_config import logging
 class AirQualitySensor:
     """
     Interface for interacting with the SPS30 air quality sensor (I2C version).
-
-    Attributes:
-        sensor (SPS30 or None): Instance of the SPS30 sensor.
-        sensor_info (dict): Configuration information for the sensor.
-        working (bool): Indicates if the sensor is working.
     """
 
     def __init__(self) -> None:
-        """
-        Initializes the AirQualitySensor instance.
-        """
         self.sensor = None
         self.sensor_info = SENSORS["air_quality_sensor"]
         self.working = self.sensor_info["working"]
@@ -28,72 +20,77 @@ class AirQualitySensor:
     def setup_sensor(self) -> bool:
         """
         Sets up the SPS30 sensor instance.
-
-        Returns:
-            bool: True if sensor setup was successful, False otherwise.
         """
         try:
-            # Initialize on I2C bus (default: 1)
             bus = self.sensor_info.get("bus", 1)
             self.sensor = SPS30(bus)
 
-            # Verify sensor is responsive
+            # Verify communication
             if self.sensor.read_article_code() == self.sensor.ARTICLE_CODE_ERROR:
                 raise RuntimeError("ARTICLE CODE CRC ERROR")
 
-            logging.info("SPS30 sensor initialized successfully.")
+            logging.info("SPS30 (I2C) initialized successfully.")
             return True
+
         except Exception as e:
-            logging.error(f"Error occurred during SPS30 setup: {e}", exc_info=True)
+            logging.error(f"Error occurred during SPS30 I2C setup: {e}", exc_info=True)
             self.sensor = None
             return False
 
+    def enable_auto_cleaning(self, interval_seconds=604800):
+        """
+        Enable auto fan cleaning (default = 1 week).
+        """
+        try:
+            self.sensor.set_fan_auto_cleaning_interval(interval_seconds)
+            logging.info(f"SPS30 auto cleaning interval set to {interval_seconds} seconds")
+        except Exception as e:
+            logging.error(f"Failed to set auto cleaning interval: {e}")
+
     def start(self) -> None:
         """
-        Starts the SPS30 sensor measurement.
+        Starts measurement and enables auto cleaning.
         """
         if not self.sensor:
             return
 
         try:
+            # Set weekly auto-cleaning first
+            self.enable_auto_cleaning()
+
             self.sensor.start_measurement()
-            sleep(30)  # warm-up time
+            sleep(30)  # warm-up
         except Exception as e:
-            logging.error(f"Error occurred during starting SPS30: {e}", exc_info=True)
+            logging.error(f"Error during SPS30 start: {e}", exc_info=True)
 
     def stop(self) -> None:
         """
-        Stops the SPS30 sensor.
+        Stops the sensor without manual fan cleaning
+        (auto-cleaning handles this weekly).
         """
         if not self.sensor:
             return
 
         try:
             self.sensor.stop_measurement()
-            self.sensor.start_fan_cleaning()
+            # No manual fan cleaning here — reduces fan life!
         except Exception as e:
-            logging.error(f"Error occurred during stopping SPS30: {e}", exc_info=True)
+            logging.error(f"Error stopping SPS30: {e}", exc_info=True)
 
     def read_data(self) -> dict:
         """
-        Reads air quality data from the SPS30 sensor.
-
-        Returns:
-            dict: Dictionary containing air quality data (pm1, pm2_5, pm10).
+        Reads PM1.0, PM2.5, PM10 values.
         """
         data = {"pm1": None, "pm2_5": None, "pm10": None}
 
-        if not self.working or self.sensor is None:
+        if not self.working or not self.sensor:
             return data
 
         try:
-            # Wait until data is ready
+            # Wait until data is available
             while not self.sensor.read_data_ready_flag():
                 sleep(0.25)
-                if self.sensor.read_data_ready_flag() == self.sensor.DATA_READY_FLAG_ERROR:
-                    raise RuntimeError("DATA READY FLAG CRC ERROR")
 
-            # Fetch measured values
             if self.sensor.read_measured_values() == self.sensor.MEASURED_VALUES_ERROR:
                 raise RuntimeError("MEASURED VALUES CRC ERROR")
 
@@ -102,6 +99,6 @@ class AirQualitySensor:
             data["pm10"] = round(self.sensor.dict_values.get("pm10p0", 0), 2)
 
         except Exception as e:
-            logging.error(f"Unhandled exception while reading SPS30: {e}", exc_info=True)
+            logging.error(f"Error while reading SPS30 I2C data: {e}", exc_info=True)
 
         return data
