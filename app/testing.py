@@ -1,12 +1,12 @@
-import time
 from prettytable import PrettyTable
 from sensors.bme280 import BME280Sensor
 from sensors.ltr390 import LTR390Sensor
 from sensors.sps30 import SPS30Sensor
 from sensors.rain import RainSensor
 from sensors.wind import WindSpeedSensor, WindDirectionSensor
-from rtc import RTCControl
+from utils.rtc import RTCControl
 import warnings
+import os
 
 # Ignore gpiozero warnings
 warnings.filterwarnings("ignore", message="Falling back from lgpio", module="gpiozero.devices")
@@ -36,6 +36,7 @@ def check_sensor(name, sensor):
 
 if __name__ == "__main__":
     # Initialize sensors
+    os.system("clear")
     sensors = {
         "RTC": RTCControl(),
         "BME280": BME280Sensor(),

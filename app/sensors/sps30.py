@@ -13,14 +13,26 @@ class SPS30Sensor:
         conf = SENSORS["sps30"]
         self.warmup_time = conf["warmup"]
 
-        if conf["i2c"]["working"]:
-            self.setup_i2c(conf["i2c"])
+        modes_priority = []
 
-        if conf["uart"]["working"] and self.sensor is None:
-            self.setup_uart(conf["uart"])
+        if conf["i2c"]["working"]:
+            modes_priority = ["i2c", "uart"]
+        elif conf["uart"]["working"]:
+            modes_priority = ["uart", "i2c"]
+        else:
+            # Neither working in config → still try both
+            modes_priority = ["i2c", "uart"]
+
+        # --- Always try both, respecting priority ---
+        for mode in modes_priority:
+            if mode == "i2c" and self.sensor is None:
+                self.setup_i2c(conf["i2c"])
+
+            elif mode == "uart" and self.sensor is None:
+                self.setup_uart(conf["uart"])
 
         if not self.sensor:
-            logging.error("[SPS30] No working mode found")
+            logging.error("[SPS30] No working mode found (I2C or UART)")
             return
 
         self.start()
