@@ -39,15 +39,18 @@ SENSORS = {
         "pin_reset": 27,
         "pin_reset_working": False
     },
-    "sps30_i2c": {
-        "working": True,
-        "port": 1,
+    "sps30": {
         "warmup": 30,
-        "autoclean": True
-    },
-    "sps_uart": {
-        "working": False,
-        "address": "/dev/ttyAMA0",
+        "uart": {
+            "working": True,
+            "address": "/dev/ttyAMA0",
+            "baudrate": 115200,
+            "timeout": 1
+        },
+        "i2c": {
+            "working": True,
+            "port": 1,
+        },
     },
     "speed": {
         "working": True,
