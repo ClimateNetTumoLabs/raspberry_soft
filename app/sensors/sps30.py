@@ -1,8 +1,8 @@
 import time
-from sps30 import SPS30
+from sps30 import SPS30 as SPS30I2C
 from config import SENSORS
 from logger_config import logging
-from .SPS30_lib import SPS30Class
+from .SPS30_lib import SPS30 as SPS30UART
 
 
 class SPS30Sensor:
@@ -28,7 +28,7 @@ class SPS30Sensor:
     def setup_i2c(self, conf):
         try:
             port = conf["port"]
-            sensor = SPS30(port)
+            sensor = SPS30I2C(port)
 
             if sensor.read_article_code() == sensor.ARTICLE_CODE_ERROR:
                 raise RuntimeError("CRC ERROR on I2C")
@@ -45,7 +45,7 @@ class SPS30Sensor:
             address = conf["address"]
             baudrate = conf["baudrate"]
             timeout = conf["timeout"]
-            sensor = SPS30Class(address, baudrate, timeout)
+            sensor = SPS30UART(address, baudrate, timeout)
             sensor.resetDevice()
             self.sensor = sensor
             self.mode = "uart"

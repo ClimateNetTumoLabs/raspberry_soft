@@ -4,7 +4,7 @@ import time
 import sys
 
 
-class SPS30Class:
+class SPS30:
     START_END_BYTE = 0x7E
     ADDRESS = 0x00
     START_MEASUREMENT = 0x00

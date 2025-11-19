@@ -42,7 +42,7 @@ SENSORS = {
     "sps30": {
         "warmup": 30,
         "uart": {
-            "working": True,
+            "working": False,
             "address": "/dev/ttyAMA0",
             "baudrate": 115200,
             "timeout": 1
