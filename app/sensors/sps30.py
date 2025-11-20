@@ -13,37 +13,38 @@ class SPS30Sensor:
         conf = SENSORS["sps30"]
         self.warmup_time = conf["warmup"]
 
-        modes_priority = []
+        # Case 1: BOTH False → skip sensor completely
+        if not conf["i2c"]["working"] and not conf["uart"]["working"]:
+            logging.info("[SPS30] Disabled in config → skipping sensor initialization")
+            return
 
-        if conf["i2c"]["working"]:
+        # Case 2: Determine priority only when at least one is True
+        if conf["i2c"]["working"] and not conf["uart"]["working"]:
             modes_priority = ["i2c", "uart"]
-        elif conf["uart"]["working"]:
+        elif conf["uart"]["working"] and not conf["i2c"]["working"]:
             modes_priority = ["uart", "i2c"]
         else:
-            # Neither working in config → still try both
+            # both True → default priority
             modes_priority = ["i2c", "uart"]
 
-        # --- Always try both, respecting priority ---
+        # Case 3: Always try both in that priority (even if config says False)
         for mode in modes_priority:
-            if mode == "i2c" and self.sensor is None:
+            if mode == "i2c":
                 self.setup_i2c(conf["i2c"])
 
-            elif mode == "uart" and self.sensor is None:
+            elif mode == "uart":
                 self.setup_uart(conf["uart"])
 
         if not self.sensor:
             logging.error("[SPS30] No working mode found (I2C or UART)")
             return
 
-        self.start()
-
     def setup_i2c(self, conf):
         try:
-            port = conf["port"]
-            sensor = SPS30I2C(port)
+            sensor = SPS30I2C(conf["port"])
 
             if sensor.read_article_code() == sensor.ARTICLE_CODE_ERROR:
-                raise RuntimeError("CRC ERROR on I2C")
+                raise RuntimeError("CRC ERROR on I2C read_article_code()")
 
             self.sensor = sensor
             self.mode = "i2c"
@@ -58,7 +59,14 @@ class SPS30Sensor:
             baudrate = conf["baudrate"]
             timeout = conf["timeout"]
             sensor = SPS30UART(address, baudrate, timeout)
+
             sensor.resetDevice()
+
+            test = sensor.readDeviceInfo()
+
+            if not test:
+                raise RuntimeError("UART no response")
+
             self.sensor = sensor
             self.mode = "uart"
             logging.info("[SPS30] Using UART mode")
@@ -75,7 +83,6 @@ class SPS30Sensor:
                 self.sensor.start_measurement()
 
             elif self.mode == "uart":
-                # THIS IS REQUIRED FOR UART MODE
                 self.sensor.startMeasurement()
 
             logging.info(f"[SPS30] Warming up for {self.warmup_time}s")
@@ -84,8 +91,18 @@ class SPS30Sensor:
         except Exception as e:
             logging.error(f"[SPS30] Error during start: {e}", exc_info=True)
 
+    def enable_auto_cleaning(self):
+        """Enable fan auto-cleaning every 7 days (both modes)."""
+        if self.mode == "i2c":
+            self.sensor.set_auto_cleaning_interval(604800)
+        elif self.mode == "uart":
+            self.sensor.setAutoCleaningInterval(604800)
 
     def read_data(self):
+        self.enable_auto_cleaning()
+        self.start()
+
+        """Always return same structure: pm1, pm2_5, pm10"""
         data = {"pm1": None, "pm2_5": None, "pm10": None}
 
         if not self.sensor:
@@ -118,14 +135,14 @@ class SPS30Sensor:
 
         return data
 
-
     def stop(self):
-        if self.sensor:
-            try:
-                if self.mode == "i2c":
-                    self.sensor.stop_measurement()
-                elif self.mode == "uart":
-                    self.sensor.stopMeasurement()
-            except Exception as e:
-                logging.error(f"Couldn't stop [SPS3 {self.mode}]", e)
+        if not self.sensor:
+            return
 
+        try:
+            if self.mode == "i2c":
+                self.sensor.stop_measurement()
+            else:
+                self.sensor.stopMeasurement()
+        except Exception as e:
+            logging.error(f"[SPS30] Couldn't stop SPS30 ({self.mode}): {e}")
