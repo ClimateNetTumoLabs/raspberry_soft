@@ -23,9 +23,8 @@ class LTR390Sensor:
             # self.sensor.gain = adafruit_ltr390.LTR390.GAIN_18X
         except Exception as e:
             logging.error(f"Error occurred while creating LTR390 object: {e}")
-
-        return self.sensor is not None
-
+            self.sensor = None
+            return False
 
     def fetch_uv_from_api(self) -> float or None:
         try:
@@ -66,11 +65,7 @@ class LTR390Sensor:
         """
         data = {"uv": None, "lux": None}
 
-        if self.working:
-            if self.sensor is None:
-                if not self.setup_sensor():
-                    return data
-
+        if self.working and self.sensor:
             try:
                 lux = self.sensor.lux
                 data["lux"] = round(lux)
