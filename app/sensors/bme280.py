@@ -22,15 +22,12 @@ class BME280Sensor:
             self.sensor = True
             logging.info("[BME280] Initialized")
         except Exception as e:
-            logging.error(f"Error occurred during creating object for BME280 sensor: {e}")
+            logging.error(f"[BME280] Error occurred during creating object for BME280 sensor: {e}")
 
     def read_data(self):
         data = {"temperature": None, "pressure": None, "humidity": None}
 
-        if self.working:
-            if not self.sensor:
-                if not self.setup_sensor():
-                    return data
+        if self.working and self.sensor:
             try:
                 result = bme280.sample(bus=self.bus, compensation_params=self.calibration)
             except AttributeError as e:

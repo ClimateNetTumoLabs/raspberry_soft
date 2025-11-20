@@ -22,7 +22,7 @@ class LTR390Sensor:
             # self.sensor.resolution = adafruit_ltr390.LTR390.RESOLUTION_20BIT
             # self.sensor.gain = adafruit_ltr390.LTR390.GAIN_18X
         except Exception as e:
-            logging.error(f"Error occurred while creating LTR390 object: {e}")
+            logging.error(f"[LTR390] Error occurred while creating LTR390 object: {e}")
             self.sensor = None
             return False
 
@@ -70,9 +70,9 @@ class LTR390Sensor:
                 lux = self.sensor.lux
                 data["lux"] = round(lux)
             except (AttributeError, OSError) as e:
-                logging.error(f"Error while reading LTR390 lux: {e}")
+                logging.error(f"[LTR390] Error while reading LTR390 lux: {e}")
             except Exception as e:
-                logging.error(f"Unhandled exception while reading LTR390 lux: {e}", exc_info=True)
+                logging.error(f"[LTR390] Unhandled exception while reading LTR390 lux: {e}", exc_info=True)
 
         uv_from_api = self.fetch_uv_from_api()
         if uv_from_api is not None:
