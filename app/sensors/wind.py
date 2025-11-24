@@ -20,7 +20,7 @@ class WindSpeedSensor:
 
     def read_data(self):
         """Return wind speed in m/s (None if disabled or error)."""
-        data = None
+        data = {"speed": None}
         if self.working:
             try:
                 now = time.time()
@@ -33,7 +33,7 @@ class WindSpeedSensor:
                 # Calculate speed (example calibration factor)
                 speed_kmh = (current_count / elapsed) * 2.4  # km/h
                 speed_m_s = speed_kmh / 3.6  # convert to m/s
-                data = round(speed_m_s, 2)
+                data["speed"] = round(speed_m_s, 2)
             except Exception as e:
                 logging.error(f"Error occured in WindSpeed: {e}")
         return data
@@ -68,7 +68,7 @@ class WindDirectionSensor:
 
     def read_data(self):
         """Take one wind direction reading and return compass direction."""
-        data = None
+        data = {"direction": None}
         if self.working:
             try:
                 voltage = round(self.adc.value * self.vref, 2)
@@ -79,8 +79,9 @@ class WindDirectionSensor:
 
                 angle = self.volt_to_angle[closest_voltage]
                 direction = self._angle_to_direction(angle)
-                data = direction
+                data["direction"] = direction
             except Exception as e:
                 logging.error(f"Error occured in Wind direction: {e}")
                 return data
         return data
+

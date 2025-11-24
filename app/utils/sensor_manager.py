@@ -1,11 +1,9 @@
 import datetime
 import time
 from collections import defaultdict
-from typing import Dict
-
 from config import READING_TIME
 from logger_config import logging
-from read_sensors import sensors
+from sensors.read_sensors import sensors
 
 
 class SensorManager:
@@ -49,11 +47,9 @@ class SensorManager:
         for sensor_name, sensor_instance in self.sensors.items():
             if sensor_name == "rain":  # Rain is handled separately
                 continue
-
             try:
                 data = sensor_instance.read_data()
                 if data:
-                    # Store each value in buffer
                     if isinstance(data, dict):
                         for key, value in data.items():
                             if value is not None:
@@ -84,12 +80,10 @@ class SensorManager:
                 self.collect_single_reading()
                 next_reading += datetime.timedelta(seconds=READING_TIME)
 
-        logging.info(f"Measurement period complete. Collected {len(self.measurement_buffer)} data types")
-
         # Stop sensors after measurement period
         self.stop_sensors()
 
-    def calculate_averages(self) -> Dict:
+    def calculate_averages(self):
         """Calculate averages from measurement buffer"""
         averages = {}
 
@@ -120,10 +114,12 @@ class SensorManager:
             logging.error(f"Error reading rain sensor: {e}")
             return 0.0
 
-    def get_averaged_data(self, timestamp: datetime.datetime) -> Dict:
+    def get_averaged_data(self, timestamp: datetime.datetime):
         """Prepare final data packet with averages and rain"""
         data = self.calculate_averages()
         data["rain"] = self.get_rain_data()
+        if data["speed"] == 0:
+            data["direction"] = None
         data["time"] = timestamp.strftime("%Y-%m-%d %H:%M:%S")
         return data
 

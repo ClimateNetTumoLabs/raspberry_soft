@@ -96,6 +96,7 @@ def main():
             else:
                 logging.warning("✗ No internet, saving locally")
                 data_storage.save_locally(data_packet)
+                logging.info(data_packet)
                 mqtt_client = None
 
         except KeyboardInterrupt:
