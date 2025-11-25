@@ -21,8 +21,6 @@ READING_TIME = 30
 SENSORS = {
     "ltr390": {
         "working": True,
-        "scl": "SCL",
-        "sda": "SDA",
         "address": 0x53
     },
     "bme280": {

@@ -1,15 +1,16 @@
 import time
-from sps30 import SPS30 as SPS30I2C
+from .libs.SPS30_I2C import SPS30 as SPS30I2C
 from config import SENSORS
 from logger_config import logging
-from .SPS30_lib import SPS30 as SPS30UART
+from .libs.SPS30_UART import SPS30 as SPS30UART
 
 
 class SPS30Sensor:
     def __init__(self):
         self.sensor = None
         self.mode = None
-        self.is_started = False  # Prevents calling start() multiple times and ensures sensor is ready before reading
+        self.is_started = False
+        self.cycle_count = 0
 
         conf = SENSORS["sps30"]
         self.warmup_time = conf["warmup"]
@@ -19,13 +20,13 @@ class SPS30Sensor:
             logging.info("[SPS30] Disabled in config")
             return
 
-        # Case 2: Determine priority only when at least one is True
+        # Determine priority based on config
         if conf["i2c"]["working"] and not conf["uart"]["working"]:
             modes_priority = ["i2c", "uart"]
         elif conf["uart"]["working"] and not conf["i2c"]["working"]:
             modes_priority = ["uart", "i2c"]
         else:
-            modes_priority = ["uart", "i2c"]
+            modes_priority = ["uart", "i2c"]  # Default: UART first
 
         # Try each mode in priority order until one works
         for mode in modes_priority:
@@ -36,38 +37,77 @@ class SPS30Sensor:
 
         if not self.sensor:
             logging.error("[SPS30] Failed to initialize any mode")
+        else:
+            logging.info(f"[SPS30] Initialized in {self.mode.upper()} mode")
 
     def setup_i2c(self, conf):
         """Initialize I2C connection"""
         try:
             sensor = SPS30I2C(conf["port"])
 
-            if sensor.read_article_code() == sensor.ARTICLE_CODE_ERROR:
+            # Test communication
+            article_code = sensor.read_article_code()
+            if article_code == sensor.ARTICLE_CODE_ERROR:
                 raise RuntimeError("CRC ERROR on I2C")
 
             self.sensor = sensor
             self.mode = "i2c"
-            logging.info("[SPS30] I2C initialized")
+
+            # Set auto-cleaning interval (non-critical, don't fail if it errors)
+            try:
+                self.sensor.set_auto_cleaning_interval(604800)  # 7 days
+                logging.info("[SPS30] Auto-cleaning set to 7 days")
+            except Exception as e:
+                logging.warning(f"[SPS30] Could not set auto-cleaning: {e}")
+
+            logging.info(f"[SPS30] I2C initialized - Article Code: {article_code}")
+
         except Exception as e:
             logging.error(f"[SPS30] I2C init failed: {e}")
+            self.sensor = None
 
     def setup_uart(self, conf):
         """Initialize UART connection"""
         try:
-            self.sensor = SPS30UART(conf["address"], conf["baudrate"], conf["timeout"])
-            self.sensor.resetDevice()
+            sensor = SPS30UART(conf["address"], conf["baudrate"], conf["timeout"])
+
+            # Test communication
+            sensor.resetDevice()
+            device_info = sensor.readDeviceInfo()
+            if not device_info:
+                raise RuntimeError("No response from UART device")
+
+            self.sensor = sensor
             self.mode = "uart"
-            logging.info("[SPS30] UART initialized")
+
+            # Set auto-cleaning interval
+            try:
+                sensor.setAutoCleaningInterval(604800)  # 7 days
+                logging.info("[SPS30] Auto-cleaning set to 7 days")
+            except Exception as e:
+                logging.warning(f"[SPS30] Could not set auto-cleaning: {e}")
+
+            logging.info(f"[SPS30] UART initialized - Device Info: {device_info}")
+
         except Exception as e:
             logging.error(f"[SPS30] UART init failed: {e}")
+            self.sensor = None
 
     def start(self):
-        """Start measurement and warm up sensor"""
+        """
+        Start measurement and warm up sensor.
+        Only starts if not already started.
+        """
         if not self.sensor or self.is_started:
+            if self.is_started:
+                logging.debug("[SPS30] Already started, skipping")
             return
 
+        self.cycle_count += 1
+        logging.info(f"[SPS30] Starting measurement cycle {self.cycle_count}")
+
         try:
-            # Start measurement
+            # Start measurement based on mode
             if self.mode == "i2c":
                 self.sensor.start_measurement()
             else:  # uart
@@ -81,14 +121,17 @@ class SPS30Sensor:
             while time.time() - start_time < self.warmup_time:
                 time.sleep(0.5)
 
-            logging.info("[SPS30] Ready")
+            logging.info("[SPS30] Ready for readings")
 
         except Exception as e:
             logging.error(f"[SPS30] Start failed: {e}")
             self.is_started = False
 
     def read_data(self):
-        """Read PM values from sensor"""
+        """
+        Read PM values from sensor.
+        Returns dict with pm1, pm2_5, pm10 values.
+        """
         data = {"pm1": None, "pm2_5": None, "pm10": None}
 
         if not self.sensor or not self.is_started:
@@ -96,11 +139,17 @@ class SPS30Sensor:
 
         try:
             if self.mode == "i2c":
-                # I2C mode
+                # Check if data is ready
                 if not self.sensor.read_data_ready_flag():
                     return data
 
-                self.sensor.read_measured_values()
+                # Read measured values
+                result = self.sensor.read_measured_values()
+                if result == self.sensor.MEASURED_VALUES_ERROR:
+                    logging.warning("[SPS30] Measurement CRC error")
+                    return data
+
+                # Extract values
                 vals = self.sensor.dict_values
                 data["pm1"] = round(vals.get("pm1p0", 0), 2)
                 data["pm2_5"] = round(vals.get("pm2p5", 0), 2)
@@ -113,13 +162,21 @@ class SPS30Sensor:
                     data["pm2_5"] = round(vals.get("Mass PM2.5", 0), 2)
                     data["pm10"] = round(vals.get("Mass PM10", 0), 2)
 
+        except OSError as e:
+            if e.errno == 121:  # Remote I/O error
+                logging.warning("[SPS30] Transient I2C error during read")
+            else:
+                logging.error(f"[SPS30] OS error reading data: {e}")
         except Exception as e:
             logging.error(f"[SPS30] Read failed: {e}")
 
         return data
 
     def stop(self):
-        """Stop measurement"""
+        """
+        Stop measurement.
+        Only stops if currently started.
+        """
         if not self.sensor or not self.is_started:
             return
 
@@ -130,7 +187,65 @@ class SPS30Sensor:
                 self.sensor.stopMeasurement()
 
             self.is_started = False
-            logging.info("[SPS30] Stopped")
+            logging.info(f"[SPS30] Measurement stopped after cycle {self.cycle_count}")
 
+        except OSError as e:
+            if e.errno == 121:  # Remote I/O error
+                logging.warning("[SPS30] I2C error during stop (sensor may already be stopped)")
+                self.is_started = False
+            else:
+                logging.error(f"[SPS30] OS error stopping: {e}")
         except Exception as e:
             logging.error(f"[SPS30] Stop failed: {e}")
+
+    def start_fan_cleaning(self):
+        """Start manual fan cleaning"""
+        if not self.sensor:
+            return
+
+        try:
+            if self.mode == "i2c":
+                self.sensor.start_fan_cleaning()
+            else:  # uart
+                # UART library might have different method name
+                if hasattr(self.sensor, 'startFanCleaning'):
+                    self.sensor.startFanCleaning()
+                elif hasattr(self.sensor, 'start_fan_cleaning'):
+                    self.sensor.start_fan_cleaning()
+
+            logging.info("[SPS30] Manual fan cleaning started")
+
+        except Exception as e:
+            logging.error(f"[SPS30] Fan cleaning failed: {e}")
+
+    def get_device_info(self):
+        """Get device information (article code, serial number)"""
+        if not self.sensor:
+            return None
+
+        try:
+            if self.mode == "i2c":
+                return {
+                    "article_code": self.sensor.read_article_code(),
+                    "serial_number": self.sensor.read_device_serial()
+                }
+            else:  # uart
+                device_info = self.sensor.readDeviceInfo()
+                return {"device_info": device_info}
+        except Exception as e:
+            logging.error(f"[SPS30] Failed to get device info: {e}")
+            return None
+
+    def is_ready(self):
+        """Check if sensor is initialized and ready"""
+        return self.sensor is not None
+
+    def is_measuring(self):
+        """Check if sensor is currently measuring"""
+        return self.is_started
+
+    def cleanup(self):
+        """Cleanup resources - call this when shutting down"""
+        if self.sensor and self.is_started:
+            logging.info("[SPS30] Cleaning up - stopping measurement")
+            self.stop()
