@@ -52,8 +52,7 @@ class SensorManager:
                 if data:
                     if isinstance(data, dict):
                         for key, value in data.items():
-                            if value is not None:
-                                self.measurement_buffer[key].append(value)
+                            self.measurement_buffer[key].append(value)
                     else:
                         self.measurement_buffer[sensor_name].append(data)
             except Exception as e:
@@ -80,6 +79,8 @@ class SensorManager:
                 self.collect_single_reading()
                 next_reading += datetime.timedelta(seconds=READING_TIME)
 
+            time.sleep(0.5)  # Prevent busy loop
+
         # Stop sensors after measurement period
         self.stop_sensors()
 
@@ -91,15 +92,24 @@ class SensorManager:
             if not values:
                 continue
 
+            # Filter out None values for averaging
+            valid_values = [v for v in values if v is not None]
+
+            if not valid_values:
+                # All values were None, keep as None
+                averages[key] = None
+                continue
+
             # For direction (compass), use most common value
             if key == "direction":
-                averages[key] = max(set(values), key=values.count)
+                averages[key] = max(set(valid_values), key=valid_values.count)
             else:
                 # Numeric average
                 try:
-                    averages[key] = round(sum(values) / len(values), 2)
+                    averages[key] = round(sum(valid_values) / len(valid_values), 2)
                 except (TypeError, ValueError):
                     logging.warning(f"Could not average {key}: {values}")
+                    averages[key] = None
 
         return averages
 
@@ -118,8 +128,11 @@ class SensorManager:
         """Prepare final data packet with averages and rain"""
         data = self.calculate_averages()
         data["rain"] = self.get_rain_data()
-        if data["speed"] == 0:
+
+        # Only set direction to None if speed is 0, otherwise keep whatever direction value we have
+        if data.get("speed") == 0 or data.get("speed") is None:
             data["direction"] = None
+
         data["time"] = timestamp.strftime("%Y-%m-%d %H:%M:%S")
         return data
 

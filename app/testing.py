@@ -1,20 +1,40 @@
 import os
-import time
+import sys
 from prettytable import PrettyTable
 from sensors.read_sensors import sensors
 from utils.rtc import RTCControl
 from utils.network import check_internet
-from config import SENSORS
 import warnings
+import subprocess
+
+SERVICE_NAME = "ProgramAutoRun.service"
+
+def stop_main_service():
+    try:
+        subprocess.run(["sudo", "systemctl", "stop", SERVICE_NAME], check=False)
+        print(f"Stopped {SERVICE_NAME}")
+    except Exception as e:
+        print(f"Failed to stop {SERVICE_NAME}: {e}")
+
+def start_main_service():
+    try:
+        subprocess.run(["sudo", "systemctl", "restart", SERVICE_NAME], check=False)
+        print(f"Restarted {SERVICE_NAME}")
+    except Exception as e:
+        print(f"Failed to restart {SERVICE_NAME}: {e}")
+
 
 warnings.filterwarnings("ignore", message="Falling back from lgpio", module="gpiozero.devices")
 
 
 class TestSensors:
     def __init__(self):
-        os.system("clear")
+        self.init_once()
+        self.reset_results()
 
-        # Initialize sensors
+    def init_once(self):
+        os.system("clear")
+        print("Initializing sensors (once)...")
         self.sensor_instances = {}
         for name, cls in sensors.items():
             try:
@@ -22,104 +42,154 @@ class TestSensors:
             except Exception as e:
                 print(f"Failed to init {name}: {e}")
 
-        # RTC
         try:
             self.rtc = RTCControl()
         except Exception:
             self.rtc = None
 
-        # Results dictionary
+        # start SPS30 only once
+        if "airQuality" in self.sensor_instances:
+            try:
+                self.sensor_instances["airQuality"].start()
+            except Exception as e:
+                print("[SPS30] start() failed:", e)
+
+    def reset_results(self):
         self.results = {
-            "tph": [True],          # BME280
-            "light": [True],        # LTR390
-            "airQuality": [True],   # SPS30
+            "tph": [True],
+            "light": [True],
+            "airQuality": [True],
             "direction": [True],
-            "speed": [False],       # actual wind speed
-            "rain": [False],        # rain count or status
+            "speed": [False],   # numeric wind speed
+            "rain": [False],    # bool only
             "Network": False,
             "RTC": False
         }
 
-    def format_result(self, result):
-        os.system("clear")
-        if isinstance(result, list):
-            if len(result) > 1:
-                is_success = result[0]
-                data = result[1]
+    def format_result(self, v):
+        if isinstance(v, list):
+            if len(v) > 1:
+                ok, data = v
                 if isinstance(data, dict):
-                    formatted_lines = [f"{k}: {v}" for k, v in data.items()]
-                    data = "\n".join(formatted_lines)
-                return f"{is_success}\n\n{data}"
-            return result[0]
-        return result
+                    data = "\n".join(f"{k}: {v}" for k, v in data.items())
+                return f"{ok}\n\n{data}"
+            return v[0]
+        return v
 
     def print_results(self):
+        os.system("clear")
         table = PrettyTable()
-        table.field_names = ["Key", "Value"]
+        table.field_names = ["Sensor", "Value"]
         for key, value in self.results.items():
-            formatted_value = self.format_result(value)
-            table.add_row([key, formatted_value], divider=True)
+            table.add_row([key, self.format_result(value)], divider=True)
         table.align = "l"
         print(table)
+        print("\nPress ENTER to restart | press 'q' then ENTER to quit")
 
     def check_devices(self):
-        # Start SPS30 if present
-        if "airQuality" in self.sensor_instances:
-            try:
-                self.sensor_instances["airQuality"].start()
-            except:
-                pass
+        self.reset_results()
 
-        # Loop through sensors
         for name, instance in self.sensor_instances.items():
+            # IMPORTANT: handle rain BEFORE calling instance.read_data()
+            if name == "rain":
+                try:
+                    count = getattr(instance, "count", None)
+                except Exception as e:
+                    count = None
+                    print(f"[rain] error reading count: {e}")
+
+                # Debug print so you can see what's happening
+                print(f"[rain debug] before read_data: count={count}")
+
+                if isinstance(count, int) and count > 0:
+                    self.results["rain"] = [True]
+                else:
+                    self.results["rain"] = [False]
+
+                # call read_data() to let sensor clear its internal count as designed
+                try:
+                    instance.read_data()
+                except Exception as e:
+                    print(f"[rain] read_data() error: {e}")
+
+                # continue to next sensor (we don't want to append read_data result to results)
+                continue
+
+            # speed: read numeric value normally
+            if name == "speed":
+                try:
+                    res = instance.read_data()
+                except Exception as e:
+                    print(f"[speed] read_data() error: {e}")
+                    self.results["speed"] = [False]
+                    continue
+
+                # Accept None as failure
+                if res is None:
+                    self.results["speed"] = [False]
+                else:
+                    self.results["speed"] = [True, res]
+                continue
+
+            # general sensors
             try:
                 res = instance.read_data()
-                if res:
-                    if name not in self.results:
-                        self.results[name] = [True]
-                    self.results[name].append(res)
-                    # mark False if any reading is None
-                    if isinstance(res, dict) and any(v is None for v in res.values()):
-                        self.results[name][0] = False
-                    elif res is None:
-                        self.results[name][0] = False
-                    else:
-                        # For wind speed, store the numeric value directly
-                        if name == "speed":
-                            self.results["speed"] = [True, res]
-                        # For rain, could store count or boolean
-                        if name == "rain":
-                            self.results["rain"] = [True, res]
-                else:
-                    self.results[name][0] = False
-            except Exception:
+            except Exception as e:
+                print(f"[{name}] read_data() error: {e}")
                 self.results[name][0] = False
+                continue
 
-        # Network check
-        self.results["Network"] = check_internet()
+            if res is None:
+                self.results[name][0] = False
+            else:
+                # append for debugging / human readable
+                self.results[name].append(res)
+                if isinstance(res, dict) and any(v is None for v in res.values()):
+                    self.results[name][0] = False
 
-        # RTC check
+        # Network & RTC checks
+        try:
+            self.results["Network"] = check_internet()
+        except Exception:
+            self.results["Network"] = False
+
         if self.rtc:
             try:
-                current_time = self.rtc.get_time().strftime("%d-%m-%Y %H:%M:%S")
-                self.results["RTC"] = [True, current_time]
+                t = self.rtc.get_time().strftime("%d-%m-%Y %H:%M:%S")
+                self.results["RTC"] = [True, t]
             except Exception:
                 self.results["RTC"] = False
 
         self.print_results()
 
-        # Stop SPS30
+    def cleanup(self):
         if "airQuality" in self.sensor_instances:
             try:
                 self.sensor_instances["airQuality"].stop()
-            except:
-                pass
+            except Exception as e:
+                print("[SPS30] stop() error:", e)
+
+
+def main():
+    stop_main_service()
+    tester = TestSensors()
+    try:
+        while True:
+            tester.check_devices()
+            user_input = input().strip().lower()
+            if user_input == "q":
+                tester.cleanup()
+                start_main_service()
+                print("Exiting...")
+                sys.exit(0)
+            # ENTER -> just loop again (sensors not reinitialized)
+    except KeyboardInterrupt:
+        tester.cleanup()
+        start_main_service()
+        print("\nExiting...")
+        sys.exit(0)
 
 
 if __name__ == "__main__":
-    test_sensors = TestSensors()
-    test_sensors.check_devices()
-
-    while True:
-        time.sleep(1000)
+    main()
 
