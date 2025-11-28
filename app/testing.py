@@ -6,6 +6,7 @@ from utils.rtc import RTCControl
 from utils.network import check_internet
 import warnings
 import subprocess
+import datetime
 
 SERVICE_NAME = "ProgramAutoRun.service"
 
@@ -44,7 +45,10 @@ class TestSensors:
 
         try:
             self.rtc = RTCControl()
-        except Exception:
+            # Auto-sync RTC if time difference is large
+            self.sync_rtc_if_needed()
+        except Exception as e:
+            print(f"RTC initialization failed: {e}")
             self.rtc = None
 
         # start SPS30 only once
@@ -53,6 +57,28 @@ class TestSensors:
                 self.sensor_instances["airQuality"].start()
             except Exception as e:
                 print("[SPS30] start() failed:", e)
+
+    def sync_rtc_if_needed(self):
+        """Sync RTC if time difference is too large"""
+        if not self.rtc:
+            return
+
+        try:
+            rtc_time = self.rtc.get_time()
+            system_time = datetime.datetime.now()
+
+            # Check if RTC time is reasonable (within 1 hour of system time)
+            time_diff = abs((system_time - rtc_time).total_seconds())
+
+            if time_diff > 3600:  # More than 1 hour difference
+                print(f"RTC time differs by {time_diff} seconds. Syncing...")
+                self.rtc.change_time(system_time)
+                print("RTC synced with system time")
+            else:
+                print(f"RTC time is correct (diff: {time_diff}s)")
+
+        except Exception as e:
+            print(f"RTC sync check failed: {e}")
 
     def reset_results(self):
         self.results = {
@@ -192,4 +218,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

@@ -1,6 +1,5 @@
 import json
 import os
-import socket
 import ssl
 import time
 
@@ -32,34 +31,22 @@ class MQTTClient:
 
     def send_data(self, data: list) -> bool:
         """
-        Sends data to the MQTT broker.
-
-        Args:
-            data (list): A list of dictionaries containing the data to be sent.
-
-        Returns:
-            bool: True if the data was successfully sent, False otherwise.
+        Sends data to the MQTT broker - ONLY TRIES ONCE
         """
         if not self.client.is_connected():
             logging.info("MQTT client not connected, attempting to reconnect...")
             try:
-                # Quick connect attempt with short timeout
+                # ONLY TRY ONCE - no loop
                 self.client.reconnect()
+                time.sleep(1)  # Brief wait for connection
 
-                # Wait up to 5 seconds for connection (reduced from 15)
-                is_connected = False
-                t = time.time()
-                while time.time() - t <= 5:
-                    if self.client.is_connected():
-                        is_connected = True
-                        logging.info("Connected to MQTT Broker")
-                        break
-                    time.sleep(0.5)
-
-                if not is_connected:
+                if not self.client.is_connected():
                     logging.error("Failed to connect to MQTT Broker")
                     return False
-            except (socket.timeout, socket.gaierror, Exception) as e:
+                else:
+                    logging.info("Connected to MQTT Broker")
+
+            except Exception as e:
                 logging.error(f"Error reconnecting to MQTT: {str(e)}")
                 return False
 
