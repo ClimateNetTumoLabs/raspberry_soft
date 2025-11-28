@@ -13,7 +13,7 @@ def check_internet(host="8.8.8.8", port=53, timeout=5):
         return False
 
 
-def reconnect(ssid="tumoTeam", password="hello2team"):
+def reconnect(ssid="MyWiFi", password="mypassword"):
     """Try to reconnect to the internet via LAN or Wi-Fi."""
     logging.info("[Network] Checking connection...")
 
