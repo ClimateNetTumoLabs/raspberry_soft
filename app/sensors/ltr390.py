@@ -74,11 +74,11 @@ class LTR390Sensor:
             except Exception as e:
                 logging.error(f"[LTR390] Unhandled exception while reading LTR390 lux: {e}", exc_info=True)
 
-        uv_from_api = self.fetch_uv_from_api()
-        if uv_from_api is not None:
-            data["uv"] = uv_from_api
-        else:
-            data["uv"] = None
+            uv_from_api = self.fetch_uv_from_api()
+            if uv_from_api is not None:
+                data["uv"] = uv_from_api
+            else:
+                data["uv"] = None
         return data
 
 if __name__=="__main__":
