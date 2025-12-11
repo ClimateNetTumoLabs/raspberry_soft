@@ -4,7 +4,6 @@ from prettytable import PrettyTable
 from sensors.read_sensors import sensors
 from utils.rtc import RTCControl
 from utils.network import check_internet
-import warnings
 import subprocess
 import datetime
 
@@ -24,10 +23,6 @@ def start_main_service():
     except Exception as e:
         print(f"Failed to restart {SERVICE_NAME}: {e}")
 
-
-warnings.filterwarnings("ignore", message="Falling back from lgpio", module="gpiozero.devices")
-
-
 class TestSensors:
     def __init__(self):
         self.init_once()
@@ -45,18 +40,28 @@ class TestSensors:
 
         try:
             self.rtc = RTCControl()
-            # Auto-sync RTC if time difference is large
             self.sync_rtc_if_needed()
         except Exception as e:
             print(f"RTC initialization failed: {e}")
             self.rtc = None
 
-        # start SPS30 only once
+        # Start SPS30 only once
         if "airQuality" in self.sensor_instances:
             try:
                 self.sensor_instances["airQuality"].start()
             except Exception as e:
                 print("[SPS30] start() failed:", e)
+
+        # Set up callbacks for pulse sensors
+        if "speed" in self.sensor_instances:
+            instance = self.sensor_instances["speed"]
+            if hasattr(instance, 'speed'):
+                instance.speed.when_pressed = self.speed_ok
+
+        if "rain" in self.sensor_instances:
+            instance = self.sensor_instances["rain"]
+            if hasattr(instance, 'rain'):
+                instance.rain.when_pressed = self.rain_ok
 
     def sync_rtc_if_needed(self):
         """Sync RTC if time difference is too large"""
@@ -66,17 +71,14 @@ class TestSensors:
         try:
             rtc_time = self.rtc.get_time()
             system_time = datetime.datetime.now()
-
-            # Check if RTC time is reasonable (within 1 hour of system time)
             time_diff = abs((system_time - rtc_time).total_seconds())
 
-            if time_diff > 3600:  # More than 1 hour difference
+            if time_diff > 3600:
                 print(f"RTC time differs by {time_diff} seconds. Syncing...")
                 self.rtc.change_time(system_time)
                 print("RTC synced with system time")
             else:
                 print(f"RTC time is correct (diff: {time_diff}s)")
-
         except Exception as e:
             print(f"RTC sync check failed: {e}")
 
@@ -86,9 +88,9 @@ class TestSensors:
             "light": [True],
             "airQuality": [True],
             "direction": [True],
-            "speed": [False],   # numeric wind speed
-            "rain": [False],    # bool only
-            "Network": False,
+            "speed": [False],
+            "rain": [False],
+            "network": False,
             "RTC": False
         }
 
@@ -112,49 +114,38 @@ class TestSensors:
         print(table)
         print("\nPress ENTER to restart | press 'q' then ENTER to quit")
 
+    def speed_ok(self):
+        """Callback when wind speed sensor triggers"""
+        if not self.results["speed"][0]:
+            self.results["speed"] = [True]
+            self.print_results()
+
+    def rain_ok(self):
+        """Callback when rain sensor triggers"""
+        if not self.results["rain"][0]:
+            self.results["rain"] = [True]
+            self.print_results()
+
     def check_devices(self):
         self.reset_results()
 
         for name, instance in self.sensor_instances.items():
-            # IMPORTANT: handle rain BEFORE calling instance.read_data()
+            # Rain sensor - just check if callback has triggered
             if name == "rain":
-                try:
-                    count = getattr(instance, "count", None)
-                except Exception as e:
-                    count = None
-                    print(f"[rain] error reading count: {e}")
-
-                # Debug print so you can see what's happening
-                print(f"[rain debug] before read_data: count={count}")
-
-                if isinstance(count, int) and count > 0:
-                    self.results["rain"] = [True]
-                else:
-                    self.results["rain"] = [False]
-
-                # call read_data() to let sensor clear its internal count as designed
-                try:
-                    instance.read_data()
-                except Exception as e:
-                    print(f"[rain] read_data() error: {e}")
-
-                # continue to next sensor (we don't want to append read_data result to results)
+                # Callback already set self.results["rain"] if triggered
                 continue
 
-            # speed: read numeric value normally
+            # Speed sensor - read numeric value
             if name == "speed":
                 try:
                     res = instance.read_data()
+                    # If callback was triggered, show True with data
+                    if self.results["speed"][0]:
+                        if res is not None:
+                            self.results["speed"] = [True]
+                    # Otherwise stays False
                 except Exception as e:
-                    print(f"[speed] read_data() error: {e}")
-                    self.results["speed"] = [False]
-                    continue
-
-                # Accept None as failure
-                if res is None:
-                    self.results["speed"] = [False]
-                else:
-                    self.results["speed"] = [True, res]
+                    print(f"[speed] error: {e}")
                 continue
 
             # general sensors
@@ -168,16 +159,15 @@ class TestSensors:
             if res is None:
                 self.results[name][0] = False
             else:
-                # append for debugging / human readable
                 self.results[name].append(res)
                 if isinstance(res, dict) and any(v is None for v in res.values()):
                     self.results[name][0] = False
 
         # Network & RTC checks
         try:
-            self.results["Network"] = check_internet()
+            self.results["network"] = check_internet()
         except Exception:
-            self.results["Network"] = False
+            self.results["network"] = False
 
         if self.rtc:
             try:
@@ -208,7 +198,6 @@ def main():
                 start_main_service()
                 print("Exiting...")
                 sys.exit(0)
-            # ENTER -> just loop again (sensors not reinitialized)
     except KeyboardInterrupt:
         tester.cleanup()
         start_main_service()
