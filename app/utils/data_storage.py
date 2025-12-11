@@ -9,12 +9,43 @@ from logger_config import logging
 class DataStorage:
     """Handles local storage and retrieval of sensor data"""
 
+    # Define the exact order for measurements
+    MEASUREMENT_ORDER = [
+        "time",
+        "uv",
+        "lux",
+        "temperature",
+        "pressure",
+        "humidity",
+        "pm1",
+        "pm2_5",
+        "pm10",
+        "speed",
+        "rain",
+        "direction"
+    ]
+
     def __init__(self):
         self.local_db_path = Path(LOCAL_DB) if LOCAL_DB else Path("local_data.json")
         self.local_db_path.parent.mkdir(parents=True, exist_ok=True)
 
+    def _order_data(self, data: Dict) -> Dict:
+        """Ensure data is in the correct order and includes all fields"""
+        ordered_data = {}
+
+        for key in self.MEASUREMENT_ORDER:
+            # Include the key even if it's missing, null, or 0
+            ordered_data[key] = data.get(key, None)
+
+        # Add any extra keys that weren't in the predefined order
+        for key, value in data.items():
+            if key not in ordered_data:
+                ordered_data[key] = value
+
+        return ordered_data
+
     def save_locally(self, data: Dict):
-        """Save data to local JSON file"""
+        """Save data to local JSON file in specific order"""
         try:
             # Load existing data
             if self.local_db_path.exists():
@@ -23,8 +54,9 @@ class DataStorage:
             else:
                 local_data = []
 
-            # Append new data
-            local_data.append(data)
+            # Order the data before appending
+            ordered_data = self._order_data(data)
+            local_data.append(ordered_data)
 
             # Save back to file
             with open(self.local_db_path, 'w') as f:

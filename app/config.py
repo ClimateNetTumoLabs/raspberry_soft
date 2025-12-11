@@ -9,6 +9,8 @@ MQTT_BROKER_ENDPOINT = os.getenv('MQTT_BROKER_ENDPOINT', '')
 MQTT_TOPIC = os.getenv('MQTT_TOPIC', '')
 DEVICE_ID = os.getenv('DEVICE_ID', '')
 
+SSID = ""
+PASSWORD = ""
 # It is recommended to set the value > than
 # MEASURING_TIME + 10
 TRANSMISSION_INTERVAL = 900
@@ -29,7 +31,7 @@ SENSORS = {
         "address": 0x76
     },
     "pms5003": {
-        "working": True,
+        "working": False,
         "address": "/dev/ttyAMA0",
         "baudrate": 9600,
         "pin_enable": 22,
@@ -40,13 +42,13 @@ SENSORS = {
     "sps30": {
         "warmup": 30,
         "uart": {
-            "working": False,
+            "working": True,
             "address": "/dev/ttyAMA0",
             "baudrate": 115200,
             "timeout": 1
         },
         "i2c": {
-            "working": True,
+            "working": False,
             "port": 1,
         },
     },

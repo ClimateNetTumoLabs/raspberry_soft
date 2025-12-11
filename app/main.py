@@ -9,7 +9,6 @@ from utils.data_storage import DataStorage
 from utils.scheduler import calculate_next_transmission, calculate_measurement_start
 from utils.sensor_manager import SensorManager
 import warnings
-warnings.filterwarnings("ignore", message="Falling back from lgpio", module="gpiozero.devices")
 
 
 def main():
@@ -19,23 +18,39 @@ def main():
     # Initialize RTC
     try:
         rtc = RTCControl()
+
+        # Try to sync with NTP if internet is available
+        if check_internet():
+            logging.info("Internet available, attempting NTP sync...")
+            if rtc.sync_from_ntp():
+                logging.info("Successfully synced with NTP")
+            else:
+                logging.warning("Failed to sync with NTP, using available time sources")
+
+        # Get current time using the priority system
         current_time = rtc.get_time()
         system_time = datetime.datetime.now()
+        rtc_time = rtc.get_rtc_time()
 
-        # Check if RTC time is reasonable (within 1 hour of system time)
-        time_diff = abs((system_time - current_time).total_seconds())
-        if time_diff > 3600:  # More than 1 hour difference
-            logging.warning(f"RTC time differs from system by {time_diff} seconds. Syncing...")
-            rtc.sync_from_system()
-            current_time = rtc.get_time()
-
-        logging.info(f"RTC Time: {current_time.strftime('%Y-%m-%d %H:%M:%S')}")
+        # Log all time sources for debugging
+        logging.info(f"RTC Hardware Time: {rtc_time.strftime('%Y-%m-%d %H:%M:%S')}")
         logging.info(f"System Time: {system_time.strftime('%Y-%m-%d %H:%M:%S')}")
+        logging.info(f"Selected Time: {current_time.strftime('%Y-%m-%d %H:%M:%S')}")
+
+        # Check if significant time difference exists
+        time_diff_system_rtc = abs((system_time - rtc_time).total_seconds())
+        if time_diff_system_rtc > 60:  # More than 1 minute difference
+            logging.warning(f"System and RTC differ by {time_diff_system_rtc} seconds")
+
+            # If internet is available, sync RTC with system time
+            if check_internet():
+                logging.info("Syncing RTC with system time...")
+                rtc.sync_from_system()
 
     except Exception as e:
         logging.error(f"RTC initialization failed: {e}")
         current_time = datetime.datetime.now()
-        logging.info(f"Using system time: {current_time.strftime('%Y-%m-%d %H:%M:%S')}")
+        logging.info(f"Using fallback system time: {current_time.strftime('%Y-%m-%d %H:%M:%S')}")
 
     # Initialize sensors
     logging.info("Initializing sensors...")
@@ -129,6 +144,7 @@ def main():
                     logging.warning("✗ MQTT send failed after 3 attempts, saving locally")
                     mqtt_working = False  # Mark MQTT as not working
                     data_storage.save_locally(data_packet)
+                    logging.info(data_packet)
             else:
                 # Internet is not available - try to reconnect
                 if reconnect():
@@ -153,11 +169,13 @@ def main():
                         logging.warning("✗ Still cannot send after reconnection, saving locally")
                         mqtt_working = False
                         data_storage.save_locally(data_packet)
+                        logging.info(data_packet)
                 else:
                     # Reconnection failed, save locally
                     logging.warning("✗ No internet and reconnection failed, saving locally")
                     mqtt_working = False
                     data_storage.save_locally(data_packet)
+                    logging.info(data_packet)
                     mqtt_client = None
 
         except KeyboardInterrupt:
