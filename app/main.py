@@ -23,9 +23,13 @@ def main():
         if check_internet():
             logging.info("Internet available, attempting NTP sync...")
             if rtc.sync_from_ntp():
-                logging.info("Successfully synced with NTP")
+                logging.info("NTP → System → RTC sync successful")
             else:
-                logging.warning("Failed to sync with NTP, using available time sources")
+                logging.warning("NTP sync failed, falling back to RTC")
+                rtc.sync_system_from_rtc()
+        else:
+            logging.warning("No internet, syncing system time from RTC")
+            rtc.sync_system_from_rtc()
 
         # Get current time using the priority system
         current_time = rtc.get_time()

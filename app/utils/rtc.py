@@ -51,6 +51,25 @@ class RTCControl:
         except Exception as e:
             raise RuntimeError(f"Error while syncing RTC from system: {e}")
 
+    def sync_system_from_rtc(self) -> None:
+        """
+        Sets system time from RTC hardware.
+        Requires root privileges.
+        """
+        try:
+            rtc_time = self.get_rtc_time()
+            formatted = rtc_time.strftime("%Y-%m-%d %H:%M:%S")
+
+            subprocess.run(
+                ["sudo", "date", "-s", formatted],
+                check=True
+            )
+
+            logging.info(f"System time synced from RTC: {formatted}")
+
+        except Exception as e:
+            raise RuntimeError(f"Failed to sync system time from RTC: {e}")
+
     def sync_from_ntp(self) -> bool:
         """
         Synchronizes system time with NTP and updates RTC.
