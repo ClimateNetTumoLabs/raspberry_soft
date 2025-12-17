@@ -70,7 +70,7 @@ class WindDirectionSensor:
         # Calculate dynamic min/max ranges
         self._calculate_adc_ranges()
 
-        logging.info("[Wind direction] Initialized for gpiozero 2.x")
+        logging.info("[Wind direction] Initialized")
 
     def _calculate_adc_ranges(self):
         """Calculate adcmin and adcmax for each direction based on midpoints"""

@@ -58,14 +58,9 @@ class SensorManager:
             except Exception as e:
                 logging.error(f"Error reading {sensor_name}: {e}")
 
-        logging.debug(f"Reading collected at {timestamp.strftime('%H:%M:%S')}")
-
     def start_measurement_period(self, start_time: datetime.datetime, end_time: datetime.datetime):
         """Collect readings every READING_TIME seconds until end_time"""
         self.measurement_buffer.clear()  # Clear previous data
-
-        # Start sensors that need warmup (this will block during warmup)
-        logging.info("Starting sensors and warming up...")
         self.start_sensors()
 
         # Now start collecting readings

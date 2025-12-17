@@ -14,6 +14,8 @@ class BME280Sensor:
 
         if self.working:
             self.setup_sensor()
+        else:
+            logging.info("[BME280] Disabled in config")
 
     def setup_sensor(self):
         try:
@@ -22,7 +24,7 @@ class BME280Sensor:
             self.sensor = True
             logging.info("[BME280] Initialized")
         except Exception as e:
-            logging.error(f"[BME280] Error occurred during creating object for BME280 sensor: {e}")
+            logging.error(f"[BME280] Init failed: {e}")
 
     def read_data(self):
         data = {"temperature": None, "pressure": None, "humidity": None}

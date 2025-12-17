@@ -14,7 +14,10 @@ echo "dtoverlay=pi3-miniuart-bt" | sudo tee -a /boot/firmware/config.txt
 echo "dtoverlay=pi3-miniuart-bt" | sudo tee -a /boot/config.txt
 
 # Copy service files
+cp WifiMonitor.service /etc/systemd/system/
 cp ProgramAutoRun.service /etc/systemd/system/
+
+sudo chmod +x /home/raspberry/workspace/raspberry_soft/wifi_monitor.sh
 
 python3 -m venv app/venv
 source app/venv/bin/activate
@@ -31,5 +34,8 @@ sudo systemctl daemon-reload
 # Enable and start services
 sudo systemctl enable NetworkManager
 sudo systemctl start NetworkManager
+
+sudo systemctl enable WifiMonitor.service
+sudo systemctl start WifiMonitor.service
 
 echo "Installation completed successfully."

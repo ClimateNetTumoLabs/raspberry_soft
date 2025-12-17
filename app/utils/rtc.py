@@ -47,7 +47,6 @@ class RTCControl:
         try:
             system_time = datetime.datetime.now()
             self.change_time(system_time)
-            logging.info(f"RTC synced with system time: {system_time.strftime('%Y-%m-%d %H:%M:%S')}")
         except Exception as e:
             raise RuntimeError(f"Error while syncing RTC from system: {e}")
 
@@ -65,7 +64,7 @@ class RTCControl:
                 check=True
             )
 
-            logging.info(f"System time synced from RTC: {formatted}")
+            logging.info(f"System synced from RTC: {formatted}")
 
         except Exception as e:
             raise RuntimeError(f"Failed to sync system time from RTC: {e}")
@@ -78,8 +77,6 @@ class RTCControl:
             bool: True if synchronization was successful, False otherwise.
         """
         try:
-            # First, try to sync system time with NTP
-            logging.info("Attempting to sync system time with NTP...")
             result = subprocess.run(
                 ["sudo", "timedatectl", "set-ntp", "true"],
                 capture_output=True,
@@ -88,22 +85,17 @@ class RTCControl:
             )
 
             if result.returncode != 0:
-                logging.warning("Failed to enable NTP sync via timedatectl")
                 return False
 
-            # Wait a moment for NTP to sync
             time.sleep(2)
-
-            # Now sync RTC with system time
             self.sync_from_system()
-            logging.info("Successfully synced RTC with NTP time")
+            logging.info("Time synced: NTP → System → RTC")
             return True
 
         except subprocess.TimeoutExpired:
-            logging.warning("NTP sync timed out")
             return False
         except Exception as e:
-            logging.error(f"Error during NTP sync: {e}")
+            logging.error(f"NTP sync error: {e}")
             return False
 
     def get_time(self) -> datetime.datetime:
@@ -118,24 +110,11 @@ class RTCControl:
             RuntimeError: If an error occurs while getting time from all sources.
         """
         try:
-            # First check if we have internet and can get NTP time
             if check_internet():
-                try:
-                    # Try to get system time (which should be NTP-synced if configured)
-                    system_time = datetime.datetime.now()
+                system_time = datetime.datetime.now()
+                if system_time.year > 2020:
+                    return system_time
 
-                    # Validate that system time is reasonable (not default/epoch)
-                    # Raspberry Pi without RTC might have a default date if not synced
-                    if system_time.year > 2020:  # Reasonable check for recent time
-                        logging.info("Using internet-synced system time")
-                        return system_time
-                    else:
-                        logging.warning(f"System time appears invalid: {system_time}")
-                except Exception as e:
-                    logging.warning(f"Failed to get system time: {e}")
-
-            # If no internet or system time invalid, fall back to RTC
-            logging.info("Using RTC hardware time (no internet or invalid system time)")
             rtc_datetime = time.mktime(self.rtc.datetime)
             return datetime.datetime.fromtimestamp(rtc_datetime)
 

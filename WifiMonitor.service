@@ -1,0 +1,15 @@
+[Unit]
+Description=WiFi Connection Monitor
+After=NetworkManager.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/home/raspberry/workspace/raspberry_soft/wifi_monitor.sh
+Restart=always
+RestartSec=60
+StandardOutput=null
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

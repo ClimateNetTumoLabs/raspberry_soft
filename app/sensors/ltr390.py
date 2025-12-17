@@ -13,6 +13,8 @@ class LTR390Sensor:
 
         if self.working:
             self.setup_sensor()
+        else:
+            logging.info("[LTR390] Disabled in config")
 
     def setup_sensor(self):
         try:
@@ -22,7 +24,7 @@ class LTR390Sensor:
             # self.sensor.resolution = adafruit_ltr390.LTR390.RESOLUTION_20BIT
             # self.sensor.gain = adafruit_ltr390.LTR390.GAIN_18X
         except Exception as e:
-            logging.error(f"[LTR390] Error occurred while creating LTR390 object: {e}")
+            logging.error(f"[LTR390] Init failed: {e}")
             self.sensor = None
             return False
 

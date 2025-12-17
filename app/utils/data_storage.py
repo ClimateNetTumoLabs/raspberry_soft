@@ -98,7 +98,6 @@ class DataStorage:
             success = mqtt_client.send_data(stored_data)
             if success:
                 self.clear_stored_data()
-                logging.info(f"✓ Sent {len(stored_data)} stored records")
                 return len(stored_data)
             else:
                 logging.warning("✗ Failed to send stored data")
