@@ -38,4 +38,7 @@ sudo systemctl start NetworkManager
 sudo systemctl enable WifiMonitor.service
 sudo systemctl start WifiMonitor.service
 
+sudo systemctl enable ProgramAutoRun.service
+sudo systemctl start ProgramAutoRun.service
+
 echo "Installation completed successfully."
