@@ -1,13 +1,13 @@
 from .bme280 import BME280Sensor
 from .ltr390 import LTR390Sensor
-from .sps30 import SPS30Sensor
+from .air_quality import AirQualitySensor
 from .rain import RainSensor
 from .wind import WindSpeedSensor, WindDirectionSensor
 
 sensors = {
     "tph": BME280Sensor,
     "light": LTR390Sensor,
-    "airQuality": SPS30Sensor,
+    "airQuality": AirQualitySensor,
     "speed": WindSpeedSensor,
     "rain": RainSensor,
     "direction": WindDirectionSensor
