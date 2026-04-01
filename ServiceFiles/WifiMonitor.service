@@ -5,7 +5,7 @@ Wants=network-online.target
 
 [Service]
 Type=simple
-ExecStart=/home/raspberry/workspace/raspberry_soft/wifi_monitor.sh
+ExecStart=/home/raspberry/workspace/raspberry_soft/ServiceFiles/wifi_monitor.sh
 Restart=always
 RestartSec=60
 StandardOutput=null

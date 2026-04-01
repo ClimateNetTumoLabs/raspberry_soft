@@ -14,10 +14,10 @@ echo "dtoverlay=pi3-miniuart-bt" | sudo tee -a /boot/firmware/config.txt
 echo "dtoverlay=pi3-miniuart-bt" | sudo tee -a /boot/config.txt
 
 # Copy service files
-cp WifiMonitor.service /etc/systemd/system/
-cp ProgramAutoRun.service /etc/systemd/system/
+cp ServiceFiles/WifiMonitor.service /etc/systemd/system/
+cp ServiceFiles/ProgramAutoRun.service /etc/systemd/system/
 
-sudo chmod +x /home/raspberry/workspace/raspberry_soft/wifi_monitor.sh
+sudo chmod +x /home/raspberry/workspace/raspberry_soft/ServiceFiles/wifi_monitor.sh
 
 python3 -m venv app/venv
 source app/venv/bin/activate
