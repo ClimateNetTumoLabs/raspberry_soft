@@ -1,30 +1,16 @@
 import json
 import os
-import socket
 import ssl
 import time
 
 import paho.mqtt.client as mqtt
-from config import MQTT_BROKER_ENDPOINT, MQTT_TOPIC
+from config import MQTT_BROKER_ENDPOINT, MQTT_TOPIC, DEVICE_ID
 from logger_config import logging
 
 
 class MQTTClient:
-    """
-    Handles interactions with an MQTT broker.
-
-    Attributes:
-        client (mqtt.Client): The MQTT client instance.
-        deviceID (str): Identifier for the device.
-    """
-
     def __init__(self, deviceID: str) -> None:
-        """
-        Initializes the MQTTClient instance and connects to the MQTT broker.
 
-        Args:
-            deviceID (str): Identifier for the device.
-        """
         self.client = mqtt.Client()
         self.client.tls_set(
             ca_certs=os.path.join(os.path.dirname(__file__), 'certificates/rootCA.pem'),
@@ -41,38 +27,26 @@ class MQTTClient:
         except Exception as e:
             logging.error(f"Failed to connect to MQTT broker: {str(e)}")
 
-        self.deviceID = f"device{deviceID}"
+        self.deviceID = f"device{DEVICE_ID}"
 
     def send_data(self, data: list) -> bool:
         """
-        Sends data to the MQTT broker.
-
-        Args:
-            data (list): A list of dictionaries containing the data to be sent.
-
-        Returns:
-            bool: True if the data was successfully sent, False otherwise.
+        Sends data to the MQTT broker - ONLY TRIES ONCE
         """
         if not self.client.is_connected():
             logging.info("MQTT client not connected, attempting to reconnect...")
             try:
-                # Quick connect attempt with short timeout
+                # ONLY TRY ONCE - no loop
                 self.client.reconnect()
+                time.sleep(1)  # Brief wait for connection
 
-                # Wait up to 5 seconds for connection (reduced from 15)
-                is_connected = False
-                t = time.time()
-                while time.time() - t <= 5:
-                    if self.client.is_connected():
-                        is_connected = True
-                        logging.info("Connected to MQTT Broker")
-                        break
-                    time.sleep(0.5)
-
-                if not is_connected:
+                if not self.client.is_connected():
                     logging.error("Failed to connect to MQTT Broker")
                     return False
-            except (socket.timeout, socket.gaierror, Exception) as e:
+                else:
+                    logging.info("Connected to MQTT Broker")
+
+            except Exception as e:
                 logging.error(f"Error reconnecting to MQTT: {str(e)}")
                 return False
 

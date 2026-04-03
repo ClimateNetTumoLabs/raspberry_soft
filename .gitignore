@@ -4,10 +4,10 @@ __pycache__/
 .DS_Store
 app/.env
 
-app/data/certificates/certificate.pem.crt
-app/data/certificates/private.pem.key
-app/data/certificates/public.pem.key
-app/data/certificates/rootCA.pem
+app/utils/certificates/certificate.pem.crt
+app/utils/certificates/private.pem.key
+app/utils/certificates/public.pem.key
+app/utils/certificates/rootCA.pem
 
-app/data.db
+app/local_data.json
 parsing.log

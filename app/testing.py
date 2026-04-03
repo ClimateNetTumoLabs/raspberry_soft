@@ -1,204 +1,209 @@
 import os
-import time
-
+import sys
 from prettytable import PrettyTable
+from sensors.read_sensors import sensors
+from utils.rtc import RTCControl
+from utils.network import check_internet
+import subprocess
+import datetime
 
-import config
-from scripts.change_permissions import chmod_tty
-from scripts.network_checker import check_network
-from scripts.rtc import RTCControl
-from scripts.time_updater import update_rtc_time
-from sensors.other_sensors.TPH_sensor_BME280 import TPHSensor
-from sensors.other_sensors.air_quality_sensor_PMS5003 import AirQualitySensor
-from sensors.other_sensors.light_sensor_LTR390 import LightSensor
-from sensors.weather_meter_sensors.rain_sensor import Rain
-from sensors.weather_meter_sensors.wind_direction_sensor import WindDirection
-from sensors.weather_meter_sensors.wind_speed_sensor import WindSpeed
+SERVICE_NAME = "ProgramAutoRun.service"
 
+def stop_main_service():
+    try:
+        subprocess.run(["sudo", "systemctl", "stop", SERVICE_NAME], check=False)
+        print(f"Stopped {SERVICE_NAME}")
+    except Exception as e:
+        print(f"Failed to stop {SERVICE_NAME}: {e}")
+
+def start_main_service():
+    try:
+        subprocess.run(["sudo", "systemctl", "restart", SERVICE_NAME], check=False)
+        print(f"Restarted {SERVICE_NAME}")
+    except Exception as e:
+        print(f"Failed to restart {SERVICE_NAME}: {e}")
 
 class TestSensors:
-    """
-    Class to test various sensors and display their status using PrettyTable.
-
-    Attributes:
-        light (LightSensor): Instance of LightSensor.
-        tph (TPHSensor): Instance of TPHSensor.
-        air_quality (AirQualitySensor): Instance of AirQualitySensor.
-        rtc (RTCControl or None): Instance of RTCControl if available, otherwise None.
-        wind_direction_sensor (WindDirection): Instance of WindDirection sensor.
-        wind_speed_sensor (WindSpeed): Instance of WindSpeed sensor.
-        rain_sensor (Rain): Instance of Rain sensor.
-        results (dict): Dictionary to store test results.
-    """
-
-    def __init__(self) -> None:
-        """
-        Initializes sensor instances, sets up RTC if available, and initializes result tracking.
-        """
-        chmod_tty()
-        self.light = LightSensor()
-        self.tph = TPHSensor()
-        self.air_quality = AirQualitySensor()
-        try:
-            self.rtc = RTCControl()
-        except Exception:
-            self.rtc = None
-
-        self.wind_direction_sensor = WindDirection()
-        self.wind_speed_sensor = WindSpeed()
-        self.rain_sensor = Rain()
-        os.system("clear")
-
-        if config.SENSORS["wind_speed"]["working"]:
-            self.wind_speed_sensor.sensor.when_pressed = self.speed_ok
-
-        if config.SENSORS["rain"]["working"]:
-            self.rain_sensor.sensor.when_pressed = self.rain_ok
-
+    def __init__(self):
+        self.init_once()
         self.reset_results()
 
-    def reset_results(self) -> None:
-        """
-        Resets the results dictionary to its default state.
-        """
+    def init_once(self):
+        os.system("clear")
+        print("Initializing sensors (once)...")
+        self.sensor_instances = {}
+        for name, cls in sensors.items():
+            try:
+                self.sensor_instances[name] = cls()
+            except Exception as e:
+                print(f"Failed to init {name}: {e}")
+
+        try:
+            self.rtc = RTCControl()
+            self.sync_rtc_if_needed()
+        except Exception as e:
+            print(f"RTC initialization failed: {e}")
+            self.rtc = None
+
+        # Start SPS30 only once
+        if "airQuality" in self.sensor_instances:
+            try:
+                self.sensor_instances["airQuality"].start()
+            except Exception as e:
+                print("[SPS30] start() failed:", e)
+
+        # Set up callbacks for pulse sensors
+        if "speed" in self.sensor_instances:
+            instance = self.sensor_instances["speed"]
+            if hasattr(instance, 'speed'):
+                instance.speed.when_pressed = self.speed_ok
+
+        if "rain" in self.sensor_instances:
+            instance = self.sensor_instances["rain"]
+            if hasattr(instance, 'rain'):
+                instance.rain.when_pressed = self.rain_ok
+
+    def sync_rtc_if_needed(self):
+        """Sync RTC if time difference is too large"""
+        if not self.rtc:
+            return
+
+        try:
+            rtc_time = self.rtc.get_time()
+            system_time = datetime.datetime.now()
+            time_diff = abs((system_time - rtc_time).total_seconds())
+
+            if time_diff > 3600:
+                print(f"RTC time differs by {time_diff} seconds. Syncing...")
+                self.rtc.change_time(system_time)
+                print("RTC synced with system time")
+            else:
+                print(f"RTC time is correct (diff: {time_diff}s)")
+        except Exception as e:
+            print(f"RTC sync check failed: {e}")
+
+    def reset_results(self):
         self.results = {
-            "LightSensor": [True],
-            "TPHSensor": [True],
-            "AirQualitySensor": [True],
-            "WindDirection": [True],
-            "WindSpeed": False,
-            "Rain": False,
-            "Network": False,
+            "tph": [True],
+            "light": [True],
+            "airQuality": [True],
+            "direction": [True],
+            "speed": [False],
+            "rain": [False],
+            "network": False,
             "RTC": False
         }
 
-    def format_result(self, result) -> str:
-        """
-        Formats the result for display in PrettyTable.
+    def format_result(self, v):
+        if isinstance(v, list):
+            if len(v) > 1:
+                ok, data = v
+                if isinstance(data, dict):
+                    data = "\n".join(f"{k}: {v}" for k, v in data.items())
+                return f"{ok}\n\n{data}"
+            return v[0]
+        return v
 
-        Args:
-            result (any): Result to format.
-
-        Returns:
-            str: Formatted result.
-        """
+    def print_results(self):
         os.system("clear")
-
-        if isinstance(result, list) and len(result) > 1:
-            is_success = result[0]
-            formatted_data = result[1]
-
-            if isinstance(formatted_data, dict):
-                formatted_lines = []
-                for key, value in formatted_data.items():
-                    formatted_lines.append(f"{key}: {value}")
-                formatted_data = '\n'.join(formatted_lines)
-
-            return f"{is_success}\n\n{formatted_data}"
-
-        return result
-
-    def print_results(self) -> None:
-        """
-        Prints the current results using PrettyTable.
-        """
         table = PrettyTable()
-        table.field_names = ["Key", "Value"]
-
+        table.field_names = ["Sensor", "Value"]
         for key, value in self.results.items():
-            formatted_value = self.format_result(value)
-            table.add_row([key, formatted_value], divider=True)
-
+            table.add_row([key, self.format_result(value)], divider=True)
         table.align = "l"
         print(table)
-        print("\nPress any key to start testing again or 'q' to quit: ")
+        print("\nPress ENTER to restart | press 'q' then ENTER to quit")
 
-    def speed_ok(self) -> None:
-        """
-        Handles the event when wind speed sensor is OK.
-        """
-        if not self.results["WindSpeed"]:
-            self.results["WindSpeed"] = True
+    def speed_ok(self):
+        """Callback when wind speed sensor triggers"""
+        if not self.results["speed"][0]:
+            self.results["speed"] = [True]
             self.print_results()
 
-    def rain_ok(self) -> None:
-        """
-        Handles the event when rain sensor is OK.
-        """
-        if not self.results["Rain"]:
-            self.results["Rain"] = True
+    def rain_ok(self):
+        """Callback when rain sensor triggers"""
+        if not self.results["rain"][0]:
+            self.results["rain"] = [True]
             self.print_results()
 
-    def check_devices(self) -> None:
-        """
-        Checks the status of all sensors and network connectivity.
-        """
-        res_light = self.light.read_data()
-        if res_light:
-            self.results["LightSensor"].append(res_light)
-            for elem in res_light.values():
-                if elem is None:
-                    self.results["LightSensor"][0] = False
-                    break
-        else:
-            self.results["LightSensor"] = False
+    def check_devices(self):
+        self.reset_results()
 
-        res_tph = self.tph.read_data()
-        if res_tph:
-            self.results["TPHSensor"].append(res_tph)
-            for elem in res_tph.values():
-                if elem is None:
-                    self.results["TPHSensor"][0] = False
-                    break
-        else:
-            self.results["TPHSensor"] = False
+        for name, instance in self.sensor_instances.items():
+            # Rain sensor - just check if callback has triggered
+            if name == "rain":
+                # Callback already set self.results["rain"] if triggered
+                continue
 
-        res_air_quality = self.air_quality.read_data()
-        if res_air_quality:
-            self.results["AirQualitySensor"].append(res_air_quality)
-            for elem in res_air_quality.values():
-                if elem is None:
-                    self.results["AirQualitySensor"][0] = False
-                    break
-        else:
-            self.results["AirQualitySensor"] = False
+            # Speed sensor - read numeric value
+            if name == "speed":
+                try:
+                    res = instance.read_data()
+                    # If callback was triggered, show True with data
+                    if self.results["speed"][0]:
+                        if res is not None:
+                            self.results["speed"] = [True]
+                    # Otherwise stays False
+                except Exception as e:
+                    print(f"[speed] error: {e}")
+                continue
 
-        res_wind_direction = self.wind_direction_sensor.read_data()
-        self.results["WindDirection"].append(res_wind_direction)
-        if res_wind_direction is None:
-            self.results["WindDirection"][0] = False
-
-        if check_network():
-            self.results["Network"] = True
-
-        if self.rtc is not None:
+            # general sensors
             try:
-                res = update_rtc_time()
-                if not res:
-                    self.results["Network"] = False
+                res = instance.read_data()
+            except Exception as e:
+                print(f"[{name}] read_data() error: {e}")
+                self.results[name][0] = False
+                continue
 
-                res_rtc = self.rtc.get_time()
-                self.results["RTC"] = [True, res_rtc.strftime("%d-%m-%Y %H:%M:%S")]
+            if res is None:
+                self.results[name][0] = False
+            else:
+                self.results[name].append(res)
+                if isinstance(res, dict) and any(v is None for v in res.values()):
+                    self.results[name][0] = False
+
+        # Network & RTC checks
+        try:
+            self.results["network"] = check_internet()
+        except Exception:
+            self.results["network"] = False
+
+        if self.rtc:
+            try:
+                t = self.rtc.get_time().strftime("%d-%m-%Y %H:%M:%S")
+                self.results["RTC"] = [True, t]
             except Exception:
                 self.results["RTC"] = False
 
         self.print_results()
 
+    def cleanup(self):
+        if "airQuality" in self.sensor_instances:
+            try:
+                self.sensor_instances["airQuality"].stop()
+            except Exception as e:
+                print("[SPS30] stop() error:", e)
+
 
 def main():
-    test_sensors = TestSensors()
-    while True:
-        test_sensors.check_devices()
-        try:
-            user_input = input()
-            if user_input.lower() == 'q':
-                print("Exiting program.")
-                break
-            print("Loading...")
-            test_sensors.reset_results()
-        except KeyboardInterrupt:
-            print("\nExiting program.")
-            break
+    stop_main_service()
+    tester = TestSensors()
+    try:
+        while True:
+            tester.check_devices()
+            user_input = input().strip().lower()
+            if user_input == "q":
+                tester.cleanup()
+                start_main_service()
+                print("Exiting...")
+                sys.exit(0)
+    except KeyboardInterrupt:
+        tester.cleanup()
+        start_main_service()
+        print("\nExiting...")
+        sys.exit(0)
+
 
 if __name__ == "__main__":
     main()

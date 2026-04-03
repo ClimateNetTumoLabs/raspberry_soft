@@ -1,77 +1,151 @@
-from datetime import datetime
-
-import config
-from data.data_handler import DataHandler
-from data.local_db import LocalDatabase
-from data.mqtt_client import MQTTClient
+import time
+import datetime
+from config import TRANSMISSION_INTERVAL, MEASURING_TIME
 from logger_config import logging
-from scripts.change_permissions import chmod_tty
-from scripts.time_updater import update_time
-from sensors.read_sensors import ReadSensors
+from utils.rtc import RTCControl
+from utils.network import check_internet, reconnect
+from utils.mqtt import MQTTClient, DEVICE_ID
+from utils.data_storage import DataStorage
+from utils.scheduler import calculate_next_transmission, calculate_measurement_start
+from utils.sensor_manager import SensorManager
+import warnings
 
 
-def main() -> None:
-    """
-    Main function to initialize sensors, databases, MQTT client, and continuously collect and store sensor data.
+def main():
+    """Main execution loop"""
+    logging.info("=== Starting ClimateNet Station ===")
 
-    Raises:
-        Exception: If any unexpected error occurs during execution.
-    """
+    # Initialize RTC
+    try:
+        rtc = RTCControl()
+
+        if check_internet():
+            if not rtc.sync_from_ntp():
+                logging.warning("NTP sync failed, using RTC")
+                rtc.sync_system_from_rtc()
+        else:
+            logging.warning("No internet, using RTC time")
+            rtc.sync_system_from_rtc()
+
+        current_time = rtc.get_time()
+
+    except Exception as e:
+        logging.error(f"RTC init failed: {e}")
+        current_time = datetime.datetime.now()
+
     # Initialize sensors
-    logging.info("Initializing sensors...")
-    sensor_reader = ReadSensors()
+    sensor_manager = SensorManager()
+    data_storage = DataStorage()
 
-    # Initialize local database
-    logging.info("Initializing local database...")
-    local_database = LocalDatabase(deviceID=config.DEVICE_ID,
-                                   db_name=config.LOCAL_DB_DB_NAME)
+    # Initialize MQTT client
+    mqtt_client = None
+    if check_internet():
+        try:
+            mqtt_client = MQTTClient(DEVICE_ID)
+            logging.info("MQTT connected")
+        except Exception as e:
+            logging.error(f"MQTT connection failed: {e}")
+    elif reconnect():
+        logging.info("Internet connected")
+    else:
+        logging.info("No internet connection, will save data locally")
 
-    # Initialize MQTT client (may fail if offline)
-    logging.info("Initializing MQTT client...")
-    mqtt_client = MQTTClient(deviceID=config.DEVICE_ID)
+    # Main loop
+    mqtt_working = False
 
-    # Initialize data handler
-    logging.info("Initializing data handler...")
-    dataHandler = DataHandler(mqtt_client=mqtt_client, local_database=local_database)
-
-    # Check if there is any existing data in the local database
-    local_data_count = dataHandler.local_db.get_count()
-    if local_data_count:
-        logging.info(f"Found {local_data_count} records in local database - attempting to send")
-        # Send existing data to designated destination
-        dataHandler.send_only_local()
-
-    # Continuous loop for collecting and storing sensor data
-    logging.info("Starting main data collection loop")
     while True:
         try:
-            # Collect sensor data
-            data = sensor_reader.collect_data()
+            next_transmission = calculate_next_transmission(TRANSMISSION_INTERVAL)
+            measurement_start = calculate_measurement_start(next_transmission, MEASURING_TIME)
 
-            # Log data collection completion and collected data
-            logging.info("Data collection completed.")
-            logging.info(f"Collected data -> {data}")
+            if measurement_start >= next_transmission:
+                logging.warning(f"Skipping cycle, next: {next_transmission.strftime('%Y-%m-%d %H:%M:%S')}")
+                while datetime.datetime.now() < next_transmission:
+                    time.sleep(1)
+                continue
 
-            # Add timestamp to collected data
-            data['time'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            logging.info(f"Next transmission: {next_transmission.strftime('%Y-%m-%d %H:%M:%S')}")
 
-            # Save collected data
-            logging.info("Saving data...")
-            dataHandler.save(data)
-            logging.info("Data saved. Continuing to next collection cycle.")
+            # Wait until measurement start time
+            last_stored_data_attempt = 0
+            while datetime.datetime.now() < measurement_start:
+                if check_internet() and mqtt_client and mqtt_working and time.time() - last_stored_data_attempt > 60:
+                    sent_count = data_storage.send_stored_data(mqtt_client)
+                    if sent_count > 0:
+                        logging.info(f"✓ Sent {sent_count} stored records")
+                    last_stored_data_attempt = time.time()
+                time.sleep(1)
 
+            # Start measurements
+            logging.info("+" * 15 + " Starting measurement period...")
+            sensor_manager.start_measurement_period(measurement_start, next_transmission)
+
+            # Wait until transmission time
+            while datetime.datetime.now() < next_transmission:
+                time.sleep(0.1)
+
+            # Prepare and send data
+            data_packet = sensor_manager.get_averaged_data(next_transmission)
+
+            if check_internet():
+                if mqtt_client is None:
+                    mqtt_client = MQTTClient(DEVICE_ID)
+
+                stored_count = data_storage.send_stored_data(mqtt_client)
+                if stored_count > 0:
+                    logging.info(f"✓ Sent {stored_count} stored records")
+
+                success = False
+                for attempt in range(3):
+                    success = mqtt_client.send_data([data_packet])
+                    if success:
+                        logging.info("✓ Data sent successfully")
+                        mqtt_working = True  # Mark MQTT as working
+                        break
+                    elif attempt < 2:
+                        time.sleep(1)
+
+                if not success:
+                    logging.warning("✗ MQTT failed, saving locally")
+                    mqtt_working = False
+                    data_storage.save_locally(data_packet)
+                    logging.info(data_packet)
+            else:
+                if reconnect():
+                    if mqtt_client is None:
+                        mqtt_client = MQTTClient(DEVICE_ID)
+
+                    stored_count = data_storage.send_stored_data(mqtt_client)
+                    if stored_count > 0:
+                        logging.info(f"✓ Sent {stored_count} stored records")
+
+                    success = False
+                    for attempt in range(3):
+                        success = mqtt_client.send_data([data_packet])
+                        if success:
+                            logging.info("✓ Data sent after reconnect")
+                            mqtt_working = True
+                            break
+                        elif attempt < 2:
+                            time.sleep(1)
+
+                    if not success:
+                        logging.warning("✗ Still no connection, saving locally")
+                        mqtt_working = False
+                        data_storage.save_locally(data_packet)
+                        logging.info(data_packet)
+                else:
+                    logging.warning("✗ No internet, saving locally")
+                    mqtt_working = False
+                    data_storage.save_locally(data_packet)
+                    logging.info(data_packet)
+                    mqtt_client = None
+
+        except KeyboardInterrupt:
+            sensor_manager.cleanup()
+            break
         except Exception as e:
-            # Log errors during execution
-            logging.error(f"Error occurred during execution: {str(e)}", exc_info=True)
-
+            logging.error(f"Error in main loop: {e}", exc_info=True)
 
 if __name__ == "__main__":
-    # Perform necessary setup tasks
-    update_time()
-    chmod_tty()
-
-    # Log program start
-    logging.info("Program started")
-
-    # Execute main function
     main()
