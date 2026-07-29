@@ -10,4 +10,6 @@ app/utils/certificates/public.pem.key
 app/utils/certificates/rootCA.pem
 
 app/local_data.json
+app/local_data.json.tmp
+app/local_data.json.corrupt.*
 parsing.log

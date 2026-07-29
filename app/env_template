@@ -1,4 +1,25 @@
+# Station number. Becomes the device name (device54), the RDS table name, and
+# the ack topic. Digits only for a production station.
+# Example: DEVICE_ID=54
 DEVICE_ID=
-LOCAL_DB=
+
+# Topic the station publishes measurements to. Must match the topic in the AWS
+# IoT rule that triggers the data_to_rds Lambda.
+# Example: MQTT_TOPIC=example/devices
 MQTT_TOPIC=
+
+# AWS IoT Core device data endpoint. Found in the AWS IoT console under Settings.
+# Example: MQTT_BROKER_ENDPOINT=xxxxxxxxxxxxxxxxx.iot.us-xxxx-x.amazonaws.com
 MQTT_BROKER_ENDPOINT=
+
+# Topic the Lambda confirms stored records on. Required: with this unset the
+# station never learns what was stored and keeps every record buffered forever.
+# Must be the same string ACK_TOPIC_TEMPLATE in the Lambda's config produces for
+# this device, and unique per station.
+# Example: MQTT_ACK_TOPIC=example-ack/device1
+MQTT_ACK_TOPIC=
+
+# Local buffer holding records until the Lambda confirms them. Blank means
+# local_data.json. Custom names must include the .json extension.
+# Example: LOCAL_DB=local_data.json
+LOCAL_DB=

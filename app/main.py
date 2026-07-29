@@ -70,9 +70,9 @@ def main():
             last_stored_data_attempt = 0
             while datetime.datetime.now() < measurement_start:
                 if check_internet() and mqtt_client and mqtt_working and time.time() - last_stored_data_attempt > 60:
-                    sent_count = data_storage.send_stored_data(mqtt_client)
-                    if sent_count > 0:
-                        logging.info(f"✓ Sent {sent_count} stored records")
+                    confirmed = data_storage.flush(mqtt_client)
+                    if confirmed > 0:
+                        logging.info(f"✓ {confirmed} stored records confirmed in database")
                     last_stored_data_attempt = time.time()
                 time.sleep(1)
 
@@ -84,62 +84,30 @@ def main():
             while datetime.datetime.now() < next_transmission:
                 time.sleep(0.1)
 
-            # Prepare and send data
+            # Prepare data. Store it before attempting any send, so a failed
+            # transmission, a crash or a power cut can never lose the packet.
             data_packet = sensor_manager.get_averaged_data(next_transmission)
+            data_storage.save_locally(data_packet)
+            logging.info(data_packet)
 
-            if check_internet():
-                if mqtt_client is None:
-                    mqtt_client = MQTTClient(DEVICE_ID)
+            if not check_internet() and not reconnect():
+                logging.warning("✗ No internet, data kept locally")
+                mqtt_working = False
+                mqtt_client = None
+                continue
 
-                stored_count = data_storage.send_stored_data(mqtt_client)
-                if stored_count > 0:
-                    logging.info(f"✓ Sent {stored_count} stored records")
+            if mqtt_client is None:
+                mqtt_client = MQTTClient(DEVICE_ID)
 
-                success = False
-                for attempt in range(3):
-                    success = mqtt_client.send_data([data_packet])
-                    if success:
-                        logging.info("✓ Data sent successfully")
-                        mqtt_working = True  # Mark MQTT as working
-                        break
-                    elif attempt < 2:
-                        time.sleep(1)
+            # Records are removed only once the Lambda confirms they are in the
+            # database; anything unconfirmed is retried on the next cycle.
+            confirmed = data_storage.flush(mqtt_client)
+            mqtt_working = confirmed > 0
 
-                if not success:
-                    logging.warning("✗ MQTT failed, saving locally")
-                    mqtt_working = False
-                    data_storage.save_locally(data_packet)
-                    logging.info(data_packet)
+            if confirmed > 0:
+                logging.info(f"✓ {confirmed} records confirmed in database")
             else:
-                if reconnect():
-                    if mqtt_client is None:
-                        mqtt_client = MQTTClient(DEVICE_ID)
-
-                    stored_count = data_storage.send_stored_data(mqtt_client)
-                    if stored_count > 0:
-                        logging.info(f"✓ Sent {stored_count} stored records")
-
-                    success = False
-                    for attempt in range(3):
-                        success = mqtt_client.send_data([data_packet])
-                        if success:
-                            logging.info("✓ Data sent after reconnect")
-                            mqtt_working = True
-                            break
-                        elif attempt < 2:
-                            time.sleep(1)
-
-                    if not success:
-                        logging.warning("✗ Still no connection, saving locally")
-                        mqtt_working = False
-                        data_storage.save_locally(data_packet)
-                        logging.info(data_packet)
-                else:
-                    logging.warning("✗ No internet, saving locally")
-                    mqtt_working = False
-                    data_storage.save_locally(data_packet)
-                    logging.info(data_packet)
-                    mqtt_client = None
+                logging.warning("✗ Nothing confirmed, data kept locally")
 
         except KeyboardInterrupt:
             sensor_manager.cleanup()

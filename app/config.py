@@ -7,6 +7,10 @@ load_dotenv()
 LOCAL_DB = os.getenv('LOCAL_DB', '')
 MQTT_BROKER_ENDPOINT = os.getenv('MQTT_BROKER_ENDPOINT', '')
 MQTT_TOPIC = os.getenv('MQTT_TOPIC', '')
+# Topic the Lambda publishes delivery confirmations to. Must resolve to the same
+# string as ACK_TOPIC_TEMPLATE in the Lambda's config; a mismatch is silent -
+# acks never arrive and records buffer forever.
+MQTT_ACK_TOPIC = os.getenv('MQTT_ACK_TOPIC', '')
 DEVICE_ID = os.getenv('DEVICE_ID', '')
 
 SSID = ""
@@ -19,6 +23,13 @@ TRANSMISSION_INTERVAL = 900
 # sum of sensors reading_times
 MEASURING_TIME = 300
 READING_TIME = 30
+
+# Seconds to wait for the Lambda to confirm a batch reached the database.
+# Covers a cold start against a VPC-attached RDS.
+ACK_TIMEOUT = 20
+
+# Records per publish. AWS IoT Core rejects payloads larger than 128 KB.
+SEND_CHUNK_SIZE = 100
 
 SENSORS = {
     "ltr390": {
