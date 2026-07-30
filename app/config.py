@@ -13,6 +13,11 @@ MQTT_TOPIC = os.getenv('MQTT_TOPIC', '')
 MQTT_ACK_TOPIC = os.getenv('MQTT_ACK_TOPIC', '')
 DEVICE_ID = os.getenv('DEVICE_ID', '')
 
+# Station coordinates, used for the Open-Meteo UV lookup. Left unset, UV is
+# reported as null rather than being read for the wrong place.
+LATITUDE = os.getenv('LATITUDE', '')
+LONGITUDE = os.getenv('LONGITUDE', '')
+
 SSID = ""
 PASSWORD = ""
 # It is recommended to set the value > than

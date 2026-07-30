@@ -1,5 +1,5 @@
 from adafruit_ltr390 import LTR390
-from config import SENSORS
+from config import SENSORS, LATITUDE, LONGITUDE
 import busio, board
 from logger_config import logging
 import datetime, requests
@@ -10,11 +10,29 @@ class LTR390Sensor:
         self.working = conf["working"]
         self.sensor = None
         self.i2c = None
+        self.location = self._read_location()
 
         if self.working:
             self.setup_sensor()
         else:
             logging.info("[LTR390] Disabled in config")
+
+    @staticmethod
+    def _read_location():
+        """
+        Station coordinates from the environment, or None.
+
+        Returning None disables the UV lookup instead of falling back to a
+        default location, which would report another place's UV as this one's.
+        Read once at init so a missing value is logged once, not every reading.
+        """
+        try:
+            return float(LATITUDE), float(LONGITUDE)
+        except (TypeError, ValueError):
+            logging.warning(
+                "[LTR390] LATITUDE/LONGITUDE not set in .env, UV will be reported as null"
+            )
+            return None
 
     def setup_sensor(self):
         try:
@@ -29,8 +47,11 @@ class LTR390Sensor:
             return False
 
     def fetch_uv_from_api(self) -> float or None:
+        if not self.location:
+            return None
+
         try:
-            lat, lon = 40.18, 44.51
+            lat, lon = self.location
             url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&hourly=uv_index&timezone=auto"
             response = requests.get(url, timeout=5)
             response.raise_for_status()

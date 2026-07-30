@@ -19,6 +19,13 @@ MQTT_BROKER_ENDPOINT=
 # Example: MQTT_ACK_TOPIC=example-ack/device1
 MQTT_ACK_TOPIC=
 
+# Station coordinates in decimal degrees, used for the Open-Meteo UV lookup.
+# Leave blank and UV is reported as null - better than another place's reading.
+# Example: LATITUDE=12.3456
+# Example: LONGITUDE=-65.4321
+LATITUDE=
+LONGITUDE=
+
 # Local buffer holding records until the Lambda confirms them. Blank means
 # local_data.json. Custom names must include the .json extension.
 # Example: LOCAL_DB=local_data.json
