@@ -1,4 +1,8 @@
 #!/bin/bash
+set -e
+
+# Build deps for lgpio, which has no prebuilt wheel on 64-bit / Python 3.13
+sudo apt install -y swig liblgpio-dev
 
 # Enable interfaces
 sudo raspi-config nonint do_ssh 0

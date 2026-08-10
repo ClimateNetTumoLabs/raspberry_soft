@@ -1,0 +1,23 @@
+[Unit]
+Description=ClimateNet first boot setup (clone repo, run install.sh)
+# Needs a working network to clone, apt-get and pip. network.target is not enough.
+Wants=network-online.target
+After=network-online.target
+# The stamp is written only after a completely successful run, so a failed or
+# interrupted setup is retried on the next boot instead of leaving a half station.
+ConditionPathExists=!/var/lib/climatenet/setup-done
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+# Branch the station clones. Set here rather than in the script so that
+# 'systemctl cat FirstBootSetup' answers which branch a station was built from.
+# REMOVE THIS LINE when merging to main, or every station keeps tracking the branch.
+Environment=BRANCH=custom-rpi-image
+ExecStart=/usr/local/sbin/first_boot_setup.sh
+# Building the venv compiles lgpio from source on 64-bit, which takes far longer
+# than the 90s default for a oneshot unit. Without this the setup is killed midway.
+TimeoutStartSec=3600
+
+[Install]
+WantedBy=multi-user.target
