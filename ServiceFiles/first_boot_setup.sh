@@ -19,17 +19,21 @@ set -eu
 
 REPO_URL="${REPO_URL:-https://github.com/ClimateNetTumoLabs/raspberry_soft.git}"
 BRANCH="${BRANCH:-main}"
-# Hardcoded rather than detected: the service units, wifi_monitor.sh and install.sh
-# all hardcode this user, so a station under any other name would install and then
-# quietly do nothing.
-STATION_USER="${STATION_USER:-raspberry}"
-TARGET="/home/${STATION_USER}/workspace/raspberry_soft"
 STAMP=/var/lib/climatenet/setup-done
 
 die() { echo "FAIL: $*" >&2; exit 1; }
 
-id "$STATION_USER" >/dev/null 2>&1 \
-    || die "no user '$STATION_USER' - the image requires this username, set it in Raspberry Pi Imager"
+# Whoever was created from the Imager dialog, not a fixed name. cloud-init makes
+# exactly one account and it always lands on uid 1000; install.sh then rewrites the
+# unit files to match, so any username works.
+STATION_USER="${STATION_USER:-$(id -nu 1000 2>/dev/null || true)}"
+[ -n "$STATION_USER" ] || die "no uid 1000 account - set a username in the Imager dialog"
+
+# Read the home directory rather than assuming /home/<user>.
+HOME_DIR="$(getent passwd "$STATION_USER" | cut -d: -f6)"
+[ -n "$HOME_DIR" ] || die "no home directory for '$STATION_USER'"
+TARGET="${HOME_DIR}/workspace/raspberry_soft"
+echo "setting up for user '${STATION_USER}' in ${TARGET}"
 
 # Package lists are empty on a fresh image, so install.sh's apt install would fail
 # to find swig and liblgpio-dev. Done here rather than in install.sh, which runs on
@@ -45,7 +49,7 @@ apt-get update || apt-get update
 apt-get install -y git
 
 # Clone as the station user. A root-owned checkout makes every later git command run
-# as raspberry fail with git's dubious-ownership check.
+# as that user fail with git's dubious-ownership check.
 if [ ! -d "$TARGET/.git" ]; then
     # An aborted earlier attempt can leave a directory with no .git in it.
     rm -rf "$TARGET"
@@ -62,7 +66,7 @@ chmod +x install.sh
 # running means a crash loop writing to the SD card until somebody provisions it.
 systemctl disable --now ProgramAutoRun.service >/dev/null 2>&1 || true
 
-cat > "/home/${STATION_USER}/PROVISION_ME.txt" <<'EOF'
+cat > "${HOME_DIR}/PROVISION_ME.txt" <<'EOF'
 This station was flashed from the ClimateNet base image. The code and virtualenv
 are installed; the station-specific parts are not. ProgramAutoRun stays disabled
 until you finish these steps.
@@ -82,8 +86,8 @@ until you finish these steps.
 
 Setup log:  journalctl -u FirstBootSetup
 EOF
-chown "$STATION_USER":"$STATION_USER" "/home/${STATION_USER}/PROVISION_ME.txt"
+chown "$STATION_USER":"$STATION_USER" "${HOME_DIR}/PROVISION_ME.txt"
 
 mkdir -p "$(dirname "$STAMP")"
 touch "$STAMP"
-echo "first boot setup complete - see /home/${STATION_USER}/PROVISION_ME.txt"
+echo "first boot setup complete - see ${HOME_DIR}/PROVISION_ME.txt"

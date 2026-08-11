@@ -16,8 +16,11 @@
 
 set -eu
 
-STATION_USER="${STATION_USER:-raspberry}"
-REPO="${REPO:-/home/${STATION_USER}/workspace/raspberry_soft}"
+# uid 1000 is the account Imager created, whatever it was named.
+STATION_USER="${STATION_USER:-$(id -nu 1000 2>/dev/null || echo raspberry)}"
+HOME_DIR="$(getent passwd "$STATION_USER" | cut -d: -f6)"
+HOME_DIR="${HOME_DIR:-/home/${STATION_USER}}"
+REPO="${REPO:-${HOME_DIR}/workspace/raspberry_soft}"
 APP="${REPO}/app"
 BOOTCFG="${BOOTCFG:-/boot/firmware/config.txt}"
 
@@ -153,8 +156,8 @@ if [ -f "$BOOTCFG" ]; then
 fi
 
 apt-get clean
-rm -rf /root/.cache/pip "/home/${STATION_USER}/.cache/pip"
-rm -f /root/.bash_history "/home/${STATION_USER}/.bash_history"
+rm -rf /root/.cache/pip "${HOME_DIR}/.cache/pip"
+rm -f /root/.bash_history "${HOME_DIR}/.bash_history"
 journalctl --rotate >/dev/null 2>&1 || true
 journalctl --vacuum-time=1s >/dev/null 2>&1 || true
 find /var/log -type f \( -name '*.gz' -o -name '*.[0-9]' \) -delete
@@ -175,7 +178,7 @@ fi
 # own copy on success - so the file's presence there means setup finished, and baking a
 # second copy in here would make a failed setup look like a completed one.
 if [ -d "$REPO/.git" ]; then
-cat > "/home/${STATION_USER}/PROVISION_ME.txt" <<'EOF'
+cat > "${HOME_DIR}/PROVISION_ME.txt" <<'EOF'
 This station was cloned from a working station and is NOT yet provisioned.
 ProgramAutoRun is disabled until you finish these steps.
 
@@ -190,7 +193,7 @@ ProgramAutoRun is disabled until you finish these steps.
   5. sudo systemctl enable --now ProgramAutoRun
   6. rm ~/PROVISION_ME.txt
 EOF
-chown "$STATION_USER":"$STATION_USER" "/home/${STATION_USER}/PROVISION_ME.txt"
+chown "$STATION_USER":"$STATION_USER" "${HOME_DIR}/PROVISION_ME.txt"
 fi
 
 echo

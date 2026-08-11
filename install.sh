@@ -1,6 +1,14 @@
 #!/bin/bash
 set -e
 
+# Where this checkout actually lives, and who owns it. The service files ship with
+# /home/raspberry paths as their default, but nothing requires that name: the units
+# are rewritten with these values as they are copied into /etc/systemd/system, which
+# git does not track, so ServiceFiles/ stays clean and git pull never conflicts.
+REPO_DIR="$(cd "$(dirname "$0")" && pwd)"
+STATION_USER="${STATION_USER:-$(stat -c '%U' "$REPO_DIR")}"
+echo "Installing for user '${STATION_USER}' from ${REPO_DIR}"
+
 # Build deps for lgpio, which has no prebuilt wheel on 64-bit / Python 3.13
 sudo apt install -y swig liblgpio-dev
 
@@ -17,11 +25,17 @@ git config --global core.editor "vim"
 echo "dtoverlay=pi3-miniuart-bt" | sudo tee -a /boot/firmware/config.txt
 echo "dtoverlay=pi3-miniuart-bt" | sudo tee -a /boot/config.txt
 
-# Copy service files
-cp ServiceFiles/WifiMonitor.service /etc/systemd/system/
-cp ServiceFiles/ProgramAutoRun.service /etc/systemd/system/
+# Copy the units, substituting this station's user and checkout path. The two
+# expressions are deliberately narrow: a blanket s/raspberry/$STATION_USER/ would
+# also rewrite "raspberry_soft" in every path.
+for unit in WifiMonitor.service ProgramAutoRun.service; do
+    sed -e "s|/home/raspberry/workspace/raspberry_soft|${REPO_DIR}|g" \
+        -e "s|^User=raspberry$|User=${STATION_USER}|" \
+        -e "s|^Group=raspberry$|Group=${STATION_USER}|" \
+        "$REPO_DIR/ServiceFiles/$unit" | sudo tee "/etc/systemd/system/$unit" >/dev/null
+done
 
-sudo chmod +x /home/raspberry/workspace/raspberry_soft/ServiceFiles/wifi_monitor.sh
+sudo chmod +x "$REPO_DIR/ServiceFiles/wifi_monitor.sh"
 
 python3 -m venv app/venv
 source app/venv/bin/activate
