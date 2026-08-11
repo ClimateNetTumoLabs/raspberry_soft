@@ -34,7 +34,15 @@ id "$STATION_USER" >/dev/null 2>&1 \
 # Package lists are empty on a fresh image, so install.sh's apt install would fail
 # to find swig and liblgpio-dev. Done here rather than in install.sh, which runs on
 # already-provisioned stations where this is just a slow no-op.
-apt-get update
+#
+# Retried once because the first attempt runs seconds after boot, before NTP has
+# corrected the clock: apt then fetches indexes against a wrong date and reports
+# "Some index files failed to download" as a warning, exiting 0 with a half-built
+# index that makes the install below fail for no visible reason.
+apt-get update || apt-get update
+
+# Raspberry Pi OS Lite ships no git, and cloning is this script's entire purpose.
+apt-get install -y git
 
 # Clone as the station user. A root-owned checkout makes every later git command run
 # as raspberry fail with git's dubious-ownership check.

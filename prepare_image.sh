@@ -71,11 +71,35 @@ systemctl disable ProgramAutoRun.service >/dev/null 2>&1 || true
 [ -L /var/lib/dbus/machine-id ] || rm -f /var/lib/dbus/machine-id
 
 rm -f /etc/ssh/ssh_host_*
-if systemctl list-unit-files | grep -q '^regenerate_ssh_host_keys'; then
-    systemctl enable regenerate_ssh_host_keys.service >/dev/null 2>&1
+
+# Deleting the keys without arranging for new ones leaves sshd unable to start, so
+# a flashed card comes up with no SSH at all. regenerate_ssh_host_keys.service is not
+# an option here - it ships with raspberrypi-sys-mods, which this image does not have -
+# and leaving it to cloud-init loses the race against sshd's own startup. A oneshot
+# ordered ahead of both sshd units takes the guesswork out of it.
+cat > /etc/systemd/system/regen-ssh-host-keys.service <<'EOF'
+[Unit]
+Description=Regenerate SSH host keys on first boot
+Before=ssh.service ssh.socket
+# Runs only when the keys are actually missing, so it is a no-op on every later boot.
+ConditionPathExists=!/etc/ssh/ssh_host_rsa_key
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/bin/ssh-keygen -A
+# sshd refuses to start without its runtime directory, and a freshly flashed card
+# does not have one yet.
+ExecStart=/usr/bin/install -d -m 0755 /run/sshd
+
+[Install]
+WantedBy=multi-user.target
+EOF
+if systemctl enable regen-ssh-host-keys.service >/dev/null 2>&1; then
+    echo "ssh host keys removed, regeneration armed for first boot"
 else
-    echo "WARN: no regenerate_ssh_host_keys.service - run" >&2
-    echo "      'sudo dpkg-reconfigure openssh-server' on each new station" >&2
+    echo "WARN: could not enable regen-ssh-host-keys.service - flashed cards will" >&2
+    echo "      have no SSH until 'sudo ssh-keygen -A' is run on the console" >&2
 fi
 
 # Saved Wi-Fi profiles hold the PSK in cleartext, separately from config.py.
@@ -146,8 +170,13 @@ if [ "${ZEROFILL:-1}" = "1" ]; then
     echo "free space zeroed, $(df -h / | awk 'NR==2{print $4}') available again"
 fi
 
+# Only for the clone-a-working-station flow, where the checkout ships inside the image.
+# On a base image the checkout arrives at first boot and first_boot_setup.sh writes its
+# own copy on success - so the file's presence there means setup finished, and baking a
+# second copy in here would make a failed setup look like a completed one.
+if [ -d "$REPO/.git" ]; then
 cat > "/home/${STATION_USER}/PROVISION_ME.txt" <<'EOF'
-This station was flashed from a golden image and is NOT yet provisioned.
+This station was cloned from a working station and is NOT yet provisioned.
 ProgramAutoRun is disabled until you finish these steps.
 
   1. cp app/env_template app/.env   and fill in DEVICE_ID, MQTT_TOPIC,
@@ -162,6 +191,7 @@ ProgramAutoRun is disabled until you finish these steps.
   6. rm ~/PROVISION_ME.txt
 EOF
 chown "$STATION_USER":"$STATION_USER" "/home/${STATION_USER}/PROVISION_ME.txt"
+fi
 
 echo
 echo "Stripped. Now: sudo shutdown -h now, then image the card from another machine."
