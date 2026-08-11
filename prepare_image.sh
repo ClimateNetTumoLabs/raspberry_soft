@@ -91,12 +91,18 @@ rm -f /etc/NetworkManager/system-connections/*
 # the boot partition) rather than custom.toml. cloud-init records that it already ran
 # and will not re-read the seed until that state is cleared, so a card flashed from
 # this image would ignore everything typed into the Imager dialog.
+CLOUD_INIT=0
 if command -v cloud-init >/dev/null 2>&1; then
-    cloud-init clean --logs --seed >/dev/null 2>&1 \
-        && echo "cloud-init state cleared - seed will be re-read on first boot" \
-        || echo "WARN: cloud-init clean failed" >&2
+    if cloud-init clean --logs --seed >/dev/null 2>&1; then
+        CLOUD_INIT=1
+        echo "cloud-init state cleared - seed will be re-read on first boot"
+    else
+        echo "WARN: cloud-init clean failed" >&2
+    fi
 fi
 
+# The older, pre-cloud-init mechanism. An image has one or the other, not both, so a
+# missing firstboot is only a problem when cloud-init is absent too.
 FIRSTBOOT=/usr/lib/raspberrypi-sys-mods/firstboot
 CMDLINE="${CMDLINE:-/boot/firmware/cmdline.txt}"
 if [ -x "$FIRSTBOOT" ] && [ -f "$CMDLINE" ]; then
@@ -107,9 +113,11 @@ if [ -x "$FIRSTBOOT" ] && [ -f "$CMDLINE" ]; then
         sed -i "1s|\$| init=${FIRSTBOOT}|" "$CMDLINE"
         echo "re-armed first-boot customisation in $CMDLINE"
     fi
+elif [ "$CLOUD_INIT" -eq 1 ]; then
+    echo "no raspberrypi-sys-mods firstboot - this image customises via cloud-init"
 else
-    echo "WARN: $FIRSTBOOT not found - custom.toml will be ignored on flashed cards;" >&2
-    echo "      set hostname and Wi-Fi by hand during provisioning" >&2
+    echo "WARN: neither cloud-init nor $FIRSTBOOT present - flashed cards will ignore" >&2
+    echo "      Imager's settings; set hostname and Wi-Fi by hand during provisioning" >&2
 fi
 
 # ---------------------------------------------------------------- shrink the image
@@ -130,10 +138,12 @@ find /var/log -type f \( -name '*.gz' -o -name '*.[0-9]' \) -delete
 # Zero free space so the image compresses. Costs a few minutes and a lot of writes;
 # skip with ZEROFILL=0 if you are going to shrink the image with pishrink anyway.
 if [ "${ZEROFILL:-1}" = "1" ]; then
-    echo "zeroing free space (ctrl-c to skip)..."
+    echo "zeroing free space - this fills the disk on purpose, so the"
+    echo "'No space left on device' below is how it is meant to end"
     dd if=/dev/zero of=/zero.fill bs=4M status=none || true
     rm -f /zero.fill
     sync
+    echo "free space zeroed, $(df -h / | awk 'NR==2{print $4}') available again"
 fi
 
 cat > "/home/${STATION_USER}/PROVISION_ME.txt" <<'EOF'
