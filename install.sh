@@ -14,7 +14,8 @@ echo "Installing for user '${STATION_USER}' from ${REPO_DIR}"
 #   swig, liblgpio-dev - build lgpio, which has no prebuilt wheel for 64-bit/Python 3.13
 #   python3-dev        - Python.h, needed by lgpio, rpi-ws281x, RPi.GPIO and sysv-ipc
 #   python3-venv       - the venv step below
-sudo apt install -y swig liblgpio-dev python3-dev python3-venv
+#   vim                - set as git's core.editor a few lines down
+sudo apt install -y swig liblgpio-dev python3-dev python3-venv vim
 
 # Enable interfaces
 sudo raspi-config nonint do_ssh 0

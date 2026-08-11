@@ -20,14 +20,20 @@
 set -eu
 
 IMG="${1:-$HOME/climatenet-base.img.gz}"
-OUT="${2:-$HOME/os_list.json}"
-# Overridden with the public asset URL once the local test passes.
-URL="${URL:-file://$IMG}"
+[ -f "$IMG" ] || { echo "no image at $IMG" >&2; exit 1; }
+
+IMG_DIR="$(cd "$(dirname "$IMG")" && pwd)"
+IMG_NAME="$(basename "$IMG")"
+
+# The metadata is written beside the image and refers to it by bare filename, so the
+# two travel together as a pair - copy the folder anywhere and it still resolves.
+# An absolute path would break the moment the pair is moved.
+OUT="${2:-${IMG_DIR}/os_list.json}"
+# Overridden with the public asset URL once you publish: URL=https://... ./make_os_list.sh
+URL="${URL:-$IMG_NAME}"
 # pi3-64bit is the Imager tag for Raspberry Pi 3. Add pi4-64bit / pi5-64bit only if
 # stations actually run on those - the dtoverlay install.sh writes is Pi 3 specific.
 DEVICES="${DEVICES:-\"pi3-64bit\"}"
-
-[ -f "$IMG" ] || { echo "no image at $IMG" >&2; exit 1; }
 
 # extract_size and extract_sha256 describe the UNCOMPRESSED image, so both come from
 # decompressing. Done in one pass because the image is ~16 GB. gzip -l is not usable
