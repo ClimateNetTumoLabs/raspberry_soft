@@ -14,6 +14,10 @@ RemainAfterExit=yes
 # 'systemctl cat FirstBootSetup' answers which branch a station was built from.
 # REMOVE THIS LINE when merging to main, or every station keeps tracking the branch.
 Environment=BRANCH=custom-rpi-image
+# systemd gives a service almost no environment. install.sh runs 'git config --global'
+# (fatal: $HOME not set) and pip caches into ~/.cache/pip, so both need HOME. /root is
+# what these commands see when install.sh is run by hand under sudo.
+Environment=HOME=/root
 ExecStart=/usr/local/sbin/first_boot_setup.sh
 # Building the venv compiles lgpio from source on 64-bit, which takes far longer
 # than the 90s default for a oneshot unit. Without this the setup is killed midway.

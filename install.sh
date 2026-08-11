@@ -9,8 +9,10 @@ REPO_DIR="$(cd "$(dirname "$0")" && pwd)"
 STATION_USER="${STATION_USER:-$(stat -c '%U' "$REPO_DIR")}"
 echo "Installing for user '${STATION_USER}' from ${REPO_DIR}"
 
-# Build deps for lgpio, which has no prebuilt wheel on 64-bit / Python 3.13
-sudo apt install -y swig liblgpio-dev
+# swig and liblgpio-dev build lgpio, which has no prebuilt wheel on 64-bit / Python
+# 3.13. python3-venv is not part of a Raspberry Pi OS Lite install but is needed by
+# the venv step below; on an already-provisioned station all three are a no-op.
+sudo apt install -y swig liblgpio-dev python3-venv
 
 # Enable interfaces
 sudo raspi-config nonint do_ssh 0
