@@ -15,9 +15,18 @@
 # Plain "cloudinit" is a different, non-Raspberry-Pi flavour - it will not apply
 # the Pi-specific settings.
 #
-# Run this on macOS; it uses stat -f%z.
+# Runs on macOS and Linux. The two tools that differ between them are resolved below.
+# On Windows use WSL or Git Bash - building an SD image needs a POSIX shell either way.
 
 set -eu
+
+# GNU coreutils on Linux, BSD equivalents on macOS.
+if command -v sha256sum >/dev/null 2>&1; then
+    sha256_of() { sha256sum | awk '{print $1}'; }
+else
+    sha256_of() { shasum -a 256 | awk '{print $1}'; }
+fi
+file_size() { stat -c%s "$1" 2>/dev/null || stat -f%z "$1"; }
 
 IMG="${1:-$HOME/climatenet-base.img.gz}"
 [ -f "$IMG" ] || { echo "no image at $IMG" >&2; exit 1; }
@@ -25,12 +34,18 @@ IMG="${1:-$HOME/climatenet-base.img.gz}"
 IMG_DIR="$(cd "$(dirname "$IMG")" && pwd)"
 IMG_NAME="$(basename "$IMG")"
 
-# The metadata is written beside the image and refers to it by bare filename, so the
-# two travel together as a pair - copy the folder anywhere and it still resolves.
-# An absolute path would break the moment the pair is moved.
+# The metadata is written beside the image, so the two stay together as a pair.
 OUT="${2:-${IMG_DIR}/os_list.json}"
-# Overridden with the public asset URL once you publish: URL=https://... ./make_os_list.sh
-URL="${URL:-$IMG_NAME}"
+
+# Imager passes this straight to libcurl, which needs a real scheme: a bare filename
+# is parsed as a hostname ("Could not resolve host: climatenet-base.img.gz") and ~ or
+# $VARS are never expanded. So a local URL has to be an absolute file:// path, and
+# that path ends up in the file.
+#
+# To keep a username out of it, build in a neutral directory - /Users/Shared/... on
+# macOS - or publish and pass the real URL:
+#     URL=https://github.com/.../climatenet-base.img.gz ./make_os_list.sh
+URL="${URL:-file://${IMG_DIR}/${IMG_NAME}}"
 # pi3-64bit is the Imager tag for Raspberry Pi 3. Add pi4-64bit / pi5-64bit only if
 # stations actually run on those - the dtoverlay install.sh writes is Pi 3 specific.
 DEVICES="${DEVICES:-\"pi3-64bit\"}"
@@ -40,11 +55,11 @@ DEVICES="${DEVICES:-\"pi3-64bit\"}"
 # here: it reports size modulo 4 GB and would silently be wrong.
 echo "hashing and measuring the uncompressed image, this takes a few minutes..." >&2
 SZFILE="$(mktemp)"
-SHA="$(gunzip -c "$IMG" | tee >(wc -c | tr -d ' ' > "$SZFILE") | shasum -a 256 | awk '{print $1}')"
+SHA="$(gunzip -c "$IMG" | tee >(wc -c | tr -d ' ' > "$SZFILE") | sha256_of)"
 EXTRACT="$(cat "$SZFILE")"
 rm -f "$SZFILE"
 
-DOWNLOAD="$(stat -f%z "$IMG")"
+DOWNLOAD="$(file_size "$IMG")"
 
 # The "imager" block is what populates Imager's device chooser. Without it the
 # wizard shows "No device selected" and the OS entry is filtered out by its own
