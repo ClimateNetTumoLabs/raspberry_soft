@@ -1,6 +1,9 @@
 #!/bin/bash
-# Change the path if doesn't correspond to yours
-CONFIG_FILE="/home/raspberry/workspace/raspberry_soft/app/config.py"
+# Resolved from this script's own location, so the checkout can live under any
+# username or path without editing anything here. It is a tracked file, so the
+# alternative - rewriting it in place at install time, the way the units are -
+# would leave the working tree dirty and conflict on the next `git pull`.
+CONFIG_FILE="$(cd "$(dirname "$0")/../app" && pwd)/config.py"
 
 # Extract SSID and PASSWORD from config.py
 WIFI_SSID=$(grep '^SSID = ' "$CONFIG_FILE" | sed 's/SSID = "\(.*\)"/\1/')
