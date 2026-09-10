@@ -47,8 +47,21 @@ sudo raspi-config nonint do_serial_hw 0
 # Configure git editor
 git config --global core.editor "vim"
 
-echo "dtoverlay=pi3-miniuart-bt" | sudo tee -a /boot/firmware/config.txt
-echo "dtoverlay=pi3-miniuart-bt" | sudo tee -a /boot/config.txt
+# Frees the good UART from Bluetooth, which the PMS5003 and the SPS30 need.
+#
+# Appended only when it is not already there. This script is run again on every
+# provisioning attempt, and it used to append unconditionally - so a station
+# that was set up more than once accumulated a copy per attempt.
+# prepare_image.sh exists partly to de-duplicate them, which is a repair for
+# something that should not happen in the first place.
+#
+# Both paths, because the file moved to /boot/firmware and a station on an older
+# release still reads the old one; whichever is not real is created and ignored.
+for bootcfg in /boot/firmware/config.txt /boot/config.txt; do
+    if ! sudo grep -qxF "dtoverlay=pi3-miniuart-bt" "$bootcfg" 2>/dev/null; then
+        echo "dtoverlay=pi3-miniuart-bt" | sudo tee -a "$bootcfg" >/dev/null
+    fi
+done
 
 # Copy the units, substituting this station's user and checkout path. The two
 # expressions are deliberately narrow: a blanket s/raspberry/$STATION_USER/
