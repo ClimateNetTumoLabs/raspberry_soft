@@ -1,4 +1,4 @@
-from adafruit_ltr390 import LTR390
+from adafruit_ltr390 import LTR390, Gain, Resolution
 from config import SENSORS, LATITUDE, LONGITUDE
 import busio, board
 from logger_config import logging
@@ -38,9 +38,16 @@ class LTR390Sensor:
         try:
             self.i2c = busio.I2C(board.SCL, board.SDA)
             self.sensor = LTR390(self.i2c)
-            logging.info("[LTR390] Initialized")
-            # self.sensor.resolution = adafruit_ltr390.LTR390.RESOLUTION_20BIT
-            # self.sensor.gain = adafruit_ltr390.LTR390.GAIN_18X
+            
+            # --- THE FIXES FOR SATURATION (52428 Error) ---
+            # 1. Lower gain to 1X so daylight doesn't overwhelm the ADC
+            self.sensor.gain = Gain.GAIN_1X
+            
+            # 2. Set resolution to 18-bit to provide a higher measurement ceiling
+            self.sensor.resolution = Resolution.RESOLUTION_18BIT
+            
+            logging.info("[LTR390] Initialized with Gain=1X and Resolution=18-Bit")
+            return True
         except Exception as e:
             logging.error(f"[LTR390] Init failed: {e}")
             self.sensor = None
