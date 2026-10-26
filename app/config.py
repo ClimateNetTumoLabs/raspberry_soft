@@ -21,13 +21,8 @@ LONGITUDE = os.getenv('LONGITUDE', '')
 SSID = ""
 PASSWORD = ""
 # It is recommended to set the value > than
-# MEASURING_TIME + 10
+# MEASURING_TIME + 10 (see metro_config.py)
 TRANSMISSION_INTERVAL = 900
-
-# It is recommended to set the value >= than
-# sum of sensors reading_times
-MEASURING_TIME = 300
-READING_TIME = 30
 
 # Seconds to wait for the Lambda to confirm a batch reached the database.
 # Covers a cold start against a VPC-attached RDS.
@@ -56,7 +51,6 @@ SENSORS = {
         "pin_reset_working": False
     },
     "sps30": {
-        "warmup": 30,
         "uart": {
             "working": True,
             "address": "/dev/ttyAMA0",
@@ -71,7 +65,6 @@ SENSORS = {
     "speed": {
         "working": True,
         "pin": 5,
-        "speed_coefficient": 2.4,
         "interval_sec": 30,
     },
     "direction": {

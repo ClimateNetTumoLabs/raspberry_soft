@@ -1,6 +1,7 @@
 from logger_config import logging
 from gpiozero import Button, MCP3008
 from config import SENSORS
+from metro_config import WIND_SPEED_COEFFICIENT, WIND_DIRECTION_VOLTAGES
 import time
 
 class WindSpeedSensor:
@@ -30,8 +31,7 @@ class WindSpeedSensor:
                 self.count = 0
                 self.last_time = now
 
-                # Calculate speed (example calibration factor)
-                speed_kmh = (current_count / elapsed) * 2.4  # km/h
+                speed_kmh = (current_count / elapsed) * WIND_SPEED_COEFFICIENT  # km/h
                 speed_m_s = speed_kmh / 3.6  # convert to m/s
                 data["speed"] = round(speed_m_s, 2)
             except Exception as e:
@@ -49,13 +49,7 @@ class WindDirectionSensor:
         self.adc_max = conf["adc_max"]  # MCP3008 is 10-bit (0-1023)
         self.vref = conf["adc_vref"]
 
-        # Your calibrated voltages for 16 directions
-        self.volts = {
-            0.0: 3.84, 22.5: 1.98, 45.0: 2.25, 67.5: 0.41,
-            90.0: 0.45, 112.5: 0.32, 135.0: 0.90, 157.5: 0.62,
-            180.0: 1.40, 202.5: 1.19, 225.0: 3.08, 247.5: 2.93,
-            270.0: 4.62, 292.5: 4.04, 315.0: 4.33, 337.5: 3.43
-        }
+        self.volts = WIND_DIRECTION_VOLTAGES
 
         # Calculate ADC values from voltages
         self.directions = []

@@ -25,6 +25,17 @@ REPO_DIR="$(cd "$(dirname "$0")" && pwd)"
 STATION_USER="${STATION_USER:-$(stat -c '%U' "$REPO_DIR")}"
 echo "Installing for user '${STATION_USER}' from ${REPO_DIR}"
 
+# Stations run a release tag, never a branch: the tag is what was approved, and
+# what the SHA-256 in its release notes was computed from. Check out the tag
+# before running this script - not from inside it, because bash reads a script
+# while running it and switching commits underneath would break it midway.
+if ! SW_TAG="$(git -C "$REPO_DIR" describe --tags --exact-match 2>/dev/null)"; then
+    echo "ERROR: ${REPO_DIR} is not on a release tag." >&2
+    echo "Run: git fetch --tags && git checkout vX.Y.Z, then run this script again." >&2
+    exit 1
+fi
+echo "Installing ${SW_TAG}"
+
 # None of these ship with Raspberry Pi OS Lite, and all are no-ops on a station
 # that already has them:
 #   python3-venv       - ensurepip, without which `python3 -m venv` leaves a

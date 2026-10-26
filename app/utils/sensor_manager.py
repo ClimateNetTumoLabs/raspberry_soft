@@ -1,9 +1,20 @@
 import datetime
 import time
 from collections import defaultdict
-from config import READING_TIME
+from metro_config import READING_TIME, SPS30_MIN_TEMPERATURE, SPS30_MAX_TEMPERATURE, SPS30_MAX_HUMIDITY
+from version import __version__
 from logger_config import logging
 from sensors.read_sensors import sensors
+
+
+PM_KEYS = ("pm1", "pm2_5", "pm10")
+
+
+def within_sps30_limits(temperature, humidity) -> bool:
+    """Unknown conditions count as outside: PM is only reported when they are known to be within limits."""
+    if temperature is None or humidity is None:
+        return False
+    return SPS30_MIN_TEMPERATURE <= temperature <= SPS30_MAX_TEMPERATURE and humidity <= SPS30_MAX_HUMIDITY
 
 
 class SensorManager:
@@ -12,6 +23,9 @@ class SensorManager:
     def __init__(self):
         self.sensors = {}
         self.measurement_buffer = defaultdict(list)
+        # Whether the SPS30 ran in the current window. Kept apart from the
+        # sensor's own is_started, which stop_sensors() clears before averaging.
+        self.sps30_started = False
         self._initialize_sensors()
 
     def _initialize_sensors(self):
@@ -22,14 +36,42 @@ class SensorManager:
             except Exception as e:
                 logging.error(f"✗ Failed to initialize {sensor_name}: {e}")
 
+    def sps30(self):
+        """The air quality sensor if it is an SPS30, else None (PMS5003 or no sensor)."""
+        sensor = self.sensors.get("airQuality")
+        mode = getattr(sensor, "mode", None) or ""
+        return sensor if mode.startswith("sps30") else None
+
+    def _sps30_conditions_ok(self) -> bool:
+        """One BME280 reading, taken before the SPS30 is started."""
+        tph = self.sensors.get("tph")
+        reading = tph.read_data() if tph else {}
+        temperature, humidity = reading.get("temperature"), reading.get("humidity")
+
+        if within_sps30_limits(temperature, humidity):
+            return True
+
+        logging.warning(
+            f"[SPS30] Not started this window: temperature {temperature} °C, humidity {humidity} % "
+            f"(limits {SPS30_MIN_TEMPERATURE}..{SPS30_MAX_TEMPERATURE} °C, <= {SPS30_MAX_HUMIDITY} %)"
+        )
+        return False
+
     def start_sensors(self):
         """Start sensors that need warmup (like SPS30)"""
+        sps30 = self.sps30()
+
         for sensor_name, sensor_instance in self.sensors.items():
             if hasattr(sensor_instance, 'start') and sensor_name != "rain":
+                if sensor_instance is sps30 and not self._sps30_conditions_ok():
+                    continue
                 try:
                     sensor_instance.start()
                 except Exception as e:
                     logging.error(f"Error starting {sensor_name}: {e}")
+
+        # A failed start counts as not started too.
+        self.sps30_started = bool(sps30 and sps30.is_started)
 
     def stop_sensors(self):
         """Stop sensors after measurement period"""
@@ -43,10 +85,13 @@ class SensorManager:
     def collect_single_reading(self):
         """Collect one reading from all sensors (except rain)"""
         timestamp = datetime.datetime.now()
+        sps30 = self.sps30()
 
         for sensor_name, sensor_instance in self.sensors.items():
             if sensor_name == "rain":  # Rain is handled separately
                 continue
+            if sensor_instance is sps30 and not self.sps30_started:
+                continue  # not running this window, its PM is sent as null anyway
             try:
                 data = sensor_instance.read_data()
                 if data:
@@ -128,8 +173,22 @@ class SensorManager:
         if data.get("speed") == 0 or data.get("speed") is None:
             data["direction"] = None
 
+        self.apply_pm_limits(data)
+
         data["time"] = timestamp.strftime("%Y-%m-%d %H:%M:%S")
+        # Stamped when measured, not when sent: a buffered record can go out
+        # after the station has been updated.
+        data["sw_version"] = __version__
         return data
+
+    def apply_pm_limits(self, data: dict):
+        """PM is null for a window the SPS30 did not run in, or whose averaged conditions were outside its limits."""
+        if not self.sps30():
+            return
+        if self.sps30_started and within_sps30_limits(data.get("temperature"), data.get("humidity")):
+            return
+        for key in PM_KEYS:
+            data[key] = None
 
     def cleanup(self):
         """Cleanup sensors if needed"""

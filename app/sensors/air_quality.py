@@ -1,5 +1,6 @@
 import time
 from config import SENSORS
+from metro_config import SPS30_WARMUP
 from logger_config import logging
 from .libs.SPS30_I2C import SPS30 as SPS30I2C
 from .libs.SPS30_UART import SPS30 as SPS30UART
@@ -112,7 +113,7 @@ class AirQualitySensor:
 
                 self.is_started = True
 
-                warmup = self.conf_sps["warmup"]
+                warmup = SPS30_WARMUP
                 logging.info(f"[SPS30] Warming up for {warmup}s...")
                 time.sleep(warmup)
 

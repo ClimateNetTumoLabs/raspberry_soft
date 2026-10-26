@@ -1,6 +1,8 @@
 import time
 import datetime
-from config import TRANSMISSION_INTERVAL, MEASURING_TIME
+from config import TRANSMISSION_INTERVAL
+from metro_config import MEASURING_TIME
+from version import SOFTWARE_NAME, __version__, metro_checksum
 from logger_config import logging
 from utils.rtc import RTCControl
 from utils.network import check_internet, reconnect
@@ -14,6 +16,7 @@ import warnings
 def main():
     """Main execution loop"""
     logging.info("=== Starting ClimateNet Station ===")
+    logging.info(f"{SOFTWARE_NAME} v{__version__}, SHA-256 {metro_checksum()}")
 
     # Initialize RTC
     try:
