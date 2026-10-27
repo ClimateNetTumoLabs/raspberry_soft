@@ -46,7 +46,9 @@ echo "Installing ${SW_TAG}"
 #   swig, liblgpio-dev - build lgpio, which has no prebuilt wheel for 64-bit
 #   python3-dev        - Python.h, needed by lgpio, rpi-ws281x, RPi.GPIO, sysv-ipc
 #   vim                - set as git's core.editor a few lines down
-sudo apt install -y swig liblgpio-dev python3-dev python3-venv vim
+#   libpq5             - libpq.so.5, which psycopg2 loads when pip takes its
+#                        piwheels build instead of the PyPI one that bundles it
+sudo apt install -y swig liblgpio-dev python3-dev python3-venv vim libpq5
 
 # Enable interfaces
 sudo raspi-config nonint do_ssh 0
