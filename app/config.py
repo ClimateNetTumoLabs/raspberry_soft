@@ -47,8 +47,8 @@ SENSORS = {
         "working": True,
         "address": 0x53
     },
-    # SHT45 on: temperature and humidity from the SHT45, pressure from the BME280.
-    # SHT45 off: all three from the BME280.
+    # SHT45 on and initialized: temperature and humidity from the SHT45, pressure
+    # from the BME280. SHT45 off or failed at startup: all three from the BME280.
     "bme280": {
         "working": True,
         "port": 1,
