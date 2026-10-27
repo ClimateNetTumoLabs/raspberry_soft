@@ -2,6 +2,7 @@ import os
 import sys
 from prettytable import PrettyTable
 from sensors.read_sensors import sensors
+from sensors import air_quality
 from utils.rtc import RTCControl
 from utils.network import check_internet
 import subprocess
@@ -187,6 +188,10 @@ class TestSensors:
 
 
 def main():
+    if "--fast" in sys.argv:
+        # No SPS30 warmup, so PM shows on the first check but is not yet settled.
+        # Overridden here: air_quality.py is in the metrological checksum.
+        air_quality.SPS30_WARMUP = 0
     stop_main_service()
     tester = TestSensors()
     try:
