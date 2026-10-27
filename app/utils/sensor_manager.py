@@ -43,7 +43,7 @@ class SensorManager:
         return sensor if mode.startswith("sps30") else None
 
     def _sps30_conditions_ok(self) -> bool:
-        """One BME280 reading, taken before the SPS30 is started."""
+        """One BME280/SHT45 reading, taken before the SPS30 is started."""
         tph = self.sensors.get("tph")
         reading = tph.read_data() if tph else {}
         temperature, humidity = reading.get("temperature"), reading.get("humidity")

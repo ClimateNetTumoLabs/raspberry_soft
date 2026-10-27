@@ -30,3 +30,18 @@ LONGITUDE=
 # local_data.json. Custom names must include the .json extension.
 # Example: LOCAL_DB=local_data.json
 LOCAL_DB=
+
+# Optional: a PostgreSQL table that gets the BME280 and SHT45 readings side by
+# side, one row per transmission, for comparing the two sensors. Leave
+# COMPARE_DB_HOST blank to turn it off. The MQTT payload is the same either way.
+# The database must accept connections from the station (security group / firewall).
+# Example: COMPARE_DB_HOST=example.xxxxxxxxxxxx.eu-central-1.rds.amazonaws.com
+# Example: COMPARE_DB_PORT=5432
+# Example: COMPARE_DB_NAME=postgres
+# Example: COMPARE_DB_TABLE=sensor_comparison
+COMPARE_DB_HOST=
+COMPARE_DB_PORT=
+COMPARE_DB_NAME=
+COMPARE_DB_USER=
+COMPARE_DB_PASSWORD=
+COMPARE_DB_TABLE=

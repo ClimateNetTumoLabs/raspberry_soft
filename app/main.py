@@ -1,6 +1,6 @@
 import time
 import datetime
-from config import TRANSMISSION_INTERVAL
+from config import TRANSMISSION_INTERVAL, COMPARE_DB
 from metro_config import MEASURING_TIME
 from version import SOFTWARE_NAME, __version__, metro_checksum
 from logger_config import logging
@@ -10,6 +10,7 @@ from utils.mqtt import MQTTClient, DEVICE_ID
 from utils.data_storage import DataStorage
 from utils.scheduler import calculate_next_transmission, calculate_measurement_start
 from utils.sensor_manager import SensorManager
+from utils.sensor_compare import SensorComparison
 import warnings
 
 
@@ -39,6 +40,7 @@ def main():
     # Initialize sensors
     sensor_manager = SensorManager()
     data_storage = DataStorage()
+    comparison = SensorComparison() if COMPARE_DB["host"] else None
 
     # Initialize MQTT client
     mqtt_client = None
@@ -92,6 +94,9 @@ def main():
             data_packet = sensor_manager.get_averaged_data(next_transmission)
             data_storage.save_locally(data_packet)
             logging.info(data_packet)
+
+            if comparison:
+                comparison.send(next_transmission)
 
             if not check_internet() and not reconnect():
                 logging.warning("✗ No internet, data kept locally")

@@ -18,6 +18,17 @@ DEVICE_ID = os.getenv('DEVICE_ID', '')
 LATITUDE = os.getenv('LATITUDE', '')
 LONGITUDE = os.getenv('LONGITUDE', '')
 
+# Optional PostgreSQL table getting BME280 and SHT45 readings side by side
+# (utils/sensor_compare.py). Off while COMPARE_DB_HOST is blank.
+COMPARE_DB = {
+    "host": os.getenv('COMPARE_DB_HOST', ''),
+    "port": os.getenv('COMPARE_DB_PORT') or '5432',
+    "dbname": os.getenv('COMPARE_DB_NAME', ''),
+    "user": os.getenv('COMPARE_DB_USER', ''),
+    "password": os.getenv('COMPARE_DB_PASSWORD', ''),
+}
+COMPARE_DB_TABLE = os.getenv('COMPARE_DB_TABLE', '')
+
 SSID = ""
 PASSWORD = ""
 # It is recommended to set the value > than
@@ -36,10 +47,16 @@ SENSORS = {
         "working": True,
         "address": 0x53
     },
+    # SHT45 on: temperature and humidity from the SHT45, pressure from the BME280.
+    # SHT45 off: all three from the BME280.
     "bme280": {
         "working": True,
         "port": 1,
         "address": 0x76
+    },
+    "sht45": {
+        "working": False,
+        "address": 0x44
     },
     "pms5003": {
         "working": False,
