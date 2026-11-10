@@ -1,10 +1,11 @@
 import time
 from config import SENSORS
-from metro_config import SPS30_WARMUP
+from metro_config import SPS30_WARMUP, SPS30_PM10_GSD
 from logger_config import logging
 from .libs.SPS30_I2C import SPS30 as SPS30I2C
 from .libs.SPS30_UART import SPS30 as SPS30UART
 from .libs.PMS5003 import PMS5003
+from .pm10_model import pm10_from_tps
 
 
 class AirQualitySensor:
@@ -144,21 +145,24 @@ class AirQualitySensor:
                     return data
 
                 vals = self.sensor.dict_values
-                data["pm1"] = round(vals.get("pm1p0", 0), 2)
-                data["pm2_5"] = round(vals.get("pm2p5", 0), 2)
-                data["pm10"] = round(vals.get("pm10p0", 0), 2)
+                self._fill_sps30(data, vals["pm1p0"], vals["pm2p5"], vals["pm10p0"], vals["typical"])
 
             elif self.mode == "sps30_uart":
                 vals = self.sensor.readMeasurement()
                 if vals:
-                    data["pm1"] = round(vals.get("Mass PM1.0", 0), 2)
-                    data["pm2_5"] = round(vals.get("Mass PM2.5", 0), 2)
-                    data["pm10"] = round(vals.get("Mass PM10", 0), 2)
+                    self._fill_sps30(data, vals["Mass PM1.0"], vals["Mass PM2.5"], vals["Mass PM10"],
+                                     vals["Particle Size"])
 
         except Exception as e:
             logging.error(f"[AirQuality] Read failed: {e}")
 
         return data
+
+    @staticmethod
+    def _fill_sps30(data, pm1, pm25, pm10, tps):
+        """Same output for I2C and UART. PM10 is corrected from the typical particle size (pm10_model.py)."""
+        data["pm1"], data["pm2_5"] = round(pm1, 2), round(pm25, 2)
+        data["pm10"] = round(pm10_from_tps(pm25, pm10, tps, SPS30_PM10_GSD), 2)
 
     def stop(self):
         if not self.sensor or not self.is_started:
