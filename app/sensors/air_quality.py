@@ -1,10 +1,11 @@
 import time
 from config import SENSORS
-from metro_config import SPS30_WARMUP
+from metro_config import SPS30_WARMUP, SPS30_PM10_GSD
 from logger_config import logging
 from .libs.SPS30_I2C import SPS30 as SPS30I2C
 from .libs.SPS30_UART import SPS30 as SPS30UART
 from .libs.PMS5003 import PMS5003
+from .pm10_model import pm10_from_tps
 
 
 class AirQualitySensor:
@@ -122,7 +123,10 @@ class AirQualitySensor:
                 self.is_started = False
 
     def read_data(self):
-        data = {"pm1": None, "pm2_5": None, "pm10": None}
+        # pm10 is corrected from the typical particle size (pm10_model.py); pm10_raw is the SPS30's own.
+        # nc* are particle counts in #/cm3 from 0.3 um up to that size, tps the typical particle size in um.
+        data = {"pm1": None, "pm2_5": None, "pm10": None, "pm10_raw": None,
+                "nc0_5": None, "nc1": None, "nc2_5": None, "nc4": None, "nc10": None, "tps": None}
 
         if not self.sensor:
             return data
@@ -144,21 +148,29 @@ class AirQualitySensor:
                     return data
 
                 vals = self.sensor.dict_values
-                data["pm1"] = round(vals.get("pm1p0", 0), 2)
-                data["pm2_5"] = round(vals.get("pm2p5", 0), 2)
-                data["pm10"] = round(vals.get("pm10p0", 0), 2)
+                self._fill_sps30(data, vals["pm1p0"], vals["pm2p5"], vals["pm10p0"],
+                                 vals["nc0p5"], vals["nc1p0"], vals["nc2p5"], vals["nc4p0"], vals["nc10p0"],
+                                 vals["typical"])
 
             elif self.mode == "sps30_uart":
                 vals = self.sensor.readMeasurement()
                 if vals:
-                    data["pm1"] = round(vals.get("Mass PM1.0", 0), 2)
-                    data["pm2_5"] = round(vals.get("Mass PM2.5", 0), 2)
-                    data["pm10"] = round(vals.get("Mass PM10", 0), 2)
+                    self._fill_sps30(data, vals["Mass PM1.0"], vals["Mass PM2.5"], vals["Mass PM10"],
+                                     vals["Number PM0.5"], vals["Number PM1.0"], vals["Number PM2.5"],
+                                     vals["Number PM4.0"], vals["Number PM10"], vals["Particle Size"])
 
         except Exception as e:
             logging.error(f"[AirQuality] Read failed: {e}")
 
         return data
+
+    @staticmethod
+    def _fill_sps30(data, pm1, pm25, pm10, nc05, nc1, nc25, nc4, nc10, tps):
+        """Same output for I2C and UART. PM10 is corrected before rounding, so TPS keeps full precision."""
+        data["pm1"], data["pm2_5"], data["pm10_raw"] = round(pm1, 2), round(pm25, 2), round(pm10, 2)
+        data["pm10"] = round(pm10_from_tps(pm25, pm10, tps, SPS30_PM10_GSD), 2)
+        data["nc0_5"], data["nc1"], data["nc2_5"] = round(nc05, 2), round(nc1, 2), round(nc25, 2)
+        data["nc4"], data["nc10"], data["tps"] = round(nc4, 2), round(nc10, 2), round(tps, 3)
 
     def stop(self):
         if not self.sensor or not self.is_started:

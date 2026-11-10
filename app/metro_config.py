@@ -33,3 +33,7 @@ WIND_DIRECTION_VOLTAGES = {
     270.0: 4.62, 292.5: 4.04, 315.0: 4.33, 337.5: 3.43
 }
 
+# SPS30 PM10 correction (sensors/pm10_model.py): spread (geometric standard deviation)
+# of the particle size distribution. 2.0 is a textbook value for mixed indoor/urban air;
+# bigger = higher PM10 for the same PM2.5. Re-fit it against a reference PM10 instrument.
+SPS30_PM10_GSD = 2.0

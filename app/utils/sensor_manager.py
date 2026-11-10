@@ -7,7 +7,7 @@ from logger_config import logging
 from sensors.read_sensors import sensors
 
 
-PM_KEYS = ("pm1", "pm2_5", "pm10")
+PM_KEYS = ("pm1", "pm2_5", "pm10", "pm10_raw", "nc0_5", "nc1", "nc2_5", "nc4", "nc10", "tps")
 
 
 def within_sps30_limits(temperature, humidity) -> bool:
