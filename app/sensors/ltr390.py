@@ -2,7 +2,11 @@ from adafruit_ltr390 import LTR390, Gain, Resolution
 from config import SENSORS, LATITUDE, LONGITUDE
 import busio, board
 from logger_config import logging
-import datetime, requests
+import datetime, requests, time
+
+# The forecast is hourly, so one request per measuring window is plenty. A failed
+# request isn't retried sooner either, so an offline station doesn't stall every reading.
+UV_REFRESH = 600  # s
 
 class LTR390Sensor:
     def __init__(self):
@@ -11,6 +15,8 @@ class LTR390Sensor:
         self.sensor = None
         self.i2c = None
         self.location = self._read_location()
+        self.uv = None
+        self.uv_fetched_at = None
 
         if self.working:
             self.setup_sensor()
@@ -104,11 +110,11 @@ class LTR390Sensor:
             except Exception as e:
                 logging.error(f"[LTR390] Unhandled exception while reading LTR390 lux: {e}", exc_info=True)
 
-            uv_from_api = self.fetch_uv_from_api()
-            if uv_from_api is not None:
-                data["uv"] = uv_from_api
-            else:
-                data["uv"] = None
+            now = time.monotonic()
+            if self.uv_fetched_at is None or now - self.uv_fetched_at >= UV_REFRESH:
+                self.uv = self.fetch_uv_from_api()
+                self.uv_fetched_at = now
+            data["uv"] = self.uv
         return data
 
 if __name__=="__main__":

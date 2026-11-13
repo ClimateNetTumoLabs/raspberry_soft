@@ -32,7 +32,7 @@ COMPARE_DB_TABLE = os.getenv('COMPARE_DB_TABLE', '')
 SSID = ""
 PASSWORD = ""
 # It is recommended to set the value > than
-# MEASURING_TIME + 10 (see metro_config.py)
+# MEASURING_TIME + SPS30_WARMUP + 10 (see metro_config.py)
 TRANSMISSION_INTERVAL = 900
 
 # Seconds to wait for the Lambda to confirm a batch reached the database.
@@ -82,7 +82,6 @@ SENSORS = {
     "speed": {
         "working": True,
         "pin": 5,
-        "interval_sec": 30,
     },
     "direction": {
         "working": True,

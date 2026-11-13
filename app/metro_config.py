@@ -6,14 +6,23 @@ constants. Never read them from .env, a file or the network - a change to
 any of them must only ever arrive as a new software version.
 """
 
-# Seconds of measuring before each transmission. It is recommended to set
-# the value >= the sum of the sensors' reading times.
-MEASURING_TIME = 300
+# Seconds of measuring before each transmission: the standard 10-min mean
+# (WMO-No. 8, Annex 1.A and §5.8.1).
+MEASURING_TIME = 600
 
-# Seconds between single readings inside the measuring period.
-READING_TIME = 30
+# Seconds between temperature, humidity, pressure, light and PM readings. Faster
+# than the sensor time constants (about 20 s for temperature, 40 s for RH, Annex 1.A).
+READING_TIME = 10
 
-# Seconds the SPS30 runs before its readings count.
+# Seconds between paired wind speed and direction readings (non-overlapping 3-s
+# samples, WMO-No. 8 §5.8.3). Direction is their speed-weighted vector mean.
+WIND_READING_TIME = 3
+
+# Mean wind speed at or below this is calm, sent with no direction (WMO-No. 8 §5.1).
+WIND_CALM = 0.2  # m/s
+
+# Seconds the SPS30 runs before its readings count. Runs before the measuring
+# window starts, so it doesn't shorten it.
 SPS30_WARMUP = 30
 
 # SPS30 operating limits. Outside them the SPS30 is not started and PM is sent

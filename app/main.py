@@ -1,7 +1,7 @@
 import time
 import datetime
 from config import TRANSMISSION_INTERVAL, COMPARE_DB
-from metro_config import MEASURING_TIME
+from metro_config import MEASURING_TIME, SPS30_WARMUP
 from version import SOFTWARE_NAME, __version__, metro_checksum
 from logger_config import logging
 from utils.rtc import RTCControl
@@ -61,7 +61,8 @@ def main():
     while True:
         try:
             next_transmission = calculate_next_transmission(TRANSMISSION_INTERVAL)
-            measurement_start = calculate_measurement_start(next_transmission, MEASURING_TIME)
+            # Sensors start SPS30_WARMUP s early; the measuring window itself is MEASURING_TIME.
+            measurement_start = calculate_measurement_start(next_transmission, MEASURING_TIME + SPS30_WARMUP)
 
             if measurement_start >= next_transmission:
                 logging.warning(f"Skipping cycle, next: {next_transmission.strftime('%Y-%m-%d %H:%M:%S')}")
@@ -83,7 +84,8 @@ def main():
 
             # Start measurements
             logging.info("+" * 15 + " Starting measurement period...")
-            sensor_manager.start_measurement_period(measurement_start, next_transmission)
+            window_start = measurement_start + datetime.timedelta(seconds=SPS30_WARMUP)
+            sensor_manager.start_measurement_period(window_start, next_transmission)
 
             # Wait until transmission time
             while datetime.datetime.now() < next_transmission:

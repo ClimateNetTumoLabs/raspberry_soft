@@ -2,6 +2,7 @@ from logger_config import logging
 from gpiozero import Button, MCP3008
 from config import SENSORS
 from metro_config import WIND_SPEED_COEFFICIENT, WIND_DIRECTION_VOLTAGES
+from .wind_model import angle_to_compass
 import time
 
 class WindSpeedSensor:
@@ -18,6 +19,11 @@ class WindSpeedSensor:
 
     def _increment(self):
         self.count += 1
+
+    def reset(self):
+        """Start counting afresh, so the first reading of a window doesn't cover the idle gap before it."""
+        self.count = 0
+        self.last_time = time.time()
 
     def read_data(self):
         """Return wind speed in m/s (None if disabled or error)."""
@@ -95,35 +101,28 @@ class WindDirectionSensor:
                 return direction["angle"]
         return None
 
-    def _angle_to_direction(self, angle: float) -> str:
-        """Convert angle (0–360) to 16-point compass direction"""
-        directions = [
-            "N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE",
-            "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW"
-        ]
-        ix = int((angle + 11.25) // 22.5) % 16
-        return directions[ix]
+    def read_angle(self):
+        """One vane reading in degrees, or None."""
+        if not self.working:
+            return None
+        try:
+            # gpiozero 2.x returns normalized 0.0-1.0
+            # Convert to raw ADC value (0-1023)
+            normalized_value = self.adc.value
+            raw_adc = normalized_value * self.adc_max
+            voltage = normalized_value * self.vref
+
+            # Find matching angle using dynamic ranges
+            angle = self._get_angle_from_adc(raw_adc)
+            if angle is None:
+                logging.warning(f"[Wind Dir] No match for ADC: {raw_adc:.1f} (V: {voltage:.2f}V)")
+            return angle
+
+        except Exception as e:
+            logging.error(f"Error in Wind direction: {e}", exc_info=True)
+            return None
 
     def read_data(self):
         """Take one wind direction reading and return compass direction."""
-        data = {"direction": None}
-        if self.working:
-            try:
-                # gpiozero 2.x returns normalized 0.0-1.0
-                # Convert to raw ADC value (0-1023)
-                normalized_value = self.adc.value
-                raw_adc = normalized_value * self.adc_max
-                voltage = normalized_value * self.vref
-
-                # Find matching angle using dynamic ranges
-                angle = self._get_angle_from_adc(raw_adc)
-
-                if angle is not None:
-                    direction = self._angle_to_direction(angle)
-                    data["direction"] = direction
-                else:
-                    logging.warning(f"[Wind Dir] No match for ADC: {raw_adc:.1f} (V: {voltage:.2f}V)")
-
-            except Exception as e:
-                logging.error(f"Error in Wind direction: {e}", exc_info=True)
-        return data
+        angle = self.read_angle()
+        return {"direction": None if angle is None else angle_to_compass(angle)}

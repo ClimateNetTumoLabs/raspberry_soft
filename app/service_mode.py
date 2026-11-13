@@ -38,6 +38,7 @@ def main():
         # Discarded: wind speed and rain count since init, and the first
         # interval would include the warmup.
         sensor_manager.collect_single_reading()
+        sensor_manager.collect_wind_reading()
         sensor_manager.get_rain_data()
 
         next_reading = time.monotonic() + READING_TIME
@@ -46,7 +47,9 @@ def main():
             next_reading += READING_TIME
 
             sensor_manager.measurement_buffer.clear()
+            sensor_manager.wind_samples.clear()
             sensor_manager.collect_single_reading()
+            sensor_manager.collect_wind_reading()
             # calculate_averages(), not get_averaged_data(): the direction is shown
             # even at zero wind speed, so the vane can be tested on a rotating table.
             data = sensor_manager.calculate_averages()

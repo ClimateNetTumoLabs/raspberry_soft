@@ -12,7 +12,7 @@ import hashlib
 from pathlib import Path
 
 SOFTWARE_NAME = "ClimateNet Station"
-__version__ = "1.1.0"
+__version__ = "1.2.0"
 
 APP_DIR = Path(__file__).resolve().parent
 
